@@ -80,6 +80,16 @@
                    value="{{ annotator }}"
                    class="annotator-input"
                    required>
+            <div class="unfilled-search">
+                <input type="text" 
+                       id="unfilled-start-index"
+                       placeholder="Start index" 
+                       value="0"
+                       class="unfilled-index-input">
+                <button type="button" 
+                        onclick="goToNextUnfilled()"
+                        class="unfilled-button">Go to next unfilled task</button>
+            </div>
             <label class="unsure-label">
                 <input type="checkbox" name="unsure"> Unsure
             </label>
@@ -121,6 +131,46 @@ function validateForm() {
     {% endfor %}
     
     return true;
+}
+
+// Function to go to next unfilled task
+function goToNextUnfilled() {
+    const annotatorInput = document.querySelector('input[name="annotator"]');
+    const annotator = annotatorInput.value.trim();
+    
+    if (!annotator) {
+        alert('Please enter your annotator name first');
+        annotatorInput.focus();
+        return;
+    }
+    
+    const startIndexInput = document.getElementById('unfilled-start-index');
+    let startIndex = startIndexInput.value.trim();
+    
+    // Handle both numeric and string formats (e.g., "5" or "00005")
+    if (startIndex.length === 5 && /^\d{5}$/.test(startIndex)) {
+        // Already in 5-digit format
+    } else if (/^\d+$/.test(startIndex)) {
+        // Convert numeric to 5-digit format
+        startIndex = parseInt(startIndex).toString().padStart(5, '0');
+    } else {
+        alert('Please enter a valid index (e.g., 0, 5, or 00005)');
+        return;
+    }
+    
+    // Make request to find next unfilled task
+    fetch(`/next_unfilled/{{ task.name }}/${startIndex}?annotator=${encodeURIComponent(annotator)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.found) {
+                window.location.href = `/{{ task.name }}/${data.stimulus_id}`;
+            } else {
+                alert('No unfilled tasks found starting from index ' + startIndex);
+            }
+        })
+        .catch(error => {
+            alert('Error finding unfilled task: ' + error);
+        });
 }
 </script>
 {% endblock %}
