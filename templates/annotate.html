@@ -153,8 +153,14 @@ function goToNextUnfilled() {
         return;
     }
     
+    // Save annotator name to localStorage
+    localStorage.setItem('annotator', annotator);
+    
     const startIndexInput = document.getElementById('unfilled-start-index');
     let startIndex = startIndexInput.value.trim();
+    
+    // Save start index to localStorage
+    localStorage.setItem('unfilled-start-index', startIndex);
     
     // Handle both numeric and string formats (e.g., "5" or "00005")
     if (startIndex.length === 5 && /^\d{5}$/.test(startIndex)) {
@@ -169,6 +175,9 @@ function goToNextUnfilled() {
     
     // Get the search scope (you or any)
     const scope = document.querySelector('input[name="unfilled-scope"]:checked').value;
+    
+    // Save scope selection to localStorage
+    localStorage.setItem('unfilled-scope', scope);
     
     // Make request to find next unfilled task
     fetch(`/next_unfilled/{{ task.name }}/${startIndex}?annotator=${encodeURIComponent(annotator)}&scope=${scope}`)
