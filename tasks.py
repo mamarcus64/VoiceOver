@@ -81,7 +81,7 @@ class CountSubjects(AnnotationTask):
         
         # Define task options
         self.options = [
-            ChooseOne("Number of Subjects", ["0", "1", "2", "3"], required=True)
+            ChooseOne("Number of Subjects", ["0", "1", "2", "3", "N/A - Do not use"], required=True)
         ]
     
     def render_stimuli(self, row: pd.Series) -> list:

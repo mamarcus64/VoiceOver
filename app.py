@@ -1,13 +1,14 @@
 """
 Flask application for annotation website
 """
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for, abort, jsonify
 import csv
 import os
 import base64
 import cv2
 import io
 from datetime import datetime
+import pandas as pd
 from tasks import CountSubjects
 
 app = Flask(__name__)
@@ -154,6 +155,52 @@ def submit(task, stim_id):
     response = redirect(url_for("annotate", task=task, stim_id=next_id))
     response.set_cookie('annotator', annotator)
     return response
+
+
+@app.route("/next_unfilled/<task>/<start_id>")
+def next_unfilled(task, start_id):
+    """Find the next unfilled task starting from a given index"""
+    t = TASKS.get(task)
+    if not t:
+        abort(404)
+    
+    annotator = request.args.get('annotator', '')
+    if not annotator:
+        return jsonify({"found": False, "error": "No annotator specified"})
+    
+    # Check if annotator has a results file
+    csv_path = f"results/{annotator}/{task}.csv"
+    filled_ids = set()
+    
+    if os.path.exists(csv_path):
+        # Read the CSV to get filled stimulus IDs
+        try:
+            df = pd.read_csv(csv_path)
+            if 'stimulus_id' in df.columns:
+                filled_ids = set(df['stimulus_id'].astype(str))
+        except Exception as e:
+            print(f"Error reading CSV: {e}")
+    
+    # Get all stimulus IDs from the task
+    all_ids = list(t.stimuli['stimulus_id'])
+    
+    # Find the starting index
+    try:
+        start_idx = all_ids.index(start_id)
+    except ValueError:
+        start_idx = 0
+    
+    # Search for the next unfilled task
+    for i in range(start_idx, len(all_ids)):
+        if all_ids[i] not in filled_ids:
+            return jsonify({"found": True, "stimulus_id": all_ids[i]})
+    
+    # If nothing found from start_idx, search from beginning
+    for i in range(0, start_idx):
+        if all_ids[i] not in filled_ids:
+            return jsonify({"found": True, "stimulus_id": all_ids[i]})
+    
+    return jsonify({"found": False})
 
 
 @app.route("/thanks")
