@@ -168,34 +168,58 @@ def next_unfilled(task, start_id):
     if not annotator:
         return jsonify({"found": False, "error": "No annotator specified"})
     
-    # Check if annotator has a results file
-    csv_path = f"results/{annotator}/{task}.csv"
+    scope = request.args.get('scope', 'you')  # 'you' or 'any'
+    
     filled_ids = set()
     
-    if os.path.exists(csv_path):
-        # Read the CSV to get filled stimulus IDs
-        try:
-            df = pd.read_csv(csv_path)
-            if 'stimulus_id' in df.columns:
-                filled_ids = set(df['stimulus_id'].astype(str))
-        except Exception as e:
-            print(f"Error reading CSV: {e}")
+    if scope == 'you':
+        # Check only the current annotator's results
+        csv_path = f"results/{annotator}/{task}.csv"
+        if os.path.exists(csv_path):
+            try:
+                df = pd.read_csv(csv_path)
+                if 'stimulus_id' in df.columns:
+                    filled_ids = set(df['stimulus_id'].astype(str))
+            except Exception as e:
+                print(f"Error reading CSV: {e}")
+    else:
+        # Check all annotators' results
+        results_dir = "results"
+        if os.path.exists(results_dir):
+            for annotator_dir in os.listdir(results_dir):
+                csv_path = os.path.join(results_dir, annotator_dir, f"{task}.csv")
+                if os.path.exists(csv_path):
+                    try:
+                        df = pd.read_csv(csv_path)
+                        if 'stimulus_id' in df.columns:
+                            filled_ids.update(df['stimulus_id'].astype(str))
+                    except Exception as e:
+                        print(f"Error reading CSV {csv_path}: {e}")
     
-    # Get all stimulus IDs from the task
-    all_ids = list(t.stimuli['stimulus_id'])
+    # Get all stimulus IDs from the task and ensure they're strings
+    all_ids = [str(sid) for sid in t.stimuli['stimulus_id']]
+    
+    # Ensure start_id is a string and properly formatted
+    start_id = str(start_id).zfill(5)
     
     # Find the starting index
     try:
         start_idx = all_ids.index(start_id)
     except ValueError:
-        start_idx = 0
+        # If start_id not found, try to convert it to int and back to padded string
+        try:
+            start_num = int(start_id)
+            start_id_padded = f"{start_num:05d}"
+            start_idx = all_ids.index(start_id_padded)
+        except (ValueError, IndexError):
+            start_idx = 0
     
-    # Search for the next unfilled task
+    # Search for the next unfilled task starting from start_idx
     for i in range(start_idx, len(all_ids)):
         if all_ids[i] not in filled_ids:
             return jsonify({"found": True, "stimulus_id": all_ids[i]})
     
-    # If nothing found from start_idx, search from beginning
+    # If nothing found from start_idx to end, search from beginning up to start_idx
     for i in range(0, start_idx):
         if all_ids[i] not in filled_ids:
             return jsonify({"found": True, "stimulus_id": all_ids[i]})
