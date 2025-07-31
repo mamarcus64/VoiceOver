@@ -7,6 +7,7 @@ import os
 import base64
 import cv2
 import io
+from datetime import datetime
 from tasks import CountSubjects
 
 app = Flask(__name__)
@@ -119,8 +120,11 @@ def submit(task, stim_id):
         
         # Write header if needed
         if write_header:
-            headers = ["stimulus_id"] + [opt.label for opt in t.options] + ["notes", "unsure"]
+            headers = ["stimulus_id"] + [opt.label for opt in t.options] + ["notes", "unsure", "timestamp"]
             writer.writerow(headers)
+        
+        # Get current timestamp in readable format
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
         # Write data row
         row_data = [stim_id]
@@ -128,6 +132,7 @@ def submit(task, stim_id):
             row_data.append(form.get(opt.label, ""))
         row_data.append(form.get("notes", ""))
         row_data.append("yes" if form.get("unsure") == "on" else "no")
+        row_data.append(timestamp)
         
         writer.writerow(row_data)
     
