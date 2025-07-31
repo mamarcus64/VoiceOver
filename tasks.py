@@ -86,7 +86,7 @@ class CountSubjects(AnnotationTask):
     
     def render_stimuli(self, row: pd.Series) -> list:
         """
-        Extract 10 frames from video at evenly spaced intervals
+        Extract 5 frames from video at 10%, 20%, 70%, 80%, 90%
         """
         filepath = row["filepath"]
         
@@ -96,9 +96,8 @@ class CountSubjects(AnnotationTask):
             duration = clip.duration
             
             frames = []
-            # Extract frames at 10 evenly spaced intervals
-            for i in range(10):
-                ratio = (i + 1) / 11.0  # Avoid the very end of video
+            # Extract frames at specific percentages
+            for ratio in [0.1, 0.2, 0.7, 0.8, 0.9]:
                 timestamp = duration * ratio
                 
                 # Get frame at timestamp (returns RGB)
@@ -118,4 +117,4 @@ class CountSubjects(AnnotationTask):
             placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.putText(placeholder, "Error loading video", (50, 240), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            return [placeholder] * 10
+            return [placeholder] * 5
