@@ -51,7 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const storedAnnotator = localStorage.getItem('annotator');
     const annotatorInput = document.querySelector('input[name="annotator"]');
     
-    if (storedAnnotator && annotatorInput && !annotatorInput.value) {
+    // Always use localStorage value if it exists, regardless of template value
+    if (storedAnnotator && annotatorInput) {
         annotatorInput.value = storedAnnotator;
     }
     
