@@ -9,133 +9,12 @@ import cv2
 import io
 from datetime import datetime
 import pandas as pd
-import time
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from tasks import CountSubjects
 
 app = Flask(__name__)
 
 # Register all tasks
 TASKS = {t.name: t for t in [CountSubjects()]}
-
-# Global set to store bad stimuli
-BAD_STIMULI = set()
-
-def load_bad_stimuli():
-    """Load bad stimuli from file"""
-    global BAD_STIMULI
-    if os.path.exists('bad_stimuli.txt'):
-        with open('bad_stimuli.txt', 'r') as f:
-            BAD_STIMULI = set(line.strip() for line in f if line.strip())
-        print(f"Loaded {len(BAD_STIMULI)} bad stimuli from file")
-
-def save_bad_stimuli():
-    """Save bad stimuli to file"""
-    with open('bad_stimuli.txt', 'w') as f:
-        for stim_id in sorted(BAD_STIMULI):
-            f.write(f"{stim_id}\n")
-
-def check_stimulus(task, stim_id, timeout=10):
-    """Check if a stimulus can be loaded within timeout"""
-    t = TASKS.get(task)
-    if not t:
-        return False
-    
-    try:
-        row = t.stimuli.loc[t.stimuli.stimulus_id == stim_id].iloc[0]
-        # Try to render the stimulus with a timeout
-        start_time = time.time()
-        frames = t.render_stimuli(row)
-        elapsed = time.time() - start_time
-        
-        # Check if it took too long or if frames are error frames
-        if elapsed > timeout:
-            return False
-        
-        # Check if we got valid frames (not all error frames)
-        if not frames or len(frames) == 0:
-            return False
-            
-        return True
-    except Exception as e:
-        print(f"Error checking stimulus {stim_id}: {e}")
-        return False
-
-def check_all_stimuli():
-    """Check all stimuli on startup if bad_stimuli.txt doesn't exist"""
-    if os.path.exists('bad_stimuli.txt'):
-        load_bad_stimuli()
-        return
-    
-    print("bad_stimuli.txt not found. Checking all stimuli...")
-    
-    for task_name, task in TASKS.items():
-        print(f"Checking stimuli for task: {task_name}")
-        total = len(task.stimuli)
-        
-        # Check stimuli in parallel with timeout
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            for idx, row in task.stimuli.iterrows():
-                stim_id = row['stimulus_id']
-                print(f"Checking {stim_id} ({idx+1}/{total})...", end='', flush=True)
-                
-                try:
-                    # Submit the check with a timeout
-                    future = executor.submit(check_stimulus, task_name, stim_id, timeout=10)
-                    result = future.result(timeout=15)  # Overall timeout
-                    
-                    if not result:
-                        BAD_STIMULI.add(stim_id)
-                        print(" ❌ BAD")
-                    else:
-                        print(" ✓ OK")
-                except TimeoutError:
-                    BAD_STIMULI.add(stim_id)
-                    print(" ❌ TIMEOUT")
-                except Exception as e:
-                    BAD_STIMULI.add(stim_id)
-                    print(f" ❌ ERROR: {e}")
-    
-    # Save the bad stimuli
-    save_bad_stimuli()
-    print(f"\nFound {len(BAD_STIMULI)} bad stimuli. Saved to bad_stimuli.txt")
-
-# Check stimuli on startup
-check_all_stimuli()
-
-def get_next_valid_stimulus(task, current_id, direction=1):
-    """Get the next valid stimulus ID, skipping bad ones"""
-    t = TASKS.get(task)
-    if not t:
-        return None
-    
-    all_ids = list(t.stimuli['stimulus_id'])
-    
-    try:
-        current_idx = all_ids.index(current_id)
-    except ValueError:
-        current_idx = -1 if direction == 1 else len(all_ids)
-    
-    # Search in the given direction
-    idx = current_idx + direction
-    while 0 <= idx < len(all_ids):
-        if all_ids[idx] not in BAD_STIMULI:
-            return all_ids[idx]
-        idx += direction
-    
-    return None
-
-def get_first_valid_stimulus(task):
-    """Get the first valid stimulus for a task"""
-    t = TASKS.get(task)
-    if not t:
-        return None
-    
-    for stim_id in t.stimuli['stimulus_id']:
-        if stim_id not in BAD_STIMULI:
-            return stim_id
-    
-    return None
 
 
 # Custom template filter to convert numpy arrays to base64
@@ -159,23 +38,15 @@ def index():
     """Homepage - redirect to first task"""
     if TASKS:
         first_task = list(TASKS.keys())[0]
-        first_valid = get_first_valid_stimulus(first_task)
-        if first_valid:
-            return redirect(url_for('annotate', task=first_task, stim_id=first_valid))
-        else:
-            return "No valid stimuli found", 404
+        return redirect(url_for('annotate', task=first_task, stim_id='00000'))
     return "No tasks configured", 404
 
 
 @app.route("/<task>")
 def task_start(task):
-    """Redirect to first valid stimulus of a task"""
+    """Redirect to first stimulus of a task"""
     if task in TASKS:
-        first_valid = get_first_valid_stimulus(task)
-        if first_valid:
-            return redirect(url_for('annotate', task=task, stim_id=first_valid))
-        else:
-            return "No valid stimuli found for this task", 404
+        return redirect(url_for('annotate', task=task, stim_id='00000'))
     abort(404)
 
 
@@ -185,14 +56,6 @@ def annotate(task, stim_id):
     t = TASKS.get(task)
     if not t:
         abort(404)
-    
-    # Check if this is a bad stimulus and redirect to next valid one
-    if stim_id in BAD_STIMULI:
-        next_valid = get_next_valid_stimulus(task, stim_id, direction=1)
-        if next_valid:
-            return redirect(url_for('annotate', task=task, stim_id=next_valid))
-        else:
-            return "No more valid stimuli found", 404
     
     # Get stimulus data
     df = t.stimuli
@@ -276,19 +139,20 @@ def submit(task, stim_id):
     
     # Determine next stimulus
     if "prev" in form:
-        # Go back to previous valid stimulus
-        next_valid = get_next_valid_stimulus(task, stim_id, direction=-1)
-        if not next_valid:
-            # Stay on current if no previous valid stimulus
-            next_valid = stim_id
+        # Go back
+        next_idx = int(stim_id) - 1
+        if next_idx < 0:
+            next_idx = 0
     else:
-        # Go forward to next valid stimulus
-        next_valid = get_next_valid_stimulus(task, stim_id, direction=1)
-        if not next_valid:
+        # Go forward
+        next_idx = int(stim_id) + 1
+        if next_idx >= len(t.stimuli):
             return redirect(url_for("thanks", annotator=annotator))
     
+    next_id = f"{next_idx:05d}"
+    
     # Set cookie for annotator name and redirect
-    response = redirect(url_for("annotate", task=task, stim_id=next_valid))
+    response = redirect(url_for("annotate", task=task, stim_id=next_id))
     response.set_cookie('annotator', annotator)
     return response
 
@@ -361,15 +225,31 @@ def next_unfilled(task, start_id):
         # If not found, default to 0
         start_idx = 0
     
-    # Search for the next unfilled task starting from start_idx, skipping bad stimuli
-    for i in range(start_idx, len(all_ids)):
-        if all_ids[i] not in filled_ids and all_ids[i] not in BAD_STIMULI:
-            return jsonify({"found": True, "stimulus_id": all_ids[i]})
+    # If scope is 'you', find the max stimulus_id in the annotator's CSV
+    # If scope is 'any', find the max stimulus_id across all annotators
+    max_filled_id = -1
     
-    # If nothing found from start_idx to end, wrap around to beginning
-    for i in range(0, start_idx):
-        if all_ids[i] not in filled_ids and all_ids[i] not in BAD_STIMULI:
-            return jsonify({"found": True, "stimulus_id": all_ids[i]})
+    if scope == 'you':
+        # Only check the current annotator's max
+        if filled_ids:
+            # Convert to integers, find max, then back to string
+            max_filled_id = max(int(sid) for sid in filled_ids)
+    else:
+        # Find max across all annotators
+        if filled_ids:
+            max_filled_id = max(int(sid) for sid in filled_ids)
+    
+    # Convert start_id to integer for comparison
+    start_num = int(start_id_formatted)
+    
+    # The next unfilled task is max + 1, but not less than start_id
+    next_unfilled_num = max(max_filled_id + 1, start_num)
+    
+    # Check if this is within valid range
+    total_stimuli = len(all_ids)
+    if next_unfilled_num < total_stimuli:
+        next_unfilled_id = f"{next_unfilled_num:05d}"
+        return jsonify({"found": True, "stimulus_id": next_unfilled_id})
     
     return jsonify({"found": False})
 
