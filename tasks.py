@@ -96,13 +96,10 @@ class CountSubjects(AnnotationTask):
             duration = clip.duration
             
             frames = []
-            # Extract frames at 10 evenly spaced intervals (10%, 20%, 30%, ..., 100%)
-            for i in range(1, 11):
-                ratio = i / 10.0
+            # Extract frames at 10 evenly spaced intervals
+            for i in range(10):
+                ratio = (i + 1) / 11.0  # Avoid the very end of video
                 timestamp = duration * ratio
-                # Ensure we don't exceed video duration
-                if timestamp >= duration:
-                    timestamp = duration - 0.1
                 
                 # Get frame at timestamp (returns RGB)
                 frame = clip.get_frame(timestamp)

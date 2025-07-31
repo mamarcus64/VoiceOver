@@ -45,7 +45,7 @@ function toggleCheckbox(btn) {
 // Flag to track if we're submitting the form
 let isSubmitting = false;
 
-// Preserve annotator name across page loads
+// Preserve form values across page loads
 document.addEventListener('DOMContentLoaded', function() {
     // Check if annotator name is stored in localStorage
     const storedAnnotator = localStorage.getItem('annotator');
@@ -61,6 +61,43 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('annotator', this.value);
         });
     }
+    
+    // Restore unfilled task search index
+    const storedStartIndex = localStorage.getItem('unfilled-start-index');
+    const startIndexInput = document.getElementById('unfilled-start-index');
+    
+    if (storedStartIndex && startIndexInput) {
+        startIndexInput.value = storedStartIndex;
+    }
+    
+    // Save unfilled task search index when it changes
+    if (startIndexInput) {
+        startIndexInput.addEventListener('change', function() {
+            localStorage.setItem('unfilled-start-index', this.value);
+        });
+        startIndexInput.addEventListener('input', function() {
+            localStorage.setItem('unfilled-start-index', this.value);
+        });
+    }
+    
+    // Restore unfilled scope radio selection
+    const storedScope = localStorage.getItem('unfilled-scope');
+    if (storedScope) {
+        const scopeRadio = document.querySelector(`input[name="unfilled-scope"][value="${storedScope}"]`);
+        if (scopeRadio) {
+            scopeRadio.checked = true;
+        }
+    }
+    
+    // Save unfilled scope when it changes
+    const scopeRadios = document.querySelectorAll('input[name="unfilled-scope"]');
+    scopeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                localStorage.setItem('unfilled-scope', this.value);
+            }
+        });
+    });
     
     // Add form submit handler to set flag
     const form = document.getElementById('annotation-form');
