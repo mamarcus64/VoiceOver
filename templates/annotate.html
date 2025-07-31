@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block body %}
+<!-- Top padding (5% of screen) -->
+<div class="pad"></div>
+
+<!-- Header with title and progress (10% of screen) -->
+<header>
+    <h2>{{ task.name }} – {{ stim_id }}</h2>
+    <div class="progress">Progress: {{ progress }}</div>
+</header>
+
+<!-- Stimuli display section (50% of screen) -->
+<section class="stimuli">
+    {% for item in renderables %}
+        {% if item is string %}
+            <p class="stim-text">{{ item }}</p>
+        {% else %}
+            <!-- Display image using base64 encoding -->
+            <img src="data:image/jpeg;base64,{{ item|b64encode }}" class="stim-img" alt="Frame {{ loop.index }}">
+        {% endif %}
+    {% endfor %}
+</section>
+
+<!-- Annotation form -->
+<form method="post" action="{{ url_for('submit', task=task.name, stim_id=stim_id) }}" id="annotation-form">
+    <!-- Options section (20% of screen) -->
+    <section class="options">
+        {% for opt in task.options %}
+            <div class="label-block">
+                <p class="option-label">{{ opt.label }}{% if opt.required %}<span class="required">*</span>{% endif %}</p>
+                
+                {% if opt.__class__.__name__ == 'ChooseOne' %}
+                    <!-- Radio-style buttons for single choice -->
+                    <div class="choice-group">
+                        {% for choice in opt.choices %}
+                            <button type="button" 
+                                    class="choice" 
+                                    data-target="{{ opt.label }}"
+                                    data-value="{{ choice }}"
+                                    onclick="toggleRadio(this)">
+                                {{ choice }}
+                            </button>
+                        {% endfor %}
+                        <input type="hidden" name="{{ opt.label }}" id="input-{{ opt.label }}">
+                    </div>
+                
+                {% elif opt.__class__.__name__ == 'ChooseMany' %}
+                    <!-- Checkbox-style buttons for multiple choice -->
+                    <div class="choice-group">
+                        {% for choice in opt.choices %}
+                            <button type="button" 
+                                    class="choice checkbox" 
+                                    data-target="{{ opt.label }}"
+                                    data-value="{{ choice }}"
+                                    onclick="toggleCheckbox(this)">
+                                {{ choice }}
+                            </button>
+                        {% endfor %}
+                        <input type="hidden" name="{{ opt.label }}" id="input-{{ opt.label }}">
+                    </div>
+                
+                {% elif opt.__class__.__name__ == 'FreeText' %}
+                    <!-- Text input field -->
+                    <input type="text" 
+                           name="{{ opt.label }}" 
+                           placeholder="{{ opt.placeholder }}"
+                           class="text-input"
+                           {% if opt.required %}required{% endif %}>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </section>
+
+    <!-- Submit section (15% of screen) -->
+    <section class="submit">
+        <div class="submit-row">
+            <input type="text" 
+                   name="annotator" 
+                   placeholder="Annotator name" 
+                   value="{{ annotator }}"
+                   class="annotator-input"
+                   required>
+            <label class="unsure-label">
+                <input type="checkbox" name="unsure"> Unsure
+            </label>
+        </div>
+        
+        <textarea name="notes" 
+                  placeholder="Notes (optional)..." 
+                  class="notes-textarea"></textarea>
+        
+        <div class="button-row">
+            <button type="submit" name="prev" class="nav-button prev-button">← Back</button>
+            <button type="submit" name="next" class="nav-button next-button" onclick="return validateForm()">Submit<br>(Click or Press Enter)</button>
+        </div>
+    </section>
+</form>
+
+<script>
+// Form validation
+function validateForm() {
+    const form = document.getElementById('annotation-form');
+    const annotator = form.querySelector('input[name="annotator"]').value.trim();
+    
+    if (!annotator) {
+        alert('Please enter your annotator name');
+        return false;
+    }
+    
+    // Check required fields
+    {% for opt in task.options %}
+        {% if opt.required %}
+            {% if opt.__class__.__name__ in ['ChooseOne', 'ChooseMany'] %}
+                const value_{{ loop.index }} = form.querySelector('input[name="{{ opt.label }}"]').value;
+                if (!value_{{ loop.index }}) {
+                    alert('Please select an option for: {{ opt.label }}');
+                    return false;
+                }
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+    
+    return true;
+}
+</script>
+{% endblock %}
