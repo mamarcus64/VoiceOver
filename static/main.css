@@ -38,30 +38,26 @@ header h2 {
     font-weight: 500;
 }
 
-/* Stimuli display section (50vh) */
+/* Stimuli display section (50vh) - 10 images in 2 rows of 5 */
 .stimuli {
     height: 50vh;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 0.5rem;
     padding: 1rem;
+    justify-items: center;
+    align-items: center;
     background-color: #ecf0f1;
 }
 
 .stim-img {
-    max-height: 45vh;
-    max-width: 48%;
+    width: 100%;
+    height: auto;
+    max-height: 22vh;
     object-fit: contain;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-
-/* For 4 images, arrange in 2x2 grid */
-.stimuli:has(.stim-img:nth-child(4)) .stim-img {
-    max-width: 48%;
-    max-height: 22vh;
 }
 
 .stim-text {
@@ -150,6 +146,7 @@ header h2 {
     display: flex;
     gap: 1rem;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .annotator-input {
@@ -164,19 +161,26 @@ header h2 {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    flex: 0.5;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.unfilled-label {
+    font-size: 0.9rem;
+    color: #555;
+    white-space: nowrap;
 }
 
 .unfilled-index-input {
-    width: 120px;
-    padding: 0.75rem;
+    width: 80px;
+    padding: 0.5rem;
     border: 2px solid #bdc3c7;
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .unfilled-button {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     border: 2px solid #3498db;
     border-radius: 6px;
     background-color: white;
@@ -191,6 +195,24 @@ header h2 {
 .unfilled-button:hover {
     background-color: #3498db;
     color: white;
+}
+
+.unfilled-scope {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.unfilled-scope label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+}
+
+.unfilled-scope input[type="radio"] {
+    cursor: pointer;
 }
 
 .unsure-label {
