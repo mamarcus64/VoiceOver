@@ -81,12 +81,12 @@ class CountSubjects(AnnotationTask):
         
         # Define task options
         self.options = [
-            ChooseOne("Number of Subjects", ["0", "1", "2", "3", "N/A - Do not use"], required=True)
+            ChooseOne("Number of Subjects", ["1", "2", "3", "Number changes", "N/A - Do not use"], required=True)
         ]
     
     def render_stimuli(self, row: pd.Series) -> list:
         """
-        Extract 4 frames from video at 20%, 40%, 60%, 80% timestamps
+        Extract 10 frames from video at evenly spaced intervals
         """
         filepath = row["filepath"]
         
@@ -96,9 +96,14 @@ class CountSubjects(AnnotationTask):
             duration = clip.duration
             
             frames = []
-            # Extract frames at specific percentages
-            for ratio in (0.2, 0.4, 0.6, 0.8):
+            # Extract frames at 10 evenly spaced intervals (10%, 20%, 30%, ..., 100%)
+            for i in range(1, 11):
+                ratio = i / 10.0
                 timestamp = duration * ratio
+                # Ensure we don't exceed video duration
+                if timestamp >= duration:
+                    timestamp = duration - 0.1
+                
                 # Get frame at timestamp (returns RGB)
                 frame = clip.get_frame(timestamp)
                 # Convert RGB to BGR for consistency
@@ -116,4 +121,4 @@ class CountSubjects(AnnotationTask):
             placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.putText(placeholder, "Error loading video", (50, 240), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            return [placeholder] * 4
+            return [placeholder] * 10

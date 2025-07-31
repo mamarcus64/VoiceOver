@@ -81,14 +81,23 @@
                    class="annotator-input"
                    required>
             <div class="unfilled-search">
+                <label class="unfilled-label">Look for unfilled tasks starting at index:</label>
                 <input type="text" 
                        id="unfilled-start-index"
-                       placeholder="Start index" 
+                       placeholder="0" 
                        value="0"
                        class="unfilled-index-input">
                 <button type="button" 
                         onclick="goToNextUnfilled()"
                         class="unfilled-button">Go to next unfilled task</button>
+                <div class="unfilled-scope">
+                    <label>
+                        <input type="radio" name="unfilled-scope" value="you" checked> Unfilled by you
+                    </label>
+                    <label>
+                        <input type="radio" name="unfilled-scope" value="any"> Unfilled by any annotator
+                    </label>
+                </div>
             </div>
             <label class="unsure-label">
                 <input type="checkbox" name="unsure"> Unsure
@@ -158,14 +167,18 @@ function goToNextUnfilled() {
         return;
     }
     
+    // Get the search scope (you or any)
+    const scope = document.querySelector('input[name="unfilled-scope"]:checked').value;
+    
     // Make request to find next unfilled task
-    fetch(`/next_unfilled/{{ task.name }}/${startIndex}?annotator=${encodeURIComponent(annotator)}`)
+    fetch(`/next_unfilled/{{ task.name }}/${startIndex}?annotator=${encodeURIComponent(annotator)}&scope=${scope}`)
         .then(response => response.json())
         .then(data => {
             if (data.found) {
                 window.location.href = `/{{ task.name }}/${data.stimulus_id}`;
             } else {
-                alert('No unfilled tasks found starting from index ' + startIndex);
+                const scopeText = scope === 'you' ? 'by you' : 'by any annotator';
+                alert(`No unfilled tasks found ${scopeText} starting from index ${startIndex}`);
             }
         })
         .catch(error => {
