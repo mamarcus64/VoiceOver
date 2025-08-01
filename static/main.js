@@ -21,6 +21,9 @@ function toggleRadio(btn) {
     if (hiddenInput) {
         hiddenInput.value = value;
     }
+    
+    // Check for auto-submit
+    checkAutoSubmit();
 }
 
 // Toggle logic for ChooseMany buttons (checkbox-style)
@@ -40,10 +43,62 @@ function toggleCheckbox(btn) {
     if (hiddenInput) {
         hiddenInput.value = values.join(',');
     }
+    
+    // Check for auto-submit
+    checkAutoSubmit();
 }
 
 // Flag to track if we're submitting the form
 let isSubmitting = false;
+
+// Check if all labels have values and auto-submit if enabled
+function checkAutoSubmit() {
+    // Check if auto-submit is enabled
+    const autoSubmitCheckbox = document.getElementById('auto-submit');
+    if (!autoSubmitCheckbox || !autoSubmitCheckbox.checked) {
+        return;
+    }
+    
+    // Check if all labels have values
+    if (areAllLabelsSet()) {
+        // Auto-submit the form
+        const submitBtn = document.querySelector('.next-button');
+        if (submitBtn && validateForm()) {
+            submitBtn.click();
+        }
+    }
+}
+
+// Check if all labels have values
+function areAllLabelsSet() {
+    const form = document.getElementById('annotation-form');
+    if (!form) return false;
+    
+    // Get all label blocks
+    const labelBlocks = form.querySelectorAll('.label-block');
+    
+    for (let block of labelBlocks) {
+        const label = block.querySelector('.option-label');
+        if (!label) continue;
+        
+        // Check ChooseOne and ChooseMany
+        const choiceGroup = block.querySelector('.choice-group');
+        if (choiceGroup) {
+            const hiddenInput = choiceGroup.querySelector('input[type="hidden"]');
+            if (hiddenInput && !hiddenInput.value) {
+                return false;
+            }
+        }
+        
+        // Check FreeText
+        const textInput = block.querySelector('input[type="text"]');
+        if (textInput && !textInput.value.trim()) {
+            return false;
+        }
+    }
+    
+    return true;
+}
 
 // Preserve form values across page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -97,6 +152,30 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.checked) {
                 localStorage.setItem('unfilled-scope', this.value);
             }
+        });
+    });
+    
+    // Restore auto-submit checkbox state
+    const storedAutoSubmit = localStorage.getItem('auto-submit');
+    const autoSubmitCheckbox = document.getElementById('auto-submit');
+    
+    if (autoSubmitCheckbox) {
+        // Default is checked, so only uncheck if explicitly set to false
+        if (storedAutoSubmit === 'false') {
+            autoSubmitCheckbox.checked = false;
+        }
+        
+        // Save auto-submit state when it changes
+        autoSubmitCheckbox.addEventListener('change', function() {
+            localStorage.setItem('auto-submit', this.checked);
+        });
+    }
+    
+    // Add event listeners for text inputs to check auto-submit
+    const textInputs = document.querySelectorAll('.text-input');
+    textInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            checkAutoSubmit();
         });
     });
     
