@@ -1,7 +1,7 @@
 """
 Flask application for annotation website
 """
-from flask import Flask, render_template, request, redirect, url_for, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, abort, jsonify, send_from_directory
 import csv
 import os
 import base64
@@ -9,12 +9,15 @@ import cv2
 import io
 from datetime import datetime
 import pandas as pd
-from tasks import CountSubjects
+from tasks import CountSubjects, EmotionComparison
 
 app = Flask(__name__)
 
 # Register all tasks
-TASKS = {t.name: t for t in [CountSubjects()]}
+TASKS = {t.name: t for t in [CountSubjects(), EmotionComparison()]}
+
+# Video directory for serving video files
+VIDEO_DIR = "/data2/mjma/voices/test_data/videos/"
 
 
 # Custom template filter to convert numpy arrays to base64
@@ -78,10 +81,14 @@ def annotate(task, stim_id):
     total = len(df)
     progress = f"{current_idx}/{total}"
     
-    return render_template("annotate.html",
+    # Build stimulus_data dict from the row for templates that need it
+    stimulus_data = row.to_dict() if row is not None else {}
+    
+    return render_template(t.template,
                          task=t,
                          stim_id=stim_id,
                          renderables=renderables,
+                         stimulus_data=stimulus_data,
                          progress=progress,
                          annotator=request.cookies.get('annotator', ''))
 
@@ -252,6 +259,12 @@ def next_unfilled(task, start_id):
         return jsonify({"found": True, "stimulus_id": next_unfilled_id})
     
     return jsonify({"found": False})
+
+
+@app.route("/video/<filename>")
+def serve_video(filename):
+    """Serve video files from the data directory with range request support."""
+    return send_from_directory(VIDEO_DIR, filename, conditional=True)
 
 
 @app.route("/thanks")
