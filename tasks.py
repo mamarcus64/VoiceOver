@@ -44,6 +44,7 @@ class AnnotationTask(ABC):
     Subclass this to create specific annotation tasks.
     """
     name: str = None  # Task name used in URLs
+    template: str = "annotate.html"  # Template to use for rendering
     stimuli: pd.DataFrame = None  # Must include 'stimulus_id' column
     options: list = None  # List of Label objects (ChooseOne, ChooseMany, FreeText)
     
@@ -118,3 +119,50 @@ class CountSubjects(AnnotationTask):
             cv2.putText(placeholder, "Error loading video", (50, 240), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             return [placeholder] * 5
+
+
+class EmotionComparison(AnnotationTask):
+    """
+    Emotion comparison task: show two 10-second clips side by side.
+    Annotators judge which clip is happier and which is more energetic.
+    """
+    name = "emotion_comparison"
+    template = "emotion_compare.html"
+    
+    def __init__(self):
+        csv_path = Path(__file__).parent / "emotion_pairs.csv"
+        
+        if not csv_path.exists():
+            raise FileNotFoundError(
+                f"emotion_pairs.csv not found at {csv_path}. "
+                "Run generate_emotion_pairs.py first."
+            )
+        
+        self.stimuli = pd.read_csv(csv_path, dtype={'stimulus_id': str})
+        
+        # Ensure stimulus_id is zero-padded
+        self.stimuli['stimulus_id'] = self.stimuli['stimulus_id'].apply(
+            lambda x: f"{int(x):05d}"
+        )
+        
+        # Video directory
+        self.video_dir = "/data2/mjma/voices/test_data/videos/"
+        
+        # Define task options
+        self.options = [
+            ChooseOne("Which was happier?", ["Video A", "Video B"], required=True),
+            ChooseOne("Which was more energetic?", ["Video A", "Video B"], required=True),
+        ]
+    
+    def render_stimuli(self, row: pd.Series) -> list:
+        """Return video metadata as a dict (not actual frames)."""
+        return [{
+            'type': 'video_comparison',
+            'video_file': row['video_file'],
+            'clip_a_start': float(row['clip_a_start']),
+            'clip_a_end': float(row['clip_a_end']),
+            'clip_b_start': float(row['clip_b_start']),
+            'clip_b_end': float(row['clip_b_end']),
+            'subject_id': row['subject_id'],
+            'comparison_type': row['comparison_type'],
+        }]
