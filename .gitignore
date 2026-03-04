@@ -2,16 +2,31 @@
 venv/
 __pycache__/
 *.pyc
+*.egg-info/
 
 # Node
 frontend/node_modules/
+
+# Built frontend (rebuilt from source; backend/static/ is the deploy copy)
 frontend/dist/
 
-# Data (too large for git)
-data/videos/
-data/eyegaze_vad/_openface_cache/
+# Videos (downloaded on-demand via yt-dlp, too large for git)
+data/videos/*.mp4
+data/videos/*.webm
+data/videos/*.mkv
+
+# Annotations (user-generated per-machine, not shipped)
 data/annotations/
 
-# OS
+# OpenFace cache (generated locally)
+data/eyegaze_vad/_openface_cache/
+
+# OS junk
 .DS_Store
 Thumbs.db
+*.swp
+*~
+
+# IDE
+.vscode/
+.idea/

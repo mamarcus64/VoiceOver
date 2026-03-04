@@ -36,8 +36,10 @@ npm install --silent
 npm run build
 cd ..
 
-# --- Copy build to backend ---
-echo "[4/4] Linking frontend build for production serving..."
+# --- Copy build to backend static dir ---
+echo "[4/4] Deploying frontend build to backend/static/..."
+rm -rf backend/static
+cp -r frontend/dist backend/static
 echo ""
 
 echo "=== Setup Complete ==="

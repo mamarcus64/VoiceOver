@@ -4,6 +4,7 @@ import { usePlayback } from "../hooks/usePlayback";
 import TranscriptTrack from "./TranscriptTrack";
 import EmotionTrack from "./EmotionTrack";
 import AnnotationOverlay from "./AnnotationOverlay";
+import SmilingMoments from "./SmilingMoments";
 import type { Utterance, AudioVADData, EyegazeVADData } from "../types";
 
 const API_BASE = "/api/videos";
@@ -67,6 +68,7 @@ export default function PlayerPage() {
   const [eyegazeEmotion, setEyegazeEmotion] = useState<EyegazeVADData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"default" | "smiling">("default");
 
   useEffect(() => {
     if (!videoId) return;
@@ -101,6 +103,16 @@ export default function PlayerPage() {
       <header style={st.header}>
         <button style={st.backBtn} onClick={() => navigate("/")}>&#8592; Back</button>
         <h1 style={st.title}>{videoId}</h1>
+        <div style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
+          {(["default", "smiling"] as const).map((mode) => (
+            <button key={mode} onClick={() => setViewMode(mode)} style={{
+              ...st.speedBtn,
+              ...(viewMode === mode ? { backgroundColor: mode === "smiling" ? "#f59e0b" : "#3b82f6", borderColor: mode === "smiling" ? "#f59e0b" : "#3b82f6", color: "#fff" } : {}),
+            }}>
+              {mode === "default" ? "Full View" : "Smiling Moments"}
+            </button>
+          ))}
+        </div>
       </header>
 
       <div style={st.videoContainer}>
@@ -126,20 +138,25 @@ export default function PlayerPage() {
       {loading && <p style={st.msg}>Loading transcript &amp; emotions&hellip;</p>}
       {error && <p style={{ ...st.msg, color: "#f87171" }}>{error}</p>}
 
-      <div style={st.grid}>
-        <div>
-          <h3 style={st.colTitle}>Transcript</h3>
-          <TranscriptTrack utterances={utterances} currentTimeMs={state.currentTime * 1000} onSeek={(ms) => seek(ms / 1000)} />
-        </div>
-        <div style={st.emotionStack}>
-          <EmotionTrack title="Audio Emotion" segments={audioEmotion?.segments ?? []} currentTime={state.currentTime}
-            duration={state.duration} type="audio" onSeek={seek} />
-          <EmotionTrack title="Eyegaze Emotion" segments={eyegazeEmotion?.segments ?? []} currentTime={state.currentTime}
-            duration={state.duration} type="eyegaze" onSeek={seek} />
-        </div>
-      </div>
-
-      <AnnotationOverlay currentTime={state.currentTime} duration={state.duration} videoId={videoId} />
+      {viewMode === "default" ? (
+        <>
+          <div style={st.grid}>
+            <div>
+              <h3 style={st.colTitle}>Transcript</h3>
+              <TranscriptTrack utterances={utterances} currentTimeMs={state.currentTime * 1000} onSeek={(ms) => seek(ms / 1000)} />
+            </div>
+            <div style={st.emotionStack}>
+              <EmotionTrack title="Audio Emotion" segments={audioEmotion?.segments ?? []} currentTime={state.currentTime}
+                duration={state.duration} type="audio" onSeek={seek} />
+              <EmotionTrack title="Eyegaze Emotion" segments={eyegazeEmotion?.segments ?? []} currentTime={state.currentTime}
+                duration={state.duration} type="eyegaze" onSeek={seek} />
+            </div>
+          </div>
+          <AnnotationOverlay currentTime={state.currentTime} duration={state.duration} videoId={videoId} />
+        </>
+      ) : (
+        <SmilingMoments videoId={videoId} currentTime={state.currentTime} onSeek={seek} />
+      )}
     </div>
   );
 }

@@ -37,3 +37,12 @@ async def get_eyegaze_emotion(video_id: str):
                 "dominance": float(row["dominance"]),
             })
     return {"video_id": video_id, "segments": segments}
+
+
+@router.get("/videos/{video_id:path}/smiling-segments")
+async def get_smiling_segments(video_id: str):
+    path = DATA_DIR / "smiling_segments" / f"{video_id}.json"
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail=f"Smiling segments not found for video {video_id}")
+    with open(path) as f:
+        return json.load(f)
