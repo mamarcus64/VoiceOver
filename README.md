@@ -2,7 +2,21 @@
 
 A media playback and annotation tool for the VOICES dataset. Browse interview videos, view time-aligned transcripts and emotion data (audio-based and eyegaze-based VAD), and annotate emotions via keyboard.
 
-## Prerequisites
+## Quick Start
+
+```bash
+bash setup.sh
+bash start.sh
+```
+
+Then open **http://localhost:1945** in your browser.
+
+---
+
+<details>
+<summary><strong>Full Setup &amp; Troubleshooting</strong></summary>
+
+### Prerequisites
 
 - **Git LFS** (data files are stored with Git Large File Storage)
 - **Python 3.10+**
@@ -21,7 +35,7 @@ On macOS:
 brew install git-lfs python node ffmpeg yt-dlp
 ```
 
-## Quick Start
+### Step-by-step
 
 ```bash
 # 0. Clone (Git LFS pulls data automatically)
@@ -29,19 +43,17 @@ git lfs install
 git clone https://github.com/mamarcus64/VoiceOver.git
 cd VoiceOver
 
-# 1. Install dependencies and build
-./setup.sh
+# 1. Install dependencies and build frontend
+bash setup.sh
 
 # 2. Run the server
-source venv/bin/activate
-cd backend
-uvicorn main:app --host 0.0.0.0 --port 8000
+bash start.sh
 
 # 3. Open in browser
-# http://localhost:8000
+# http://localhost:1945
 ```
 
-## Development Mode
+### Development Mode
 
 For hot-reloading during development, run frontend and backend separately:
 
@@ -49,13 +61,17 @@ For hot-reloading during development, run frontend and backend separately:
 # Terminal 1: Backend with auto-reload
 source venv/bin/activate
 cd backend
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 1945
 
 # Terminal 2: Frontend dev server (proxies API to backend)
 cd frontend
 npm run dev
 # Open http://localhost:5173
 ```
+
+</details>
+
+---
 
 ## Project Structure
 

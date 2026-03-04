@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { usePlayback } from "../hooks/usePlayback";
 import TranscriptTrack from "./TranscriptTrack";
 import EmotionTrack from "./EmotionTrack";
-import AnnotationOverlay from "./AnnotationOverlay";
 import SmilingMoments from "./SmilingMoments";
 import type { Utterance, AudioVADData, EyegazeVADData } from "../types";
 
@@ -18,7 +17,7 @@ function formatTime(seconds: number): string {
 
 const st: Record<string, React.CSSProperties> = {
   page: {
-    padding: "24px",
+    padding: "12px 20px",
     maxWidth: "1800px",
     margin: "0 auto",
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -26,7 +25,7 @@ const st: Record<string, React.CSSProperties> = {
     backgroundColor: "#0f172a",
     minHeight: "100vh",
   },
-  header: { display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" },
+  header: { display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" },
   backBtn: {
     padding: "8px 14px", backgroundColor: "#334155", color: "#e2e8f0",
     border: "1px solid #475569", borderRadius: "6px", cursor: "pointer", fontSize: "0.9rem",
@@ -34,8 +33,8 @@ const st: Record<string, React.CSSProperties> = {
   title: { fontSize: "1.5rem", fontWeight: 600, color: "#f8fafc", margin: 0 },
   mainLayout: {
     display: "flex",
-    gap: "20px",
-    marginBottom: "20px",
+    gap: "16px",
+    marginBottom: "12px",
     alignItems: "flex-start",
   },
   leftPanel: {
@@ -48,12 +47,12 @@ const st: Record<string, React.CSSProperties> = {
     flex: "0 0 420px",
     display: "flex",
     flexDirection: "column" as const,
-    gap: "12px",
+    gap: "8px",
   },
   video: { width: "100%", borderRadius: "8px", backgroundColor: "#000" },
   controls: {
-    display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" as const,
-    padding: "10px 14px", backgroundColor: "#1e293b", borderRadius: "8px", marginTop: "10px",
+    display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" as const,
+    padding: "6px 10px", backgroundColor: "#1e293b", borderRadius: "8px", marginTop: "6px",
   },
   playPause: {
     padding: "8px 16px", backgroundColor: "#3b82f6", color: "#fff",
@@ -155,8 +154,8 @@ export default function PlayerPage() {
           </div>
 
           {viewMode === "smiling" && (
-            <div style={{ marginTop: "16px" }}>
-              <SmilingMoments videoId={videoId} currentTime={state.currentTime} onSeek={seek} />
+            <div style={{ marginTop: "8px" }}>
+              <SmilingMoments videoId={videoId} onSeek={seek} />
             </div>
           )}
         </div>
@@ -173,8 +172,6 @@ export default function PlayerPage() {
             duration={state.duration} type="eyegaze" onSeek={seek} />
         </div>
       </div>
-
-      <AnnotationOverlay currentTime={state.currentTime} duration={state.duration} videoId={videoId} />
     </div>
   );
 }
