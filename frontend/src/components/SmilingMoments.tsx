@@ -49,11 +49,10 @@ function filterAndMerge(segments: SmileSegment[], params: SmileParams): Filtered
 
 interface Props {
   videoId: string;
-  currentTime: number;
   onSeek: (time: number) => void;
 }
 
-export default function SmilingMoments({ videoId, currentTime, onSeek }: Props) {
+export default function SmilingMoments({ videoId, onSeek }: Props) {
   const [data, setData] = useState<SmilingSegmentsData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [params, setParams] = useState<SmileParams>(loadParams);
@@ -105,9 +104,9 @@ export default function SmilingMoments({ videoId, currentTime, onSeek }: Props) 
     <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
       {/* Left: Parameters */}
       <div style={{
-        flex: "0 0 280px", backgroundColor: "#1a1a2e", borderRadius: "8px", padding: "16px",
+        flex: "0 0 260px", backgroundColor: "#1a1a2e", borderRadius: "8px", padding: "10px 12px",
       }}>
-        <h3 style={{ color: "#f8fafc", fontSize: "1rem", marginBottom: "16px" }}>Smile Parameters</h3>
+        <h3 style={{ color: "#f8fafc", fontSize: "0.9rem", marginBottom: "8px" }}>Smile Parameters</h3>
         {([
           ["intensityThreshold", "Intensity threshold", 0.5, 4.0, 0.1],
           ["mergeDistance", "Merge distance (s)", 0, 5, 0.1],
@@ -115,7 +114,7 @@ export default function SmilingMoments({ videoId, currentTime, onSeek }: Props) 
           ["contextBefore", "Context before (s)", 0, 10, 0.5],
           ["contextAfter", "Context after (s)", 0, 10, 0.5],
         ] as [keyof SmileParams, string, number, number, number][]).map(([key, label, min, max, step]) => (
-          <div key={key} style={{ marginBottom: "12px" }}>
+          <div key={key} style={{ marginBottom: "7px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", color: "#94a3b8", fontSize: "12px", marginBottom: "4px" }}>
               <span>{label}</span>
               <span style={{ color: "#e2e8f0", fontWeight: 600 }}>{params[key]}</span>
@@ -130,8 +129,8 @@ export default function SmilingMoments({ videoId, currentTime, onSeek }: Props) 
 
         {/* Stats */}
         {stats && (
-          <div style={{ marginTop: "16px", padding: "12px", backgroundColor: "#16213e", borderRadius: "6px" }}>
-            <div style={{ color: "#f8fafc", fontSize: "13px", fontWeight: 600, marginBottom: "8px" }}>Stats</div>
+          <div style={{ marginTop: "8px", padding: "8px 10px", backgroundColor: "#16213e", borderRadius: "6px" }}>
+            <div style={{ color: "#f8fafc", fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>Stats</div>
             <div style={{ color: "#94a3b8", fontSize: "12px", lineHeight: 1.8 }}>
               Moments: <b style={{ color: "#f59e0b" }}>{stats.count}</b><br />
               Total smile: <b style={{ color: "#f59e0b" }}>{stats.totalDur.toFixed(1)}s</b><br />
@@ -144,22 +143,21 @@ export default function SmilingMoments({ videoId, currentTime, onSeek }: Props) 
       </div>
 
       {/* Right: Moments list */}
-      <div style={{ flex: 1, minWidth: "300px", maxHeight: "500px", overflowY: "auto" }}>
+      <div style={{ flex: 1, minWidth: "300px", maxHeight: "380px", overflowY: "auto" }}>
         {moments.length === 0 ? (
           <div style={{ color: "#64748b", padding: "24px", textAlign: "center" }}>
             No smiling moments match current parameters.
           </div>
         ) : (
           moments.map((m, i) => {
-            const isActive = activeIdx === i ||
-              (currentTime >= m.play_start && currentTime <= m.play_end);
+            const isActive = activeIdx === i;
             return (
               <div
                 key={`${m.start_ts}-${i}`}
                 onClick={() => handleMomentClick(i)}
                 style={{
                   display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "10px 14px", marginBottom: "4px", borderRadius: "6px", cursor: "pointer",
+                  padding: "7px 10px", marginBottom: "3px", borderRadius: "6px", cursor: "pointer",
                   backgroundColor: isActive ? "#422006" : "#16213e",
                   border: isActive ? "1px solid #f59e0b" : "1px solid transparent",
                 }}

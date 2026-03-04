@@ -122,7 +122,7 @@ export default function TranscriptTrack({
   }, [currentTimeMs, autoScroll]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", maxHeight: "500px" }}>
+    <div style={{ display: "flex", flexDirection: "column", maxHeight: "380px" }}>
       {/* Toolbar */}
       <div style={{
         display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px",
@@ -223,8 +223,8 @@ export default function TranscriptTrack({
               style={{
                 display: "flex",
                 gap: "12px",
-                padding: "10px 12px",
-                marginBottom: "4px",
+                padding: "7px 10px",
+                marginBottom: "3px",
                 backgroundColor: isActive ? ACTIVE_BG : ROW_BG,
                 borderRadius: "6px",
                 cursor: "pointer",

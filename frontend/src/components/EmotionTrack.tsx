@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 
 const DARK_BG = "#1a1a2e";
 const VALENCE_COLOR = "#22c55e";
@@ -6,6 +6,9 @@ const AROUSAL_COLOR = "#ef4444";
 const DOMINANCE_COLOR = "#3b82f6";
 const PADDING_LEFT = 40;
 const PADDING_RIGHT = 8;
+
+// Half-width of the zoom window in seconds
+const ZOOM_HALF = 5;
 
 interface AudioSegment {
   start: number;
@@ -41,6 +44,15 @@ export default function EmotionTrack({
 }: EmotionTrackProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [showValence, setShowValence] = useState(true);
+  const [showArousal, setShowArousal] = useState(true);
+  const [showDominance, setShowDominance] = useState(false);
+
+  // The visible time window centered on currentTime
+  const winStart = Math.max(0, currentTime - ZOOM_HALF);
+  const winEnd = Math.min(Math.max(duration, 0.001), currentTime + ZOOM_HALF);
+  const winDuration = winEnd - winStart;
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -64,8 +76,9 @@ export default function EmotionTrack({
     const chartW = w - padding.left - padding.right;
     const chartH = h - padding.top - padding.bottom;
 
+    // Map absolute time → canvas x using the zoom window
     const x = (t: number) =>
-      padding.left + (t / Math.max(duration, 0.001)) * chartW;
+      padding.left + ((t - winStart) / Math.max(winDuration, 0.001)) * chartW;
     const y = (v: number) => padding.top + chartH * (1 - v);
 
     // Horizontal grid lines at y=0.0, 0.5, 1.0
@@ -95,13 +108,17 @@ export default function EmotionTrack({
       color: string,
       lineWidth: number = 2
     ) => {
-      if (points.length < 2) return;
+      // Only keep points within the visible window (with a small buffer)
+      const visible = points.filter(
+        (p) => p.t >= winStart - 0.5 && p.t <= winEnd + 0.5
+      );
+      if (visible.length < 2) return;
       ctx.beginPath();
       ctx.strokeStyle = color;
       ctx.lineWidth = lineWidth;
-      ctx.moveTo(x(points[0].t), y(points[0].v));
-      for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(x(points[i].t), y(points[i].v));
+      ctx.moveTo(x(visible[0].t), y(visible[0].v));
+      for (let i = 1; i < visible.length; i++) {
+        ctx.lineTo(x(visible[i].t), y(visible[i].v));
       }
       ctx.stroke();
     };
@@ -126,9 +143,9 @@ export default function EmotionTrack({
       aPoints.sort(sortByT);
       dPoints.sort(sortByT);
 
-      drawLine(vPoints, VALENCE_COLOR);
-      drawLine(aPoints, AROUSAL_COLOR);
-      drawLine(dPoints, DOMINANCE_COLOR);
+      if (showValence) drawLine(vPoints, VALENCE_COLOR);
+      if (showArousal) drawLine(aPoints, AROUSAL_COLOR);
+      if (showDominance) drawLine(dPoints, DOMINANCE_COLOR);
     } else {
       const segs = segments as EyegazeSegment[];
       const vPoints = segs.map((s) => ({ t: s.timestamp, v: s.valence }));
@@ -139,11 +156,12 @@ export default function EmotionTrack({
       aPoints.sort((a, b) => a.t - b.t);
       dPoints.sort((a, b) => a.t - b.t);
 
-      drawLine(vPoints, VALENCE_COLOR);
-      drawLine(aPoints, AROUSAL_COLOR);
-      drawLine(dPoints, DOMINANCE_COLOR);
+      if (showValence) drawLine(vPoints, VALENCE_COLOR);
+      if (showArousal) drawLine(aPoints, AROUSAL_COLOR);
+      if (showDominance) drawLine(dPoints, DOMINANCE_COLOR);
     }
 
+    // Playhead is always centered in the zoom window
     const playheadX = x(currentTime);
     ctx.beginPath();
     ctx.strokeStyle = "#ffffff";
@@ -152,30 +170,32 @@ export default function EmotionTrack({
     ctx.lineTo(playheadX, h - padding.bottom);
     ctx.stroke();
 
-    // Legend in top-right corner
-    const legendX = padding.left + chartW - 8;
-    const legendY = padding.top + 12;
-    const legendItems: { color: string; label: string }[] = [
-      { color: VALENCE_COLOR, label: "Valence" },
-      { color: AROUSAL_COLOR, label: "Arousal" },
-      { color: DOMINANCE_COLOR, label: "Dominance" },
-    ];
-    ctx.textAlign = "right";
-    ctx.textBaseline = "middle";
-    ctx.font = "10px sans-serif";
+    // Time labels: left edge, center, right edge of window
     ctx.fillStyle = labelColor;
-    legendItems.forEach((item, i) => {
-      const ly = legendY + i * 14;
-      ctx.strokeStyle = item.color;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(legendX - 20, ly);
-      ctx.lineTo(legendX - 6, ly);
-      ctx.stroke();
-      ctx.fillStyle = labelColor;
-      ctx.fillText(item.label, legendX - 24, ly);
-    });
-  }, [segments, currentTime, duration, type]);
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const timeY = h - padding.bottom + 3;
+    const fmt = (t: number) => {
+      const m = Math.floor(t / 60);
+      const s = Math.floor(t % 60);
+      return `${m}:${s.toString().padStart(2, "0")}`;
+    };
+    ctx.fillText(fmt(winStart), padding.left, timeY);
+    ctx.fillText(fmt(currentTime), padding.left + chartW / 2, timeY);
+    ctx.fillText(fmt(winEnd), padding.left + chartW, timeY);
+  }, [
+    segments,
+    currentTime,
+    duration,
+    type,
+    showValence,
+    showArousal,
+    showDominance,
+    winStart,
+    winEnd,
+    winDuration,
+  ]);
 
   useEffect(() => {
     draw();
@@ -195,35 +215,73 @@ export default function EmotionTrack({
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const chartW = rect.width - PADDING_LEFT - PADDING_RIGHT;
-    const x = e.clientX - rect.left - PADDING_LEFT;
-    const t = (Math.max(0, Math.min(x, chartW)) / Math.max(chartW, 1)) * duration;
-    onSeek(t);
+    const xPos = e.clientX - rect.left - PADDING_LEFT;
+    const frac = Math.max(0, Math.min(xPos, chartW)) / Math.max(chartW, 1);
+    const t = winStart + frac * winDuration;
+    onSeek(Math.max(0, Math.min(t, duration)));
   };
+
+  const toggleBtn = (
+    label: string,
+    color: string,
+    active: boolean,
+    toggle: () => void
+  ) => (
+    <button
+      onClick={toggle}
+      style={{
+        padding: "2px 10px",
+        borderRadius: "12px",
+        border: `1.5px solid ${color}`,
+        backgroundColor: active ? color : "transparent",
+        color: active ? "#1a1a2e" : color,
+        fontSize: "11px",
+        fontWeight: 600,
+        cursor: "pointer",
+        transition: "background 0.15s, color 0.15s",
+      }}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <div
       style={{
         backgroundColor: DARK_BG,
         borderRadius: "8px",
-        padding: "12px",
+        padding: "8px 10px",
       }}
     >
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
           marginBottom: "8px",
-          color: "#e2e8f0",
-          fontWeight: 600,
-          fontSize: "14px",
         }}
       >
-        {title}
+        <span style={{ color: "#e2e8f0", fontWeight: 600, fontSize: "14px" }}>
+          {title}
+        </span>
+        <div style={{ display: "flex", gap: "6px" }}>
+          {toggleBtn("Valence", VALENCE_COLOR, showValence, () =>
+            setShowValence((v) => !v)
+          )}
+          {toggleBtn("Arousal", AROUSAL_COLOR, showArousal, () =>
+            setShowArousal((v) => !v)
+          )}
+          {toggleBtn("Dominance", DOMINANCE_COLOR, showDominance, () =>
+            setShowDominance((v) => !v)
+          )}
+        </div>
       </div>
       <canvas
         ref={canvasRef}
         onClick={handleClick}
         style={{
           width: "100%",
-          height: "120px",
+          height: "90px",
           display: "block",
           borderRadius: "4px",
           cursor: onSeek ? "pointer" : "default",
