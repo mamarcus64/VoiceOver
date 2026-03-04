@@ -19,7 +19,7 @@ function formatTime(seconds: number): string {
 const st: Record<string, React.CSSProperties> = {
   page: {
     padding: "24px",
-    maxWidth: "1200px",
+    maxWidth: "1800px",
     margin: "0 auto",
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     color: "#e2e8f0",
@@ -32,11 +32,28 @@ const st: Record<string, React.CSSProperties> = {
     border: "1px solid #475569", borderRadius: "6px", cursor: "pointer", fontSize: "0.9rem",
   },
   title: { fontSize: "1.5rem", fontWeight: 600, color: "#f8fafc", margin: 0 },
-  videoContainer: { maxWidth: "960px", margin: "0 auto 16px" },
+  mainLayout: {
+    display: "flex",
+    gap: "20px",
+    marginBottom: "20px",
+    alignItems: "flex-start",
+  },
+  leftPanel: {
+    flex: "1 1 60%",
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column" as const,
+  },
+  rightPanel: {
+    flex: "0 0 420px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "12px",
+  },
   video: { width: "100%", borderRadius: "8px", backgroundColor: "#000" },
   controls: {
-    display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" as const,
-    padding: "12px 16px", backgroundColor: "#1e293b", borderRadius: "8px", marginBottom: "20px",
+    display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" as const,
+    padding: "10px 14px", backgroundColor: "#1e293b", borderRadius: "8px", marginTop: "10px",
   },
   playPause: {
     padding: "8px 16px", backgroundColor: "#3b82f6", color: "#fff",
@@ -49,10 +66,8 @@ const st: Record<string, React.CSSProperties> = {
   },
   speedActive: { backgroundColor: "#3b82f6", borderColor: "#3b82f6", color: "#fff" },
   timeDisplay: { color: "#94a3b8", fontSize: "0.9rem", fontVariantNumeric: "tabular-nums", minWidth: "100px" },
-  seekBar: { flex: 1, minWidth: "200px", accentColor: "#3b82f6" },
-  grid: { display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "16px", marginBottom: "20px" },
-  colTitle: { fontSize: "1rem", fontWeight: 600, color: "#f8fafc", marginBottom: "8px" },
-  emotionStack: { display: "flex", flexDirection: "column" as const, gap: "12px" },
+  seekBar: { flex: 1, minWidth: "100px", accentColor: "#3b82f6" },
+  colTitle: { fontSize: "0.85rem", fontWeight: 600, color: "#f8fafc", marginBottom: "6px" },
   msg: { textAlign: "center" as const, padding: "32px", color: "#64748b" },
 };
 
@@ -109,54 +124,57 @@ export default function PlayerPage() {
               ...st.speedBtn,
               ...(viewMode === mode ? { backgroundColor: mode === "smiling" ? "#f59e0b" : "#3b82f6", borderColor: mode === "smiling" ? "#f59e0b" : "#3b82f6", color: "#fff" } : {}),
             }}>
-              {mode === "default" ? "Full View" : "Smiling Moments"}
+              {mode === "default" ? "Full Video" : "Smiling Moments"}
             </button>
           ))}
         </div>
       </header>
 
-      <div style={st.videoContainer}>
-        <video ref={videoRef} src={`${API_BASE}/${videoId}/stream`} preload="auto" playsInline style={st.video} />
-      </div>
-
-      <div style={st.controls}>
-        <button style={st.playPause} onClick={togglePlay}>
-          {state.playing ? "\u23F8 Pause" : "\u25B6 Play"}
-        </button>
-        <div style={st.speedGroup}>
-          {SPEEDS.map((r) => (
-            <button key={r} style={{ ...st.speedBtn, ...(state.speed === r ? st.speedActive : {}) }} onClick={() => setSpeed(r)}>
-              {r}x
-            </button>
-          ))}
-        </div>
-        <span style={st.timeDisplay}>{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
-        <input type="range" min={0} max={state.duration || 1} step={0.1} value={state.currentTime}
-          onChange={(e) => seek(Number(e.target.value))} style={st.seekBar} />
-      </div>
-
       {loading && <p style={st.msg}>Loading transcript &amp; emotions&hellip;</p>}
       {error && <p style={{ ...st.msg, color: "#f87171" }}>{error}</p>}
 
-      {viewMode === "default" ? (
-        <>
-          <div style={st.grid}>
-            <div>
-              <h3 style={st.colTitle}>Transcript</h3>
-              <TranscriptTrack utterances={utterances} currentTimeMs={state.currentTime * 1000} onSeek={(ms) => seek(ms / 1000)} />
+      <div style={st.mainLayout}>
+        {/* Left panel: video + controls, optionally smiling moments below */}
+        <div style={st.leftPanel}>
+          <video ref={videoRef} src={`${API_BASE}/${videoId}/stream`} preload="auto" playsInline style={st.video} />
+
+          <div style={st.controls}>
+            <button style={st.playPause} onClick={togglePlay}>
+              {state.playing ? "\u23F8 Pause" : "\u25B6 Play"}
+            </button>
+            <div style={st.speedGroup}>
+              {SPEEDS.map((r) => (
+                <button key={r} style={{ ...st.speedBtn, ...(state.speed === r ? st.speedActive : {}) }} onClick={() => setSpeed(r)}>
+                  {r}x
+                </button>
+              ))}
             </div>
-            <div style={st.emotionStack}>
-              <EmotionTrack title="Audio Emotion" segments={audioEmotion?.segments ?? []} currentTime={state.currentTime}
-                duration={state.duration} type="audio" onSeek={seek} />
-              <EmotionTrack title="Eyegaze Emotion" segments={eyegazeEmotion?.segments ?? []} currentTime={state.currentTime}
-                duration={state.duration} type="eyegaze" onSeek={seek} />
-            </div>
+            <span style={st.timeDisplay}>{formatTime(state.currentTime)} / {formatTime(state.duration)}</span>
+            <input type="range" min={0} max={state.duration || 1} step={0.1} value={state.currentTime}
+              onChange={(e) => seek(Number(e.target.value))} style={st.seekBar} />
           </div>
-          <AnnotationOverlay currentTime={state.currentTime} duration={state.duration} videoId={videoId} />
-        </>
-      ) : (
-        <SmilingMoments videoId={videoId} currentTime={state.currentTime} onSeek={seek} />
-      )}
+
+          {viewMode === "smiling" && (
+            <div style={{ marginTop: "16px" }}>
+              <SmilingMoments videoId={videoId} currentTime={state.currentTime} onSeek={seek} />
+            </div>
+          )}
+        </div>
+
+        {/* Right panel: transcript + emotion tracks (always visible) */}
+        <div style={st.rightPanel}>
+          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <h3 style={st.colTitle}>Transcript</h3>
+            <TranscriptTrack utterances={utterances} currentTimeMs={state.currentTime * 1000} onSeek={(ms) => seek(ms / 1000)} />
+          </div>
+          <EmotionTrack title="Audio Emotion" segments={audioEmotion?.segments ?? []} currentTime={state.currentTime}
+            duration={state.duration} type="audio" onSeek={seek} />
+          <EmotionTrack title="Eyegaze Emotion" segments={eyegazeEmotion?.segments ?? []} currentTime={state.currentTime}
+            duration={state.duration} type="eyegaze" onSeek={seek} />
+        </div>
+      </div>
+
+      <AnnotationOverlay currentTime={state.currentTime} duration={state.duration} videoId={videoId} />
     </div>
   );
 }

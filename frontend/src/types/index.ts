@@ -18,7 +18,7 @@ export interface Word {
 
 export interface Utterance {
   speaker: "interviewer" | "interviewee";
-  tag: string;
+  tag: string | null;
   text: string;
   start_ms: number;
   end_ms: number;

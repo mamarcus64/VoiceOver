@@ -66,8 +66,29 @@ export default function EmotionTrack({
 
     const x = (t: number) =>
       padding.left + (t / Math.max(duration, 0.001)) * chartW;
-    const y = (v: number) =>
-      padding.top + chartH - (v * chartH) / Math.max(chartH, 0.001);
+    const y = (v: number) => padding.top + chartH * (1 - v);
+
+    // Horizontal grid lines at y=0.0, 0.5, 1.0
+    const gridColor = "rgba(100,116,139,0.3)";
+    for (const vVal of [0, 0.5, 1]) {
+      ctx.beginPath();
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.moveTo(padding.left, y(vVal));
+      ctx.lineTo(padding.left + chartW, y(vVal));
+      ctx.stroke();
+    }
+
+    // Y-axis labels
+    const labelColor = "#64748b";
+    ctx.fillStyle = labelColor;
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    const labelX = padding.left - 6;
+    ctx.fillText("1.0", labelX, y(1));
+    ctx.fillText("0.5", labelX, y(0.5));
+    ctx.fillText("0.0", labelX, y(0));
 
     const drawLine = (
       points: { t: number; v: number }[],
@@ -130,6 +151,30 @@ export default function EmotionTrack({
     ctx.moveTo(playheadX, padding.top);
     ctx.lineTo(playheadX, h - padding.bottom);
     ctx.stroke();
+
+    // Legend in top-right corner
+    const legendX = padding.left + chartW - 8;
+    const legendY = padding.top + 12;
+    const legendItems: { color: string; label: string }[] = [
+      { color: VALENCE_COLOR, label: "Valence" },
+      { color: AROUSAL_COLOR, label: "Arousal" },
+      { color: DOMINANCE_COLOR, label: "Dominance" },
+    ];
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = labelColor;
+    legendItems.forEach((item, i) => {
+      const ly = legendY + i * 14;
+      ctx.strokeStyle = item.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(legendX - 20, ly);
+      ctx.lineTo(legendX - 6, ly);
+      ctx.stroke();
+      ctx.fillStyle = labelColor;
+      ctx.fillText(item.label, legendX - 24, ly);
+    });
   }, [segments, currentTime, duration, type]);
 
   useEffect(() => {

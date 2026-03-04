@@ -14,8 +14,8 @@ router = APIRouter()
 
 @router.get("/videos/{video_id:path}/transcript")
 async def get_transcript(video_id: str):
-    path = DATA_DIR / "transcripts" / f"{video_id}.json"
+    path = DATA_DIR / "transcripts_llm" / f"{video_id}.json"
     if not path.is_file():
-        raise HTTPException(status_code=404, detail=f"Transcript not found for video {video_id}")
+        raise HTTPException(status_code=404, detail=f"Transcript not found for video {video_id} (checked transcripts_llm)")
     with open(path) as f:
         return json.load(f)
