@@ -120,9 +120,10 @@ async def video_status(video_id: str):
         entry = video_manager.get_video(video_id)
         if entry is None:
             raise HTTPException(status_code=404, detail="Video not found in manifest")
+        file_exists = video_manager.get_video_path(video_id) is not None
         return {
             "video_id": video_id,
-            "status": "complete" if entry.get("downloaded") else "none",
+            "status": "complete" if file_exists else "none",
             "error": None,
         }
     return status
