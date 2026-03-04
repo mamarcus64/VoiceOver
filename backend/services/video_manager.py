@@ -34,11 +34,24 @@ class VideoManager:
         self._lock = threading.Lock()
 
         self._load_manifest()
+        self._reconcile_downloaded()
 
     def _load_manifest(self) -> None:
         with open(self.manifest_path, "r") as f:
             self._manifest = json.load(f)
         self._manifest_by_id = {v["id"]: v for v in self._manifest}
+
+    def _reconcile_downloaded(self) -> None:
+        """Sync each entry's 'downloaded' flag with whether the file
+        actually exists on disk (primary or fallback directory)."""
+        changed = False
+        for entry in self._manifest:
+            file_exists = self.get_video_path(entry["id"]) is not None
+            if entry.get("downloaded") != file_exists:
+                entry["downloaded"] = file_exists
+                changed = True
+        if changed:
+            self._save_manifest()
 
     def _save_manifest(self) -> None:
         with open(self.manifest_path, "w") as f:
