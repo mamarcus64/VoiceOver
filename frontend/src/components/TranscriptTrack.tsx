@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { Utterance } from "../types";
+import type { Utterance, Word } from "../types";
 
 const DARK_BG = "#1a1a2e";
 const ROW_BG = "#16213e";
@@ -7,11 +7,33 @@ const ACTIVE_BG = "#0f3460";
 const INTERVIEWER = "#3b82f6";
 const INTERVIEWEE = "#22c55e";
 const NON_VERBAL = "#94a3b8";
+const CURRENT_WORD_BG = "#f59e0b";
+const CURRENT_WORD_TEXT = "#0f172a";
+const FUTURE_WORD = "#64748b";
 
 interface TranscriptTrackProps {
   utterances: Utterance[];
   currentTimeMs: number;
   onSeek: (ms: number) => void;
+}
+
+function getCurrentWordIndex(words: Word[], currentTimeMs: number): number {
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const nextWord = words[i + 1];
+    const isCurrent =
+      currentTimeMs >= word.ms &&
+      (nextWord === undefined || currentTimeMs < nextWord.ms);
+    if (isCurrent) return i;
+  }
+  return -1;
+}
+
+function getDisplayTag(u: Utterance): string {
+  if (u.tag != null && u.tag !== "") {
+    return u.tag;
+  }
+  return u.speaker === "interviewer" ? "Interviewer" : "Interviewee";
 }
 
 export default function TranscriptTrack({
@@ -41,6 +63,65 @@ export default function TranscriptTrack({
         const isActive =
           currentTimeMs >= u.start_ms && currentTimeMs < u.end_ms;
         const isNonVerbal = u.type === "non_verbal";
+        const hasWords = u.words && u.words.length > 0;
+        const currentWordIndex = hasWords
+          ? getCurrentWordIndex(u.words!, currentTimeMs)
+          : -1;
+        const baseTextColor = isNonVerbal ? NON_VERBAL : "#e2e8f0";
+
+        const renderTextContent = () => {
+          if (isActive && hasWords) {
+            return u.words!.map((word, wi) => {
+              const isCurrent = wi === currentWordIndex;
+              const isFuture = wi > currentWordIndex;
+
+              let color = baseTextColor;
+              let backgroundColor = "transparent";
+              let padding = "0";
+              let borderRadius = "0";
+
+              if (isCurrent) {
+                color = CURRENT_WORD_TEXT;
+                backgroundColor = CURRENT_WORD_BG;
+                padding = "2px 4px";
+                borderRadius = "4px";
+              } else if (isFuture) {
+                color = FUTURE_WORD;
+              }
+
+              return (
+                <span
+                  key={`${word.ms}-${wi}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSeek(word.ms);
+                  }}
+                  style={{
+                    color,
+                    backgroundColor,
+                    padding,
+                    borderRadius,
+                    fontStyle: isNonVerbal ? "italic" : "normal",
+                    cursor: "pointer",
+                  }}
+                >
+                  {word.text}
+                  {wi < u.words!.length - 1 ? " " : ""}
+                </span>
+              );
+            });
+          }
+
+          return (
+            <span
+              style={{
+                fontStyle: isNonVerbal ? "italic" : "normal",
+              }}
+            >
+              {u.text}
+            </span>
+          );
+        };
 
         return (
           <div
@@ -60,7 +141,7 @@ export default function TranscriptTrack({
             <span
               style={{
                 flexShrink: 0,
-                width: "100px",
+                width: "50px",
                 color: isNonVerbal
                   ? NON_VERBAL
                   : u.speaker === "interviewer"
@@ -70,18 +151,17 @@ export default function TranscriptTrack({
                 fontSize: "13px",
               }}
             >
-              {u.tag}
+              {getDisplayTag(u)}
             </span>
             <span
               style={{
                 flex: 1,
-                color: isNonVerbal ? NON_VERBAL : "#e2e8f0",
-                fontStyle: isNonVerbal ? "italic" : "normal",
+                color: baseTextColor,
                 fontSize: "14px",
                 lineHeight: 1.5,
               }}
             >
-              {u.text}
+              {renderTextContent()}
             </span>
           </div>
         );
