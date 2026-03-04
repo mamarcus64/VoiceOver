@@ -15,6 +15,7 @@ from tqdm import tqdm
 
 TRANSCRIPT_DIR = "/home/mjma/voices/test_data/transcripts"
 OUTPUT_DIR = "/home/mjma/voices/VoiceOver/data/transcripts"
+OFFSETS_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "transcript_offsets.json")
 
 INTERVIEWER_TAGS = {
     'CREW', 'INT', 'INT 1', 'INT 2', 'INT1', 'INT2', 'UNIDENTIFIED SPEAKER'
@@ -142,8 +143,13 @@ def _build_utterance(group):
     return utt
 
 
-def parse_xml_to_utterances(xml_path):
-    """Parse an XML transcript into a list of structured utterance dicts."""
+def parse_xml_to_utterances(xml_path, offset_ms=0):
+    """Parse an XML transcript into a list of structured utterance dicts.
+
+    If offset_ms is provided, it is subtracted from every raw 'm' value to
+    convert tape-time to video-time.  (offset_ms = xml_ms − video_ms, so
+    corrected = raw_ms − offset_ms.)
+    """
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
@@ -171,7 +177,7 @@ def parse_xml_to_utterances(xml_path):
             if after0:
                 ms_str = spans[0].attrib.get('m')
                 if ms_str:
-                    entries.append((current_role, current_tag, after0, int(ms_str)))
+                    entries.append((current_role, current_tag, after0, int(ms_str) - offset_ms))
             start_idx = 1
         else:
             inferred_role = _classify_untagged_paragraph(
@@ -191,7 +197,7 @@ def parse_xml_to_utterances(xml_path):
                 continue
 
             try:
-                ms = int(ms_str)
+                ms = int(ms_str) - offset_ms
             except ValueError:
                 continue
 
@@ -236,11 +242,21 @@ def parse_xml_to_utterances(xml_path):
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+    offsets = {}
+    offsets_path = os.path.normpath(OFFSETS_PATH)
+    if os.path.isfile(offsets_path):
+        with open(offsets_path) as f:
+            offsets = json.load(f)
+        print(f"Loaded {len(offsets)} time offsets from {offsets_path}")
+    else:
+        print(f"No offsets file found at {offsets_path} — using raw timestamps")
+
     xml_files = sorted(f for f in os.listdir(TRANSCRIPT_DIR) if f.endswith('.xml'))
     print(f"Found {len(xml_files)} XML files to process")
 
     successes = 0
     failures = []
+    no_offset = 0
     total_utterances = 0
     sample_file = None
     sample_utterances = None
@@ -250,8 +266,12 @@ def main():
         video_id = os.path.splitext(filename)[0]
         out_path = os.path.join(OUTPUT_DIR, f"{video_id}.json")
 
+        offset_ms = offsets.get(video_id, 0)
+        if offset_ms == 0 and offsets:
+            no_offset += 1
+
         try:
-            utterances = parse_xml_to_utterances(xml_path)
+            utterances = parse_xml_to_utterances(xml_path, offset_ms=offset_ms)
             with open(out_path, 'w', encoding='utf-8') as f:
                 json.dump(utterances, f, ensure_ascii=False, indent=2)
             successes += 1
@@ -265,6 +285,8 @@ def main():
     print(f"\n{'=' * 60}")
     print(f"Total files processed successfully: {successes}")
     print(f"Total files failed: {len(failures)}")
+    if no_offset:
+        print(f"Videos with no offset (used raw timestamps): {no_offset}")
     if failures:
         print("\nFailed files:")
         for fname, err in failures:
