@@ -92,9 +92,12 @@ independent set of word-level timestamps in video-time. Aligning the two word
 sequences recovers the offset.
 
 1. **ASR pass.** We run `faster-whisper` (CTranslate2 backend, `base` model)
-   on the first 300 seconds of each video's audio, extracting word-level
-   timestamps. Only the beginning of the video is needed because a small number
-   of matched words suffices to estimate a single scalar.
+   on the beginning of each video's audio, extracting word-level timestamps.
+   An adaptive duration strategy is used: the script first transcribes a short
+   window (default 60 s); if fewer than 15 word matches result (common for
+   videos with long silent intros), it retries with a 300 s window. This keeps
+   average per-video time low (~0.5 s for fast cases) while still covering
+   videos whose speech onset is 40+ seconds in.
 
 2. **Word matching.** We walk the ASR word list and the XML word list in
    parallel. For each ASR word, we scan forward in the XML for a
@@ -104,31 +107,50 @@ sequences recovers the offset.
 
 3. **Robust estimation.** We take the **median** of all δ samples as the
    offset estimate. The median is insensitive to outliers caused by ASR
-   mis-recognitions, XML transcription errors, or timing jitter. As a quality
-   check, we compute the median absolute deviation (MAD) and the number of
-   matched words; videos with too few matches or too high MAD are flagged for
-   manual review.
+   mis-recognitions, XML transcription errors, or timing jitter. A second
+   pass trims any sample more than 5 s from the initial median before
+   recomputing. As a quality check, we report the median absolute deviation
+   (MAD) and the number of inlier matches; videos with fewer than 15 matches
+   or MAD > 1 s are flagged for manual review.
 
-4. **Output.** A JSON file mapping each video ID to its offset in milliseconds:
+4. **Concurrency.** Multiple videos are processed in parallel via a thread
+   pool (default 8 workers). Each worker runs the full ffmpeg→ASR→alignment
+   pipeline independently, sharing a single GPU-resident Whisper model.
+   CTranslate2 handles concurrent inference scheduling internally. XML
+   transcripts are pre-parsed in parallel before the main loop begins.
+
+5. **Output.** A JSON file mapping each video ID to its offset in milliseconds
+   (`δ = xml_ms − video_ms`; negative values mean the XML timestamps are
+   earlier than the corresponding video time):
 
    ```json
    {
-     "8.1": 11240,
-     "8.2": 10870,
+     "8.1": -8930,
+     "8.2": -10400,
      ...
    }
    ```
 
+   `standardize_transcripts.py` applies the correction as
+   `corrected_ms = raw_ms − offset`, which shifts timestamps forward when the
+   offset is negative.
+
 ### Reproducing
 
 ```bash
-CUDA_VISIBLE_DEVICES=2 python VoiceOver/scripts/compute_transcript_offsets.py
+CUDA_VISIBLE_DEVICES=2 python VoiceOver/scripts/compute_transcript_offsets.py \
+    --asr-seconds 60 --workers 8 --resume
 ```
 
 Options:
 - `--limit N` — process only the first N videos (for testing)
-- `--asr-seconds N` — how many seconds of audio to transcribe (default 300)
+- `--asr-seconds N` — initial ASR window in seconds (default 300; recommend 60
+  with adaptive retry)
 - `--model SIZE` — Whisper model size (default `base`)
+- `--workers N` — concurrent processing threads (default 8)
+- `--resume` — skip videos already present in the output file
+- `--video-list FILE` — path to a text file with one video ID per line
+  (overrides automatic detection from manifest + disk)
 
 ---
 
