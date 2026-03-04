@@ -11,7 +11,8 @@ from api.emotions import router as emotions_router
 from api.annotations import router as annotations_router
 
 DATA_DIR = Path(os.environ.get("VOICEOVER_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+FRONTEND_DIR = STATIC_DIR if STATIC_DIR.is_dir() else Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 app = FastAPI(title="VoiceOver", version="1.0.0")
 

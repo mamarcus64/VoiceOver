@@ -4,6 +4,7 @@ A media playback and annotation tool for the VOICES dataset. Browse interview vi
 
 ## Prerequisites
 
+- **Git LFS** (data files are stored with Git Large File Storage)
 - **Python 3.10+**
 - **Node.js 18+** and npm
 - **ffmpeg** (for video processing)
@@ -11,18 +12,23 @@ A media playback and annotation tool for the VOICES dataset. Browse interview vi
 
 On Ubuntu/Debian:
 ```bash
-sudo apt install python3 python3-venv nodejs npm ffmpeg
+sudo apt install git-lfs python3 python3-venv nodejs npm ffmpeg
 pip install yt-dlp
 ```
 
 On macOS:
 ```bash
-brew install python node ffmpeg yt-dlp
+brew install git-lfs python node ffmpeg yt-dlp
 ```
 
 ## Quick Start
 
 ```bash
+# 0. Clone (Git LFS pulls data automatically)
+git lfs install
+git clone https://github.com/mamarcus64/VoiceOver.git
+cd VoiceOver
+
 # 1. Install dependencies and build
 ./setup.sh
 
@@ -63,28 +69,36 @@ VoiceOver/
 │   └── src/
 │       ├── components/   # VideoBrowser, PlayerPage, TranscriptTrack, etc.
 │       └── hooks/        # usePlayback, useAnnotation
-├── data/             # All data files
+├── data/             # All data files (tracked with Git LFS)
 │   ├── manifest.json     # Video catalog (5,151 entries)
 │   ├── transcripts/      # Standardized JSON transcripts (per video)
+│   ├── transcripts_llm/  # LLM-corrected transcripts
 │   ├── audio_vad/        # Audio emotion data (per video)
 │   ├── eyegaze_vad/      # Eyegaze emotion data (per video, from GLASS)
-│   ├── annotations/      # User annotations (per video, per annotator)
-│   └── videos/           # Downloaded .mp4 files
+│   ├── smiling_segments/ # Pre-extracted AU12 smile segments (per video)
+│   ├── annotations/      # User annotations (gitignored, per annotator)
+│   └── videos/           # Downloaded .mp4 files (gitignored)
 └── scripts/          # Data preparation and processing scripts
 ```
 
 ## Data
 
-### Included Data (< 1 GB)
-- **manifest.json**: catalog of all 5,151 videos with YouTube links
-- **transcripts/**: standardized JSON transcripts with word-level timestamps
-- **audio_vad/**: audio-based valence/arousal/dominance per video
+All data files under `data/` are tracked with **Git LFS** (~2.6 GB total). They download automatically on clone if Git LFS is installed.
 
-### Generated Data
-- **eyegaze_vad/**: must be generated using GLASS (see below)
+| Directory | Files | Size | Description |
+|---|---|---|---|
+| `manifest.json` | 1 | 726 KB | Video catalog (5,151 entries with YouTube links) |
+| `transcripts/` | 5,129 | 1.2 GB | Standardized JSON transcripts (word-level timestamps) |
+| `transcripts_llm/` | 4,739 | 1.1 GB | LLM-corrected transcripts |
+| `audio_vad/` | 5,100 | 195 MB | Audio-based valence/arousal/dominance |
+| `eyegaze_vad/` | 3,998 | 110 MB | Eyegaze-based VAD (from GLASS) |
+| `smiling_segments/` | 3,997 | 37 MB | Pre-extracted AU12 smile segments |
 
 ### Videos
-Videos are **not** included (5,000+ files). Use the browser UI to selectively download videos from YouTube, or use yt-dlp directly.
+Videos are **not** included (5,000+ files, too large). Use the browser UI to selectively download videos from YouTube, or use yt-dlp directly.
+
+### Annotations
+Annotations are user-generated and stored locally in `data/annotations/` (not tracked in git).
 
 ## Generating Eyegaze Emotion Data
 
@@ -106,6 +120,22 @@ python scripts/llm_transcript_pass.py --limit 20 --diff-report --provider Cerebr
 
 # After reviewing the diff report, run on all files:
 python scripts/llm_transcript_pass.py --provider Cerebras
+```
+
+## Smiling Moments
+
+The player includes a **Smiling Moments** mode for browsing smile events detected via OpenFace AU12 (lip corner puller). Click the "Smiling Moments" toggle in the player header to switch modes.
+
+Five parameters can be adjusted in real-time (persisted across sessions):
+- **Intensity threshold** (default 1.8): minimum mean AU12\_r
+- **Merge distance** (default 0.5s): combine nearby segments
+- **Min duration** (default 0.5s): discard short segments after merging
+- **Context before** (default 3s): playback starts this many seconds before the smile
+- **Context after** (default 2s): playback extends this many seconds after
+
+To regenerate smiling segments from raw OpenFace data:
+```bash
+python scripts/extract_smiling_segments.py --workers 64
 ```
 
 ## Annotation
@@ -140,6 +170,7 @@ python scripts/validate_data.py
 | `/api/videos/{id}/transcript` | GET | Standardized transcript |
 | `/api/videos/{id}/audio-emotion` | GET | Audio VAD data |
 | `/api/videos/{id}/eyegaze-emotion` | GET | Eyegaze VAD data |
+| `/api/videos/{id}/smiling-segments` | GET | Pre-extracted AU12 smile segments |
 | `/api/annotations` | GET | Load annotations |
 | `/api/annotations` | POST | Save annotations |
 | `/api/annotations/annotators` | GET | List annotators for a video |

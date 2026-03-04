@@ -71,6 +71,43 @@ export interface DownloadStatus {
   error: string | null;
 }
 
+export interface SmileSegment {
+  start_ts: number;
+  end_ts: number;
+  peak_r: number;
+  mean_r: number;
+  mass_r: number;
+}
+
+export interface SmilingSegmentsData {
+  video_id: string;
+  fps: number;
+  total_frames: number;
+  total_duration_sec: number;
+  smoothing_sigma_sec: number;
+  threshold: number;
+  min_duration_sec: number;
+  num_segments: number;
+  total_smile_sec: number;
+  segments: SmileSegment[];
+}
+
+export interface SmileParams {
+  intensityThreshold: number;
+  mergeDistance: number;
+  minDuration: number;
+  contextBefore: number;
+  contextAfter: number;
+}
+
+export const DEFAULT_SMILE_PARAMS: SmileParams = {
+  intensityThreshold: 1.8,
+  mergeDistance: 0.5,
+  minDuration: 0.5,
+  contextBefore: 3.0,
+  contextAfter: 2.0,
+};
+
 export const EMOTION_LABELS: Record<number, string> = {
   1: "very_happy",
   2: "happy",
