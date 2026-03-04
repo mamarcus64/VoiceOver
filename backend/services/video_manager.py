@@ -32,9 +32,10 @@ class VideoManager:
         self._manifest_by_id: dict[str, dict] = {}
         self._download_statuses: dict[str, dict] = {}
         self._lock = threading.Lock()
+        self._reconciled = False
 
         self._load_manifest()
-        self._reconcile_downloaded()
+        threading.Thread(target=self._reconcile_downloaded, daemon=True).start()
 
     def _load_manifest(self) -> None:
         with open(self.manifest_path, "r") as f:
@@ -43,15 +44,27 @@ class VideoManager:
 
     def _reconcile_downloaded(self) -> None:
         """Sync each entry's 'downloaded' flag with whether the file
-        actually exists on disk (primary or fallback directory)."""
+        actually exists on disk (primary or fallback directory).
+        Runs in a background thread to avoid blocking startup."""
+        local_files = set()
+        if self.videos_dir.is_dir():
+            local_files = {p.stem for p in self.videos_dir.glob("*.mp4")}
+
+        fallback_files: set[str] = set()
+        if FALLBACK_VIDEO_DIR.is_dir():
+            fallback_files = {p.stem for p in FALLBACK_VIDEO_DIR.glob("*.mp4")}
+
+        all_available = local_files | fallback_files
+
         changed = False
         for entry in self._manifest:
-            file_exists = self.get_video_path(entry["id"]) is not None
+            file_exists = entry["id"] in all_available
             if entry.get("downloaded") != file_exists:
                 entry["downloaded"] = file_exists
                 changed = True
         if changed:
             self._save_manifest()
+        self._reconciled = True
 
     def _save_manifest(self) -> None:
         with open(self.manifest_path, "w") as f:
