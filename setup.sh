@@ -8,9 +8,28 @@ echo "=== VoiceOver Setup ==="
 echo ""
 
 # --- Python virtual environment ---
+# Require Python 3.10+ (3.9 is not supported by yt-dlp)
+PYTHON_BIN=""
+for candidate in python3.10 python3.11 python3.12 python3.13 python3; do
+  if command -v "$candidate" &>/dev/null; then
+    version=$("$candidate" -c 'import sys; print(sys.version_info[:2])')
+    if "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3,10) else 1)' 2>/dev/null; then
+      PYTHON_BIN="$candidate"
+      break
+    fi
+  fi
+done
+
+if [ -z "$PYTHON_BIN" ]; then
+  echo "ERROR: Python 3.10+ is required but not found."
+  echo "  - macOS: brew install python@3.10"
+  echo "  - Ubuntu: sudo apt install python3.10 python3.10-venv"
+  exit 1
+fi
+
 if [ ! -d "venv" ]; then
-  echo "[1/4] Creating Python virtual environment..."
-  python3 -m venv venv
+  echo "[1/4] Creating Python virtual environment (using $PYTHON_BIN)..."
+  "$PYTHON_BIN" -m venv venv
 else
   echo "[1/4] Python venv already exists, skipping."
 fi
