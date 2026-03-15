@@ -20,6 +20,7 @@ SAMPLE_JSON="${REPO_ROOT}/data/annotation_sample.json"
 VIDEO_DIR="${REPO_ROOT}/data/videos"
 MANIFEST="${REPO_ROOT}/data/manifest.json"
 VENV="${REPO_ROOT}/venv"
+COOKIES="${REPO_ROOT}/youtube_cookies.txt"
 
 # yt-dlp download format: best mp4 up to 1080p, fallback to best available
 YT_FORMAT="bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best"
@@ -126,12 +127,16 @@ for entry in "${ENTRIES[@]}"; do
 
     echo "  [DL] ${TAPE_ID}  ($(( DOWNLOADED + SKIPPED + FAILED + 1 ))/${TOTAL})  ${URL}"
 
+    COOKIES_ARG=()
+    [[ -f "${COOKIES}" ]] && COOKIES_ARG=(--cookies "${COOKIES}")
+
     if yt-dlp \
         --format "${YT_FORMAT}" \
         --output "${OUT_FILE}" \
         --no-playlist \
         --quiet \
         --progress \
+        "${COOKIES_ARG[@]}" \
         "${URL}"; then
         (( DOWNLOADED++ )) || true
     else
