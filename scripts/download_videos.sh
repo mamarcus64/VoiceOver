@@ -19,6 +19,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SAMPLE_JSON="${REPO_ROOT}/data/annotation_sample.json"
 VIDEO_DIR="${REPO_ROOT}/data/videos"
 MANIFEST="${REPO_ROOT}/data/manifest.json"
+VENV="${REPO_ROOT}/venv"
 
 # yt-dlp download format: best mp4 up to 1080p, fallback to best available
 YT_FORMAT="bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best"
@@ -62,7 +63,14 @@ fi
 # Pre-flight checks
 ###############################################################################
 
-command -v yt-dlp >/dev/null 2>&1 || { echo "Error: yt-dlp not found in PATH" >&2; exit 1; }
+# Activate the project venv so yt-dlp and python3 use Python 3.10+
+if [[ -f "${VENV}/bin/activate" ]]; then
+    source "${VENV}/bin/activate"
+else
+    echo "Warning: venv not found at ${VENV} — run setup.sh first to create it with Python 3.10+" >&2
+fi
+
+command -v yt-dlp >/dev/null 2>&1 || { echo "Error: yt-dlp not found. Install it with: pip install yt-dlp" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "Error: python3 not found in PATH" >&2; exit 1; }
 [[ -f "${SAMPLE_JSON}" ]] || { echo "Error: ${SAMPLE_JSON} not found. Run scripts/build_annotation_sample.py first." >&2; exit 1; }
 
