@@ -82,7 +82,11 @@ mkdir -p "${VIDEO_DIR}"
 ###############################################################################
 
 # Emit one "id|youtube_url" line per tape, limited to LIMIT entries.
-mapfile -t ENTRIES < <(python3 - "${SAMPLE_JSON}" "${LIMIT}" <<'PYEOF'
+# Uses a while-read loop instead of mapfile for macOS bash 3.2 compatibility.
+ENTRIES=()
+while IFS= read -r line; do
+    ENTRIES+=("$line")
+done < <(python3 - "${SAMPLE_JSON}" "${LIMIT}" <<'PYEOF'
 import json, sys
 with open(sys.argv[1]) as f:
     data = json.load(f)
