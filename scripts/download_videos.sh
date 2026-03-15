@@ -127,16 +127,16 @@ for entry in "${ENTRIES[@]}"; do
 
     echo "  [DL] ${TAPE_ID}  ($(( DOWNLOADED + SKIPPED + FAILED + 1 ))/${TOTAL})  ${URL}"
 
-    COOKIES_ARG=()
-    [[ -f "${COOKIES}" ]] && COOKIES_ARG=(--cookies "${COOKIES}")
+    if [[ ! -f "${COOKIES}" ]]; then
+        echo "  [WARN] Cookie file not found at ${COOKIES} — download may fail bot check" >&2
+    fi
 
     if yt-dlp \
         --format "${YT_FORMAT}" \
         --output "${OUT_FILE}" \
         --no-playlist \
-        --quiet \
+        --cookies "${COOKIES}" \
         --progress \
-        "${COOKIES_ARG[@]}" \
         "${URL}"; then
         (( DOWNLOADED++ )) || true
     else
