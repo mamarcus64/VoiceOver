@@ -10,6 +10,18 @@ PORT=1945
 
 echo "==> Building frontend..."
 cd frontend
+# Load .env so VITE_* vars are available at build time (Vite bakes them in)
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+  echo "Loaded frontend/.env"
+elif [ -f ../.env ]; then
+  set -a
+  source ../.env
+  set +a
+  echo "Loaded .env from project root"
+fi
 npm run build
 cd ..
 
