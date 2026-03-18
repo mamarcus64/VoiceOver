@@ -264,9 +264,11 @@ export default function SmileAnnotate() {
         if (cancelled || !data) return;
         setTaskData(data);
         setJumpVal(String(taskNum));
-        if (data.task.total_tasks > taskNum) {
-          preloadTask(taskNum + 1);
+        const total = data.task.total_tasks;
+        for (let i = 1; i <= 5; i++) {
+          if (taskNum + i <= total) preloadTask(taskNum + i);
         }
+        if (taskNum > 1) preloadTask(taskNum - 1);
       } catch { /* handled */ }
       if (!cancelled) setLoading(false);
     })();
