@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import TranscriptTrack from "./TranscriptTrack";
 import HelpModal from "./HelpModal";
 import type {
@@ -200,6 +200,7 @@ async function fetchTaskData(taskNum: number): Promise<TaskData> {
 
 export default function SmileAnnotate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const annotator = localStorage.getItem(STORAGE_KEY);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -208,7 +209,7 @@ export default function SmileAnnotate() {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeedState] = useState(1);
 
-  const [ctxBefore, setCtxBefore] = useState(() => loadContextSeconds(CONTEXT_BEFORE_KEY, 10));
+  const [ctxBefore, setCtxBefore] = useState(() => loadContextSeconds(CONTEXT_BEFORE_KEY, 5));
   const [ctxAfter, setCtxAfter] = useState(() => loadContextSeconds(CONTEXT_AFTER_KEY, 5));
 
   const [taskNum, setTaskNum] = useState<number | null>(null);
@@ -220,7 +221,7 @@ export default function SmileAnnotate() {
   const [notes, setNotes] = useState("");
   const [twoLabelMode, setTwoLabelMode] = useState(false);
   const [pendingPrimary, setPendingPrimary] = useState<string | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
+  const [showHelp, setShowHelp] = useState(() => !!(location.state as { showHelp?: boolean } | null)?.showHelp);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
@@ -526,15 +527,10 @@ export default function SmileAnnotate() {
         </span>
         <button
           onClick={() => setShowHelp(true)}
-          style={{
-            ...st.logoutBtn,
-            fontWeight: 700, fontSize: "0.85rem",
-            borderRadius: "50%", width: "28px", height: "28px",
-            padding: 0, textAlign: "center",
-          }}
+          style={{ ...st.logoutBtn, color: "#93c5fd" }}
           title="How this works"
         >
-          ?
+          Review Annotation Instructions
         </button>
         <button style={st.logoutBtn} onClick={handleLogout}>Logout</button>
       </div>
