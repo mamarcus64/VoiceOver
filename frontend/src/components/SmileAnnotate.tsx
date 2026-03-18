@@ -722,11 +722,11 @@ export default function SmileAnnotate() {
                 padding: "6px 12px",
                 fontSize: "0.75rem",
                 fontWeight: 600,
-                border: twoLabelMode ? "1px solid #6366f1" : "1px solidrgb(191, 149, 33)",
+                border: twoLabelMode ? "1px solid #6366f1" : "1px solidrgb(87, 79, 57)",
                 borderRadius: "5px",
                 cursor: "pointer",
                 backgroundColor: twoLabelMode ? "#312e81" : "#334155",
-                color: twoLabelMode ? "#a5b4fc" : "#94a3b8",
+                color: twoLabelMode ? "#a5b4fc" : "#664113",
                 whiteSpace: "nowrap" as const,
               }}
             >
