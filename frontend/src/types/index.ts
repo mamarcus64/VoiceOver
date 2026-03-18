@@ -140,7 +140,7 @@ export interface SmileAnnotationEntry {
   label: string;
   timestamp: string;
   notes?: string;
-  low_confidence?: boolean;
+  runner_up?: string;
 }
 
 export interface SmileAnnotations {

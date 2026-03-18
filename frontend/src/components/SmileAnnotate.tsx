@@ -217,7 +217,8 @@ export default function SmileAnnotate() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState("");
-  const [lowConfidence, setLowConfidence] = useState(false);
+  const [twoLabelMode, setTwoLabelMode] = useState(false);
+  const [pendingPrimary, setPendingPrimary] = useState<string | null>(null);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
@@ -352,43 +353,60 @@ export default function SmileAnnotate() {
   const goToTask = useCallback((num: number) => {
     if (!taskData || num < 1 || num > taskData.task.total_tasks) return;
     preloadRef.current.delete(num);
+    setPendingPrimary(null);
     setTaskNum(num);
   }, [taskData]);
 
+  const saveAnnotation = useCallback(async (label: string, runnerUp: string) => {
+    if (!annotator || !taskData) return;
+    await fetch(`${API}/smile-annotations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        annotator,
+        task_number: taskData.task.task_number,
+        label,
+        notes,
+        runner_up: runnerUp,
+      }),
+    });
+    setAnnotations((prev) => {
+      const a = prev ? { ...prev } : { annotator, annotations: {} };
+      a.annotations = {
+        ...a.annotations,
+        [String(taskData.task.task_number)]: {
+          label,
+          timestamp: new Date().toISOString(),
+          notes: notes || undefined,
+          runner_up: runnerUp || undefined,
+        },
+      };
+      return a;
+    });
+  }, [annotator, taskData, notes]);
+
   const handleLabel = useCallback(async (label: string) => {
     if (!annotator || !taskData || saving) return;
+
+    if (twoLabelMode && !pendingPrimary) {
+      setPendingPrimary(label);
+      return;
+    }
+
     setSaving(true);
     try {
-      await fetch(`${API}/smile-annotations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          annotator,
-          task_number: taskData.task.task_number,
-          label,
-          notes,
-          low_confidence: lowConfidence,
-        }),
-      });
-      setAnnotations((prev) => {
-        const a = prev ? { ...prev } : { annotator, annotations: {} };
-        a.annotations = {
-          ...a.annotations,
-          [String(taskData.task.task_number)]: {
-            label,
-            timestamp: new Date().toISOString(),
-            notes: notes || undefined,
-            low_confidence: lowConfidence || undefined,
-          },
-        };
-        return a;
-      });
+      if (twoLabelMode && pendingPrimary) {
+        await saveAnnotation(pendingPrimary, label);
+      } else {
+        await saveAnnotation(label, "");
+      }
+      setPendingPrimary(null);
       if (taskData.task.task_number < taskData.task.total_tasks) {
         goToTask(taskData.task.task_number + 1);
       }
     } catch { /* ignore */ }
     setSaving(false);
-  }, [annotator, taskData, saving, goToTask, notes, lowConfidence]);
+  }, [annotator, taskData, saving, goToTask, twoLabelMode, pendingPrimary, saveAnnotation]);
 
   const handleJump = useCallback(() => {
     const n = parseInt(jumpVal, 10);
@@ -402,10 +420,12 @@ export default function SmileAnnotate() {
 
   const currentAnnotation = annotations?.annotations[String(taskNum)];
   const currentLabel = currentAnnotation?.label ?? null;
+  const currentRunnerUp = currentAnnotation?.runner_up ?? null;
 
   useEffect(() => {
     setNotes(currentAnnotation?.notes ?? "");
-    setLowConfidence(currentAnnotation?.low_confidence ?? false);
+    setPendingPrimary(null);
+    setTwoLabelMode(!!currentAnnotation?.runner_up);
   }, [taskNum]);
 
   const seekBarSmileLeft = useMemo(() => {
@@ -430,9 +450,15 @@ export default function SmileAnnotate() {
 
   const { task } = taskData;
 
+  const promptText = twoLabelMode
+    ? pendingPrimary
+      ? `Primary: ${SMILE_LABELS.find((l) => l.key === pendingPrimary)?.display}. Now pick the runner-up.`
+      : "Pick the primary label first."
+    : null;
+
   return (
     <div style={st.page}>
-      {/* Top bar: nav + instruction merged */}
+      {/* Top bar */}
       <div style={st.topBar}>
         <span style={st.taskLabel}>
           Task {task.task_number} / {task.available_tasks}
@@ -465,6 +491,12 @@ export default function SmileAnnotate() {
             padding: "2px 8px", backgroundColor: "#0f172a", borderRadius: "5px",
           }}>
             {SMILE_LABELS.find((l) => l.key === currentLabel)?.display ?? currentLabel}
+            {currentRunnerUp && (
+              <span style={{ color: "#64748b", fontWeight: 400 }}>
+                {" / "}
+                {SMILE_LABELS.find((l) => l.key === currentRunnerUp)?.display ?? currentRunnerUp}
+              </span>
+            )}
           </span>
         )}
 
@@ -529,7 +561,6 @@ export default function SmileAnnotate() {
                 <button style={st.playBtn} onClick={togglePlay}>
                   {playing ? "\u23F8" : "\u25B6"}
                 </button>
-
                 <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
                   <span style={{ fontSize: "0.65rem", color: "#64748b" }}>Spd</span>
                   {SPEEDS.map((r) => (
@@ -566,52 +597,73 @@ export default function SmileAnnotate() {
             <div style={st.notDownloaded}>Video not yet downloaded</div>
           )}
 
-          {/* Label cards: button + description underneath, in a 4-column grid */}
+          {/* Two-label mode prompt */}
+          {promptText && (
+            <div style={{
+              marginTop: "6px", padding: "5px 12px",
+              backgroundColor: "#1c1917", border: "1px solid #6366f155",
+              borderRadius: "6px", fontSize: "0.8rem", color: "#a5b4fc", textAlign: "center",
+            }}>
+              {promptText}
+            </div>
+          )}
+
+          {/* Label cards: 4-column grid, button + description */}
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(4, 1fr)",
             gap: "8px",
-            marginTop: "10px",
+            marginTop: "8px",
           }}>
-            {SMILE_LABELS.map((l) => (
-              <div key={l.key} style={{
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: "10px",
-                overflow: "hidden",
-                border: currentLabel === l.key ? "2px solid #fff" : "2px solid transparent",
-              }}>
-                <button
-                  style={{
-                    padding: "10px 6px",
-                    fontSize: "0.9rem",
-                    fontWeight: 700,
-                    border: "none",
-                    cursor: "pointer",
-                    color: "#fff",
-                    backgroundColor: l.color,
-                    opacity: saving ? 0.6 : 1,
-                  }}
-                  onClick={() => handleLabel(l.key)}
-                  disabled={saving}
-                >
-                  {l.display}
-                </button>
-                <div style={{
-                  padding: "6px 8px",
-                  fontSize: "0.7rem",
-                  lineHeight: 1.4,
-                  color: "#94a3b8",
-                  backgroundColor: "#1e293b",
-                  flex: 1,
+            {SMILE_LABELS.map((l) => {
+              const isPrimary = pendingPrimary === l.key;
+              const isSaved = currentLabel === l.key;
+              const isRunnerUp = currentRunnerUp === l.key;
+              const highlighted = isPrimary || isSaved;
+
+              return (
+                <div key={l.key} style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  border: highlighted ? `2px solid ${l.color}` : isRunnerUp ? "2px dashed #64748b" : "2px solid #334155",
+                  transition: "border-color 0.15s",
                 }}>
-                  {l.desc}
+                  <button
+                    style={{
+                      padding: "10px 6px",
+                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#0f172a",
+                      backgroundColor: l.color,
+                      opacity: saving ? 0.6 : 1,
+                      textAlign: "center",
+                    }}
+                    onClick={() => handleLabel(l.key)}
+                    disabled={saving}
+                  >
+                    {l.display}
+                  </button>
+                  <div style={{
+                    padding: "6px 10px",
+                    fontSize: "0.75rem",
+                    lineHeight: 1.5,
+                    color: "#94a3b8",
+                    backgroundColor: "#1e293b",
+                    flex: 1,
+                    textAlign: "center",
+                  }}>
+                    {l.desc}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Notes + confidence row */}
+          {/* Notes + two-label toggle row */}
           <div style={{
             display: "flex",
             gap: "8px",
@@ -635,20 +687,23 @@ export default function SmileAnnotate() {
               }}
             />
             <button
-              onClick={() => setLowConfidence((v) => !v)}
+              onClick={() => {
+                setTwoLabelMode((v) => !v);
+                setPendingPrimary(null);
+              }}
               style={{
                 padding: "6px 12px",
                 fontSize: "0.75rem",
                 fontWeight: 600,
-                border: lowConfidence ? "1px solid #ef4444" : "1px solid #475569",
+                border: twoLabelMode ? "1px solid #6366f1" : "1px solid #475569",
                 borderRadius: "5px",
                 cursor: "pointer",
-                backgroundColor: lowConfidence ? "#7f1d1d" : "#334155",
-                color: lowConfidence ? "#fca5a5" : "#94a3b8",
+                backgroundColor: twoLabelMode ? "#312e81" : "#334155",
+                color: twoLabelMode ? "#a5b4fc" : "#94a3b8",
                 whiteSpace: "nowrap" as const,
               }}
             >
-              {lowConfidence ? "\u26A0 Low confidence" : "< 70% confident?"}
+              {twoLabelMode ? "This smile is one label" : "This smile could be two labels"}
             </button>
           </div>
         </div>
