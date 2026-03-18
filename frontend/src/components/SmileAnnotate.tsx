@@ -244,6 +244,7 @@ export default function SmileAnnotate() {
   const [jumpVal, setJumpVal] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
@@ -657,6 +658,52 @@ export default function SmileAnnotate() {
               </button>
             ))}
           </div>
+
+          {/* Label Descriptions toggle */}
+          <div style={{ marginTop: "10px", textAlign: "center" }}>
+            <button
+              onClick={() => setShowHelp((v) => !v)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#64748b",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              {showHelp ? "Hide Label Descriptions" : "Label Descriptions"}
+            </button>
+          </div>
+
+          {showHelp && (
+            <div style={{
+              marginTop: "8px",
+              padding: "14px 18px",
+              backgroundColor: "#1e293b",
+              borderRadius: "10px",
+              fontSize: "0.85rem",
+              lineHeight: 1.6,
+              color: "#cbd5e1",
+            }}>
+              <div style={{ marginBottom: "10px" }}>
+                <strong style={{ color: "#22c55e" }}>Genuine Smile</strong>
+                <div>A smile that demonstrates true happiness. Some things to look for are laughter, &ldquo;sparkles&rdquo; in the eyes, closed eyes, and contextually happy words and speech.</div>
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <strong style={{ color: "#3b82f6" }}>Polite Smile</strong>
+                <div>A smile that is used as a social function. Look for if the interviewer asked a recent question, if the subject is responding to something, or if the smile indicates conversational signaling.</div>
+              </div>
+              <div style={{ marginBottom: "10px" }}>
+                <strong style={{ color: "#f59e0b" }}>Masking Smile</strong>
+                <div>A smile used for complex emotion processing. Look for signs of trauma, irony, contradictory or negative emotions, or otherwise non-happy behaviors.</div>
+              </div>
+              <div>
+                <strong style={{ color: "#64748b" }}>Not a Smile</strong>
+                <div>For segments where a smile is misidentified.</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Transcript panel -- full transcript, scrollable */}
