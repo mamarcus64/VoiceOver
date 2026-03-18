@@ -114,6 +114,7 @@ class AnnotateBody(BaseModel):
     annotator: str
     task_number: int
     label: str
+    notes: str = ""
 
 
 VALID_LABELS = {"genuine", "polite", "masking", "not_a_smile"}
@@ -129,9 +130,12 @@ async def save_annotation(body: AnnotateBody):
         raise HTTPException(status_code=404, detail=f"Task {body.task_number} not found")
 
     data = _load_annotations(body.annotator)
-    data["annotations"][str(body.task_number)] = {
+    entry: dict[str, Any] = {
         "label": body.label,
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
+    if body.notes.strip():
+        entry["notes"] = body.notes.strip()
+    data["annotations"][str(body.task_number)] = entry
     _save_annotations(body.annotator, data)
     return {"ok": True, "task_number": body.task_number, "label": body.label}

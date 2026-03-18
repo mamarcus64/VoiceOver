@@ -107,6 +107,7 @@ interface TranscriptTrackProps {
   smileStartMs?: number;
   smileEndMs?: number;
   maxHeight?: string;
+  initialScrollToMs?: number;
 }
 
 export default function TranscriptTrack({
@@ -116,13 +117,27 @@ export default function TranscriptTrack({
   smileStartMs,
   smileEndMs,
   maxHeight = "380px",
+  initialScrollToMs,
 }: TranscriptTrackProps) {
   const activeRef = useRef<HTMLDivElement | null>(null);
-  const [autoScroll, setAutoScroll] = useState(true);
+  const initialScrollRef = useRef<HTMLDivElement | null>(null);
+  const didInitialScroll = useRef(false);
+  const [autoScroll, setAutoScroll] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("medium");
 
   const blocks = useMemo(() => splitIntoParagraphs(utterances), [utterances]);
   const fs = FONT_SIZES[fontSize];
+
+  useEffect(() => {
+    didInitialScroll.current = false;
+  }, [initialScrollToMs]);
+
+  useEffect(() => {
+    if (!didInitialScroll.current && initialScrollRef.current) {
+      initialScrollRef.current.scrollIntoView({ behavior: "instant", block: "center" });
+      didInitialScroll.current = true;
+    }
+  });
 
   useEffect(() => {
     if (autoScroll && activeRef.current) {
@@ -188,6 +203,8 @@ export default function TranscriptTrack({
           const isActive = currentTimeMs >= block.startMs && currentTimeMs < block.endMs;
           const isInSmile = smileStartMs != null && smileEndMs != null
             && block.endMs > smileStartMs && block.startMs < smileEndMs;
+          const isInitialTarget = initialScrollToMs != null
+            && block.startMs <= initialScrollToMs && block.endMs > initialScrollToMs;
           const isNonVerbal = u.type === "non_verbal";
           const hasWords = block.words.length > 0;
           const currentWordIndex = isActive && hasWords
@@ -229,7 +246,10 @@ export default function TranscriptTrack({
           return (
             <div
               key={`${block.startMs}-${bi}`}
-              ref={isActive ? activeRef : null}
+              ref={(el) => {
+                if (isActive) activeRef.current = el;
+                if (isInitialTarget) initialScrollRef.current = el;
+              }}
               onClick={() => onSeek(block.startMs)}
               style={{
                 display: "flex",
