@@ -1,11 +1,26 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import VideoBrowser from "./components/VideoBrowser";
 import PlayerPage from "./components/PlayerPage";
 import SmileLogin from "./components/SmileLogin";
 import SmileConfig from "./components/SmileConfig";
 import SmileAnnotate from "./components/SmileAnnotate";
 
+const HIDE_DEV_TABS = import.meta.env.VITE_HIDE_DEV_TABS === "true";
+
 export default function App() {
+  if (HIDE_DEV_TABS) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/smile-login" replace />} />
+          <Route path="/smile-login" element={<SmileLogin />} />
+          <Route path="/smile-annotate" element={<SmileAnnotate />} />
+          <Route path="*" element={<Navigate to="/smile-login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
