@@ -244,7 +244,7 @@ export default function SmileAnnotate() {
   const [jumpVal, setJumpVal] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
+  const [notes, setNotes] = useState("");
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
@@ -389,13 +389,13 @@ export default function SmileAnnotate() {
       await fetch(`${API}/smile-annotations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ annotator, task_number: taskData.task.task_number, label }),
+        body: JSON.stringify({ annotator, task_number: taskData.task.task_number, label, notes }),
       });
       setAnnotations((prev) => {
         const a = prev ? { ...prev } : { annotator, annotations: {} };
         a.annotations = {
           ...a.annotations,
-          [String(taskData.task.task_number)]: { label, timestamp: new Date().toISOString() },
+          [String(taskData.task.task_number)]: { label, timestamp: new Date().toISOString(), notes: notes || undefined },
         };
         return a;
       });
@@ -416,7 +416,12 @@ export default function SmileAnnotate() {
     navigate("/smile-login", { replace: true });
   }, [navigate]);
 
-  const currentLabel = annotations?.annotations[String(taskNum)]?.label ?? null;
+  const currentAnnotation = annotations?.annotations[String(taskNum)];
+  const currentLabel = currentAnnotation?.label ?? null;
+
+  useEffect(() => {
+    setNotes(currentAnnotation?.notes ?? "");
+  }, [taskNum]);
 
   const seekBarSmileLeft = useMemo(() => {
     if (!taskData || playEnd <= playStart) return 0;
@@ -640,6 +645,27 @@ export default function SmileAnnotate() {
             <div style={st.notDownloaded}>Video not yet downloaded</div>
           )}
 
+          {/* Notes */}
+          <div style={{ marginTop: "12px" }}>
+            <input
+              type="text"
+              placeholder="Notes (optional)"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px",
+                fontSize: "0.85rem",
+                border: "1px solid #475569",
+                borderRadius: "6px",
+                backgroundColor: "#1e293b",
+                color: "#e2e8f0",
+                boxSizing: "border-box" as const,
+                outline: "none",
+              }}
+            />
+          </div>
+
           {/* Label buttons */}
           <div style={st.labelRow}>
             {SMILE_LABELS.map((l) => (
@@ -659,25 +685,8 @@ export default function SmileAnnotate() {
             ))}
           </div>
 
-          {/* Label Descriptions toggle */}
-          <div style={{ marginTop: "10px", textAlign: "center" }}>
-            <button
-              onClick={() => setShowHelp((v) => !v)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#64748b",
-                fontSize: "0.8rem",
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
-            >
-              {showHelp ? "Hide Label Descriptions" : "Label Descriptions"}
-            </button>
-          </div>
-
-          {showHelp && (
-            <div style={{
+          {/* Label Descriptions */}
+          <div style={{
               marginTop: "8px",
               padding: "14px 18px",
               backgroundColor: "#1e293b",
@@ -688,22 +697,24 @@ export default function SmileAnnotate() {
             }}>
               <div style={{ marginBottom: "10px" }}>
                 <strong style={{ color: "#22c55e" }}>Genuine Smile</strong>
-                <div>A smile that demonstrates true happiness. Some things to look for are laughter, &ldquo;sparkles&rdquo; in the eyes, closed eyes, and contextually happy words and speech.</div>
+                <div>A smile driven by true positive emotion. Some physical things to look for are wrinkled skin near corners of eyes, cheeks pushing upwards, eyebrows lowered, and straightening of the lowered eyelid. Genuine smiles build in intensity over time and usually do not fade instantly. Some behaviors to look for are &ldquo;sparkles&rdquo; in the eyes or remembering something fondly. These smiles may feel somewhat more natural and &ldquo;fluid&rdquo; than polite smiles.
+              <br />
+              
+              Note: You should use behaviors only as helpful context, as polite and genuine smiles can have overlapping behaviors. </div>
               </div>
               <div style={{ marginBottom: "10px" }}>
                 <strong style={{ color: "#3b82f6" }}>Polite Smile</strong>
-                <div>A smile that is used as a social function. Look for if the interviewer asked a recent question, if the subject is responding to something, or if the smile indicates conversational signaling.</div>
+                <div>A controlled smile meant for social etiquette, or oftentimes acknowledgement of an interviewer's question. Polite smiles can also indicate positive emotions sometimes: in these cases, the interview context and physical features should be considered. Some physical things to look for are eyes remaining relatively static and/or open even as the mouth moves. They often appear and disappear quicker than genuine smiles. If the subject laughs, consider whether it is from joy (genuine smile) or from acknowledgement, nervousness, or as a social/communicative function (polite smile).</div>
               </div>
               <div style={{ marginBottom: "10px" }}>
                 <strong style={{ color: "#f59e0b" }}>Masking Smile</strong>
-                <div>A smile used for complex emotion processing. Look for signs of trauma, irony, contradictory or negative emotions, or otherwise non-happy behaviors.</div>
+                <div>A smile used to convey a different underlying emotion than happiness. Look for micro-expressions in other parts of the face that betray the smile: typical emotions with masking smiles include sadness, anger, contempt, irony, or frustration. Also, see if the smile disappears quickly by looking at the corners of the mouth. If a smile disappears quickly, it is likely either a masking smile or a polite smile. In these cases, use behaviors, speech audio, and narrative context to make your decision.</div>
               </div>
               <div>
                 <strong style={{ color: "#64748b" }}>Not a Smile</strong>
-                <div>For segments where a smile is misidentified.</div>
+                <div>For segments where the subject is not smiling. If you're unsure, then assume it is a smile.</div>
               </div>
             </div>
-          )}
         </div>
 
         {/* Transcript panel -- full transcript, scrollable */}
@@ -716,6 +727,7 @@ export default function SmileAnnotate() {
             smileStartMs={task.smile_start * 1000}
             smileEndMs={task.smile_end * 1000}
             maxHeight="calc(100vh - 180px)"
+            initialScrollToMs={task.smile_start * 1000}
           />
         </div>
       </div>

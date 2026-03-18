@@ -139,6 +139,7 @@ export interface SmileTask {
 export interface SmileAnnotationEntry {
   label: string;
   timestamp: string;
+  notes?: string;
 }
 
 export interface SmileAnnotations {
