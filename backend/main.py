@@ -9,6 +9,9 @@ from api.videos import router as videos_router
 from api.transcripts import router as transcripts_router
 from api.emotions import router as emotions_router
 from api.annotations import router as annotations_router
+from api.smile_config import router as smile_config_router
+from api.smile_auth import router as smile_auth_router
+from api.smile_tasks import router as smile_tasks_router
 
 DATA_DIR = Path(os.environ.get("VOICEOVER_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -27,6 +30,9 @@ app.include_router(videos_router, prefix="/api")
 app.include_router(transcripts_router, prefix="/api")
 app.include_router(emotions_router, prefix="/api")
 app.include_router(annotations_router, prefix="/api")
+app.include_router(smile_config_router, prefix="/api")
+app.include_router(smile_auth_router, prefix="/api")
+app.include_router(smile_tasks_router, prefix="/api")
 
 if FRONTEND_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
