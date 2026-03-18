@@ -118,7 +118,7 @@ export default function TranscriptTrack({
   maxHeight = "380px",
 }: TranscriptTrackProps) {
   const activeRef = useRef<HTMLDivElement | null>(null);
-  const [autoScroll, setAutoScroll] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const [fontSize, setFontSize] = useState<FontSize>("medium");
 
   const blocks = useMemo(() => splitIntoParagraphs(utterances), [utterances]);
@@ -126,7 +126,7 @@ export default function TranscriptTrack({
 
   useEffect(() => {
     if (autoScroll && activeRef.current) {
-      activeRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      activeRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [currentTimeMs, autoScroll]);
 
