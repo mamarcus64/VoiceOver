@@ -140,6 +140,7 @@ export interface SmileAnnotationEntry {
   label: string;
   timestamp: string;
   notes?: string;
+  low_confidence?: boolean;
 }
 
 export interface SmileAnnotations {
@@ -167,9 +168,13 @@ export interface SmilePreviewStats {
 
 export type SmileLabel = "genuine" | "polite" | "masking" | "not_a_smile";
 
-export const SMILE_LABELS: { key: SmileLabel; display: string; color: string }[] = [
-  { key: "genuine", display: "Genuine Smile", color: "#22c55e" },
-  { key: "polite", display: "Polite Smile", color: "#3b82f6" },
-  { key: "masking", display: "Masking Smile", color: "#f59e0b" },
-  { key: "not_a_smile", display: "Not a Smile", color: "#64748b" },
+export const SMILE_LABELS: { key: SmileLabel; display: string; color: string; desc: string }[] = [
+  { key: "genuine", display: "Genuine Smile", color: "#22c55e",
+    desc: "A smile that demonstrates true happiness. Look for laughter, \u201Csparkles\u201D in the eyes, closed eyes, and contextually happy words and speech." },
+  { key: "polite", display: "Polite Smile", color: "#3b82f6",
+    desc: "A smile used as a social function. Look for if the interviewer asked a recent question, if the subject is responding to something, or if the smile indicates conversational signaling." },
+  { key: "masking", display: "Masking Smile", color: "#f59e0b",
+    desc: "A smile used for complex emotion processing. Look for signs of trauma, irony, contradictory or negative emotions, or otherwise non-happy behaviors." },
+  { key: "not_a_smile", display: "Not a Smile", color: "#64748b",
+    desc: "For segments where a smile is misidentified." },
 ];
