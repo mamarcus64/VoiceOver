@@ -97,16 +97,25 @@ function getDisplayTag(u: Utterance): string {
   return u.speaker === "interviewer" ? "Interviewer" : "Interviewee";
 }
 
+const SMILE_HIGHLIGHT_BG = "#422006";
+const SMILE_HIGHLIGHT_BORDER = "#f59e0b";
+
 interface TranscriptTrackProps {
   utterances: Utterance[];
   currentTimeMs: number;
   onSeek: (ms: number) => void;
+  smileStartMs?: number;
+  smileEndMs?: number;
+  maxHeight?: string;
 }
 
 export default function TranscriptTrack({
   utterances,
   currentTimeMs,
   onSeek,
+  smileStartMs,
+  smileEndMs,
+  maxHeight = "380px",
 }: TranscriptTrackProps) {
   const activeRef = useRef<HTMLDivElement | null>(null);
   const [autoScroll, setAutoScroll] = useState(false);
@@ -122,7 +131,7 @@ export default function TranscriptTrack({
   }, [currentTimeMs, autoScroll]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", maxHeight: "380px" }}>
+    <div style={{ display: "flex", flexDirection: "column", maxHeight }}>
       {/* Toolbar */}
       <div style={{
         display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px",
@@ -177,6 +186,8 @@ export default function TranscriptTrack({
         {blocks.map((block, bi) => {
           const u = block.utterance;
           const isActive = currentTimeMs >= block.startMs && currentTimeMs < block.endMs;
+          const isInSmile = smileStartMs != null && smileEndMs != null
+            && block.endMs > smileStartMs && block.startMs < smileEndMs;
           const isNonVerbal = u.type === "non_verbal";
           const hasWords = block.words.length > 0;
           const currentWordIndex = isActive && hasWords
@@ -225,9 +236,10 @@ export default function TranscriptTrack({
                 gap: "12px",
                 padding: "7px 10px",
                 marginBottom: "3px",
-                backgroundColor: isActive ? ACTIVE_BG : ROW_BG,
+                backgroundColor: isActive ? ACTIVE_BG : isInSmile ? SMILE_HIGHLIGHT_BG : ROW_BG,
                 borderRadius: "6px",
                 cursor: "pointer",
+                borderLeft: isInSmile ? `3px solid ${SMILE_HIGHLIGHT_BORDER}` : "3px solid transparent",
               }}
             >
               <span

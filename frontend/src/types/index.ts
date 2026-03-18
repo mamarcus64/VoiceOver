@@ -123,3 +123,52 @@ export const EMOTION_COLORS: Record<string, string> = {
   sad: "#93c5fd",
   very_sad: "#3b82f6",
 };
+
+export interface SmileTask {
+  task_number: number;
+  video_id: string;
+  smile_start: number;
+  smile_end: number;
+  peak_r: number;
+  mean_r: number;
+  total_tasks: number;
+  available_tasks: number;
+  video_downloaded: boolean;
+}
+
+export interface SmileAnnotationEntry {
+  label: string;
+  timestamp: string;
+}
+
+export interface SmileAnnotations {
+  annotator: string;
+  annotations: Record<string, SmileAnnotationEntry>;
+}
+
+export interface SmileConfigData {
+  intensityThreshold: number;
+  mergeDistance: number;
+  minDuration: number;
+  maxPerVideo: number;
+  contextBefore: number;
+  contextAfter: number;
+}
+
+export interface SmilePreviewStats {
+  total_tasks: number;
+  videos_with_tasks: number;
+  tasks_per_video_mean: number;
+  tasks_per_video_median: number;
+  tasks_per_video_max: number;
+  params: Record<string, number>;
+}
+
+export type SmileLabel = "genuine" | "polite" | "masking" | "not_a_smile";
+
+export const SMILE_LABELS: { key: SmileLabel; display: string; color: string }[] = [
+  { key: "genuine", display: "Genuine Smile", color: "#22c55e" },
+  { key: "polite", display: "Polite Smile", color: "#3b82f6" },
+  { key: "masking", display: "Masking Smile", color: "#f59e0b" },
+  { key: "not_a_smile", display: "Not a Smile", color: "#64748b" },
+];
