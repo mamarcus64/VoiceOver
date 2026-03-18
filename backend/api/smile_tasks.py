@@ -115,7 +115,7 @@ class AnnotateBody(BaseModel):
     task_number: int
     label: str
     notes: str = ""
-    low_confidence: bool = False
+    runner_up: str = ""
 
 
 VALID_LABELS = {"genuine", "polite", "masking", "not_a_smile"}
@@ -137,8 +137,10 @@ async def save_annotation(body: AnnotateBody):
     }
     if body.notes.strip():
         entry["notes"] = body.notes.strip()
-    if body.low_confidence:
-        entry["low_confidence"] = True
+    if body.runner_up:
+        if body.runner_up not in VALID_LABELS:
+            raise HTTPException(status_code=400, detail=f"Invalid runner_up '{body.runner_up}'")
+        entry["runner_up"] = body.runner_up
     data["annotations"][str(body.task_number)] = entry
     _save_annotations(body.annotator, data)
     return {"ok": True, "task_number": body.task_number, "label": body.label}
