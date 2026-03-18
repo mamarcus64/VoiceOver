@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import HelpModal from "./HelpModal";
 
 const STORAGE_KEY = "smile_annotator_name";
+const HELP_SEEN_KEY = "smile_help_seen";
 
 const st: Record<string, React.CSSProperties> = {
   page: {
@@ -78,10 +80,16 @@ export default function SmileLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) navigate("/smile-annotate", { replace: true });
+    // Auto-show help on first ever visit
+    if (!localStorage.getItem(HELP_SEEN_KEY)) {
+      setShowHelp(true);
+      localStorage.setItem(HELP_SEEN_KEY, "1");
+    }
   }, [navigate]);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -110,6 +118,7 @@ export default function SmileLogin() {
 
   return (
     <div style={st.page}>
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       <form style={st.card} onSubmit={handleSubmit}>
         <div style={st.title}>Smile Annotation</div>
         <div style={st.subtitle}>Log in to start annotating</div>

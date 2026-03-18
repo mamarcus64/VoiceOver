@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import TranscriptTrack from "./TranscriptTrack";
+import HelpModal from "./HelpModal";
 import type {
   SmileTask,
   SmileAnnotations,
@@ -219,6 +220,7 @@ export default function SmileAnnotate() {
   const [notes, setNotes] = useState("");
   const [twoLabelMode, setTwoLabelMode] = useState(false);
   const [pendingPrimary, setPendingPrimary] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
@@ -473,6 +475,7 @@ export default function SmileAnnotate() {
 
   return (
     <div style={st.page}>
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
       {/* Top bar */}
       <div style={st.topBar}>
         <span style={st.taskLabel}>
@@ -521,6 +524,18 @@ export default function SmileAnnotate() {
         <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
           {task.video_id}
         </span>
+        <button
+          onClick={() => setShowHelp(true)}
+          style={{
+            ...st.logoutBtn,
+            fontWeight: 700, fontSize: "0.85rem",
+            borderRadius: "50%", width: "28px", height: "28px",
+            padding: 0, textAlign: "center",
+          }}
+          title="How this works"
+        >
+          ?
+        </button>
         <button style={st.logoutBtn} onClick={handleLogout}>Logout</button>
       </div>
 
