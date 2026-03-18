@@ -385,6 +385,8 @@ export default function SmileAnnotate() {
     });
   }, [annotator, taskData, notes]);
 
+  const cancelPrimary = useCallback(() => setPendingPrimary(null), []);
+
   const handleLabel = useCallback(async (label: string) => {
     if (!annotator || !taskData || saving) return;
 
@@ -392,6 +394,8 @@ export default function SmileAnnotate() {
       setPendingPrimary(label);
       return;
     }
+
+    if (twoLabelMode && pendingPrimary && label === pendingPrimary) return;
 
     setSaving(true);
     try {
@@ -407,6 +411,15 @@ export default function SmileAnnotate() {
     } catch { /* ignore */ }
     setSaving(false);
   }, [annotator, taskData, saving, goToTask, twoLabelMode, pendingPrimary, saveAnnotation]);
+
+  useEffect(() => {
+    if (!pendingPrimary) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") cancelPrimary();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pendingPrimary, cancelPrimary]);
 
   const handleJump = useCallback(() => {
     const n = parseInt(jumpVal, 10);
@@ -602,9 +615,23 @@ export default function SmileAnnotate() {
             <div style={{
               marginTop: "6px", padding: "5px 12px",
               backgroundColor: "#1c1917", border: "1px solid #6366f155",
-              borderRadius: "6px", fontSize: "0.8rem", color: "#a5b4fc", textAlign: "center",
+              borderRadius: "6px", fontSize: "0.8rem", color: "#a5b4fc",
+              textAlign: "center", display: "flex", alignItems: "center",
+              justifyContent: "center", gap: "10px",
             }}>
-              {promptText}
+              <span>{promptText}</span>
+              {pendingPrimary && (
+                <button
+                  onClick={cancelPrimary}
+                  style={{
+                    padding: "2px 10px", fontSize: "0.75rem", fontWeight: 600,
+                    border: "1px solid #475569", borderRadius: "4px",
+                    cursor: "pointer", backgroundColor: "#334155", color: "#e2e8f0",
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
             </div>
           )}
 
