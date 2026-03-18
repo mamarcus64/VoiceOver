@@ -27,7 +27,7 @@ function loadContextSeconds(key: string, fallback: number): number {
 
 const st: Record<string, React.CSSProperties> = {
   page: {
-    padding: "12px 20px",
+    padding: "8px 16px",
     maxWidth: "1400px",
     margin: "0 auto",
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -38,57 +38,55 @@ const st: Record<string, React.CSSProperties> = {
   topBar: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
-    padding: "10px 16px",
+    gap: "10px",
+    padding: "7px 14px",
     backgroundColor: "#1e293b",
-    borderRadius: "10px",
-    marginBottom: "12px",
+    borderRadius: "8px",
+    marginBottom: "8px",
     flexWrap: "wrap" as const,
   },
   taskLabel: {
-    fontSize: "1.2rem",
+    fontSize: "1.1rem",
     fontWeight: 700,
     color: "#f8fafc",
   },
   annotator: {
-    fontSize: "0.85rem",
+    fontSize: "0.8rem",
     color: "#94a3b8",
   },
   navBtn: {
-    padding: "6px 14px",
-    fontSize: "0.85rem",
+    padding: "4px 12px",
+    fontSize: "0.8rem",
     fontWeight: 600,
     border: "1px solid #475569",
-    borderRadius: "6px",
+    borderRadius: "5px",
     cursor: "pointer",
     backgroundColor: "#334155",
     color: "#e2e8f0",
   },
   jumpInput: {
-    width: "70px",
-    padding: "6px 8px",
-    fontSize: "0.85rem",
+    width: "60px",
+    padding: "4px 6px",
+    fontSize: "0.8rem",
     border: "1px solid #475569",
-    borderRadius: "6px",
+    borderRadius: "5px",
     backgroundColor: "#0f172a",
     color: "#e2e8f0",
     textAlign: "center" as const,
   },
   logoutBtn: {
-    padding: "6px 12px",
-    fontSize: "0.8rem",
+    padding: "4px 10px",
+    fontSize: "0.75rem",
     border: "1px solid #475569",
-    borderRadius: "6px",
+    borderRadius: "5px",
     cursor: "pointer",
     backgroundColor: "#334155",
     color: "#94a3b8",
-    marginLeft: "auto",
   },
   mainLayout: {
     display: "flex",
-    gap: "16px",
+    gap: "12px",
     alignItems: "flex-start",
-    marginBottom: "16px",
   },
   leftPanel: {
     flex: "1 1 60%",
@@ -97,7 +95,7 @@ const st: Record<string, React.CSSProperties> = {
     flexDirection: "column" as const,
   },
   rightPanel: {
-    flex: "0 0 400px",
+    flex: "0 0 380px",
     display: "flex",
     flexDirection: "column" as const,
   },
@@ -105,34 +103,34 @@ const st: Record<string, React.CSSProperties> = {
     width: "100%",
     borderRadius: "8px",
     backgroundColor: "#000",
-    maxHeight: "60vh",
+    maxHeight: "45vh",
   },
   controls: {
     display: "flex",
     alignItems: "center",
-    gap: "8px",
-    padding: "6px 10px",
+    gap: "6px",
+    padding: "4px 8px",
     backgroundColor: "#1e293b",
-    borderRadius: "8px",
-    marginTop: "6px",
+    borderRadius: "6px",
+    marginTop: "4px",
     flexWrap: "wrap" as const,
   },
   playBtn: {
-    padding: "8px 16px",
+    padding: "5px 12px",
     backgroundColor: "#3b82f6",
     color: "#fff",
     border: "none",
-    borderRadius: "6px",
+    borderRadius: "5px",
     cursor: "pointer",
     fontWeight: 600,
-    fontSize: "0.9rem",
+    fontSize: "0.8rem",
   },
   optBtn: {
-    padding: "5px 8px",
+    padding: "3px 6px",
     border: "1px solid #475569",
-    borderRadius: "4px",
+    borderRadius: "3px",
     cursor: "pointer",
-    fontSize: "0.75rem",
+    fontSize: "0.7rem",
     fontWeight: 500,
     backgroundColor: "#334155",
     color: "#e2e8f0",
@@ -144,45 +142,19 @@ const st: Record<string, React.CSSProperties> = {
   },
   timeDisplay: {
     color: "#94a3b8",
-    fontSize: "0.85rem",
+    fontSize: "0.8rem",
     fontVariantNumeric: "tabular-nums",
-  },
-  labelRow: {
-    display: "flex",
-    gap: "10px",
-    justifyContent: "center",
-    marginTop: "16px",
-    flexWrap: "wrap" as const,
-  },
-  labelBtn: {
-    flex: "1 1 0",
-    padding: "14px 8px",
-    fontSize: "1rem",
-    fontWeight: 700,
-    border: "3px solid transparent",
-    borderRadius: "12px",
-    cursor: "pointer",
-    color: "#fff",
-    maxWidth: "200px",
-    minWidth: "120px",
-    transition: "transform 0.1s",
   },
   notDownloaded: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    height: "300px",
+    height: "200px",
     backgroundColor: "#1e293b",
     borderRadius: "8px",
     color: "#f59e0b",
-    fontSize: "1.1rem",
+    fontSize: "1rem",
     fontWeight: 600,
-  },
-  sectionTitle: {
-    fontSize: "0.85rem",
-    fontWeight: 600,
-    color: "#f8fafc",
-    marginBottom: "6px",
   },
   loading: {
     textAlign: "center" as const,
@@ -245,6 +217,7 @@ export default function SmileAnnotate() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [notes, setNotes] = useState("");
+  const [lowConfidence, setLowConfidence] = useState(false);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
@@ -389,13 +362,24 @@ export default function SmileAnnotate() {
       await fetch(`${API}/smile-annotations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ annotator, task_number: taskData.task.task_number, label, notes }),
+        body: JSON.stringify({
+          annotator,
+          task_number: taskData.task.task_number,
+          label,
+          notes,
+          low_confidence: lowConfidence,
+        }),
       });
       setAnnotations((prev) => {
         const a = prev ? { ...prev } : { annotator, annotations: {} };
         a.annotations = {
           ...a.annotations,
-          [String(taskData.task.task_number)]: { label, timestamp: new Date().toISOString(), notes: notes || undefined },
+          [String(taskData.task.task_number)]: {
+            label,
+            timestamp: new Date().toISOString(),
+            notes: notes || undefined,
+            low_confidence: lowConfidence || undefined,
+          },
         };
         return a;
       });
@@ -404,7 +388,7 @@ export default function SmileAnnotate() {
       }
     } catch { /* ignore */ }
     setSaving(false);
-  }, [annotator, taskData, saving, goToTask]);
+  }, [annotator, taskData, saving, goToTask, notes, lowConfidence]);
 
   const handleJump = useCallback(() => {
     const n = parseInt(jumpVal, 10);
@@ -421,6 +405,7 @@ export default function SmileAnnotate() {
 
   useEffect(() => {
     setNotes(currentAnnotation?.notes ?? "");
+    setLowConfidence(currentAnnotation?.low_confidence ?? false);
   }, [taskNum]);
 
   const seekBarSmileLeft = useMemo(() => {
@@ -447,31 +432,22 @@ export default function SmileAnnotate() {
 
   return (
     <div style={st.page}>
-      {/* Top bar */}
+      {/* Top bar: nav + instruction merged */}
       <div style={st.topBar}>
         <span style={st.taskLabel}>
           Task {task.task_number} / {task.available_tasks}
         </span>
-        <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+        <span style={{ fontSize: "0.7rem", color: "#64748b" }}>
           ({task.total_tasks} total)
         </span>
         <span style={st.annotator}>{annotator}</span>
 
-        <button
-          style={st.navBtn}
-          onClick={() => goToTask(task.task_number - 1)}
-          disabled={task.task_number <= 1}
-        >
+        <button style={st.navBtn} onClick={() => goToTask(task.task_number - 1)} disabled={task.task_number <= 1}>
           Prev
         </button>
-        <button
-          style={st.navBtn}
-          onClick={() => goToTask(task.task_number + 1)}
-          disabled={task.task_number >= task.total_tasks}
-        >
+        <button style={st.navBtn} onClick={() => goToTask(task.task_number + 1)} disabled={task.task_number >= task.total_tasks}>
           Next
         </button>
-
         <input
           style={st.jumpInput}
           type="text"
@@ -484,35 +460,21 @@ export default function SmileAnnotate() {
 
         {currentLabel && (
           <span style={{
-            fontSize: "0.85rem",
-            fontWeight: 600,
+            fontSize: "0.8rem", fontWeight: 600,
             color: SMILE_LABELS.find((l) => l.key === currentLabel)?.color ?? "#94a3b8",
-            padding: "4px 10px",
-            backgroundColor: "#0f172a",
-            borderRadius: "6px",
+            padding: "2px 8px", backgroundColor: "#0f172a", borderRadius: "5px",
           }}>
-            Labeled: {SMILE_LABELS.find((l) => l.key === currentLabel)?.display ?? currentLabel}
+            {SMILE_LABELS.find((l) => l.key === currentLabel)?.display ?? currentLabel}
           </span>
         )}
 
-        <span style={{ ...st.annotator, marginLeft: "auto", fontSize: "0.8rem" }}>
-          Video: {task.video_id}
+        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#fbbf24" }}>
+          Label the <strong>highlighted</strong> smile. Ignore others.
+        </span>
+        <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+          {task.video_id}
         </span>
         <button style={st.logoutBtn} onClick={handleLogout}>Logout</button>
-      </div>
-
-      {/* Instruction */}
-      <div style={{
-        padding: "8px 16px",
-        marginBottom: "10px",
-        backgroundColor: "#1c1917",
-        border: "1px solid #f59e0b44",
-        borderRadius: "8px",
-        fontSize: "0.85rem",
-        color: "#fbbf24",
-      }}>
-        Provide the label for the <strong>highlighted smile</strong> (orange border on video, yellow bar on timeline).
-        If there are other smiles in the video, ignore them.
       </div>
 
       <div style={st.mainLayout}>
@@ -522,7 +484,7 @@ export default function SmileAnnotate() {
               {/* Video with smile-region border glow */}
               <div style={{
                 borderRadius: "10px",
-                padding: "4px",
+                padding: "3px",
                 backgroundColor: isInSmile ? "#f59e0b" : "transparent",
                 transition: "background-color 0.2s",
               }}>
@@ -535,15 +497,10 @@ export default function SmileAnnotate() {
                 />
               </div>
 
-              {/* Custom seek bar with smile highlight */}
+              {/* Custom seek bar */}
               <div style={{
-                position: "relative",
-                height: "20px",
-                marginTop: "6px",
-                backgroundColor: "#1e293b",
-                borderRadius: "4px",
-                cursor: "pointer",
-                overflow: "hidden",
+                position: "relative", height: "14px", marginTop: "4px",
+                backgroundColor: "#1e293b", borderRadius: "3px", cursor: "pointer", overflow: "hidden",
               }}
                 onClick={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
@@ -551,182 +508,160 @@ export default function SmileAnnotate() {
                   seek(playStart + pct * (playEnd - playStart));
                 }}
               >
-                {/* Smile region highlight */}
                 <div style={{
                   position: "absolute",
-                  left: `${seekBarSmileLeft}%`,
-                  width: `${seekBarSmileWidth}%`,
-                  top: 0,
-                  bottom: 0,
+                  left: `${seekBarSmileLeft}%`, width: `${seekBarSmileWidth}%`,
+                  top: 0, bottom: 0,
                   backgroundColor: "#f59e0b55",
-                  borderLeft: "2px solid #f59e0b",
-                  borderRight: "2px solid #f59e0b",
+                  borderLeft: "2px solid #f59e0b", borderRight: "2px solid #f59e0b",
                 }} />
-                {/* Playhead */}
                 <div style={{
                   position: "absolute",
                   left: `${playEnd > playStart ? ((currentTime - playStart) / (playEnd - playStart)) * 100 : 0}%`,
-                  top: 0,
-                  bottom: 0,
-                  width: "3px",
-                  backgroundColor: "#3b82f6",
-                  borderRadius: "2px",
+                  top: 0, bottom: 0, width: "3px",
+                  backgroundColor: "#3b82f6", borderRadius: "2px",
                   transition: "left 0.05s linear",
                 }} />
               </div>
 
-              {/* Controls row */}
+              {/* Controls */}
               <div style={st.controls}>
                 <button style={st.playBtn} onClick={togglePlay}>
-                  {playing ? "\u23F8 Pause" : "\u25B6 Play"}
+                  {playing ? "\u23F8" : "\u25B6"}
                 </button>
 
-                {/* Speed */}
-                <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.7rem", color: "#64748b", marginRight: "2px" }}>Speed</span>
+                <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.65rem", color: "#64748b" }}>Spd</span>
                   {SPEEDS.map((r) => (
-                    <button
-                      key={r}
-                      style={{ ...st.optBtn, ...(speed === r ? st.optActive : {}) }}
-                      onClick={() => setSpeed(r)}
-                    >
+                    <button key={r} style={{ ...st.optBtn, ...(speed === r ? st.optActive : {}) }} onClick={() => setSpeed(r)}>
                       {r}x
                     </button>
                   ))}
                 </div>
-
-                <span style={{ color: "#334155" }}>|</span>
-
-                {/* Before seconds */}
-                <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.7rem", color: "#64748b", marginRight: "2px" }}>Before</span>
+                <span style={{ color: "#334155", fontSize: "0.7rem" }}>|</span>
+                <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.65rem", color: "#64748b" }}>Before</span>
                   {BEFORE_OPTIONS.map((v) => (
-                    <button
-                      key={v}
-                      style={{ ...st.optBtn, ...(ctxBefore === v ? st.optActive : {}) }}
-                      onClick={() => setCtxBefore(v)}
-                    >
+                    <button key={v} style={{ ...st.optBtn, ...(ctxBefore === v ? st.optActive : {}) }} onClick={() => setCtxBefore(v)}>
                       {v}s
                     </button>
                   ))}
                 </div>
-
-                <span style={{ color: "#334155" }}>|</span>
-
-                {/* After seconds */}
-                <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.7rem", color: "#64748b", marginRight: "2px" }}>After</span>
+                <span style={{ color: "#334155", fontSize: "0.7rem" }}>|</span>
+                <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.65rem", color: "#64748b" }}>After</span>
                   {AFTER_OPTIONS.map((v) => (
-                    <button
-                      key={v}
-                      style={{ ...st.optBtn, ...(ctxAfter === v ? st.optActive : {}) }}
-                      onClick={() => setCtxAfter(v)}
-                    >
+                    <button key={v} style={{ ...st.optBtn, ...(ctxAfter === v ? st.optActive : {}) }} onClick={() => setCtxAfter(v)}>
                       {v}s
                     </button>
                   ))}
                 </div>
-
-                <span style={st.timeDisplay}>
-                  {fmtTime(currentTime)} / {fmtTime(duration)}
+                <span style={st.timeDisplay}>{fmtTime(currentTime)}/{fmtTime(duration)}</span>
+                <span style={{ fontSize: "0.7rem", color: "#64748b" }}>
+                  Smile {fmtTime(task.smile_start)}-{fmtTime(task.smile_end)}
                 </span>
-              </div>
-
-              <div style={{
-                display: "flex", gap: "12px", marginTop: "4px",
-                fontSize: "0.8rem", color: "#64748b", padding: "0 4px",
-              }}>
-                <span>Smile: {fmtTime(task.smile_start)} - {fmtTime(task.smile_end)}</span>
-                <span>Peak: {task.peak_r.toFixed(2)}</span>
-                <span>Mean: {task.mean_r.toFixed(2)}</span>
               </div>
             </>
           ) : (
             <div style={st.notDownloaded}>Video not yet downloaded</div>
           )}
 
-          {/* Notes */}
-          <div style={{ marginTop: "12px" }}>
+          {/* Label cards: button + description underneath, in a 4-column grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "8px",
+            marginTop: "10px",
+          }}>
+            {SMILE_LABELS.map((l) => (
+              <div key={l.key} style={{
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "10px",
+                overflow: "hidden",
+                border: currentLabel === l.key ? "2px solid #fff" : "2px solid transparent",
+              }}>
+                <button
+                  style={{
+                    padding: "10px 6px",
+                    fontSize: "0.9rem",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#fff",
+                    backgroundColor: l.color,
+                    opacity: saving ? 0.6 : 1,
+                  }}
+                  onClick={() => handleLabel(l.key)}
+                  disabled={saving}
+                >
+                  {l.display}
+                </button>
+                <div style={{
+                  padding: "6px 8px",
+                  fontSize: "0.7rem",
+                  lineHeight: 1.4,
+                  color: "#94a3b8",
+                  backgroundColor: "#1e293b",
+                  flex: 1,
+                }}>
+                  {l.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Notes + confidence row */}
+          <div style={{
+            display: "flex",
+            gap: "8px",
+            alignItems: "center",
+            marginTop: "8px",
+          }}>
             <input
               type="text"
               placeholder="Notes (optional)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               style={{
-                width: "100%",
-                padding: "8px 12px",
-                fontSize: "0.85rem",
+                flex: 1,
+                padding: "6px 10px",
+                fontSize: "0.8rem",
                 border: "1px solid #475569",
-                borderRadius: "6px",
+                borderRadius: "5px",
                 backgroundColor: "#1e293b",
                 color: "#e2e8f0",
-                boxSizing: "border-box" as const,
                 outline: "none",
               }}
             />
+            <button
+              onClick={() => setLowConfidence((v) => !v)}
+              style={{
+                padding: "6px 12px",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                border: lowConfidence ? "1px solid #ef4444" : "1px solid #475569",
+                borderRadius: "5px",
+                cursor: "pointer",
+                backgroundColor: lowConfidence ? "#7f1d1d" : "#334155",
+                color: lowConfidence ? "#fca5a5" : "#94a3b8",
+                whiteSpace: "nowrap" as const,
+              }}
+            >
+              {lowConfidence ? "\u26A0 Low confidence" : "< 70% confident?"}
+            </button>
           </div>
-
-          {/* Label buttons */}
-          <div style={st.labelRow}>
-            {SMILE_LABELS.map((l) => (
-              <button
-                key={l.key}
-                style={{
-                  ...st.labelBtn,
-                  backgroundColor: l.color,
-                  opacity: saving ? 0.6 : 1,
-                  borderColor: currentLabel === l.key ? "#fff" : "transparent",
-                }}
-                onClick={() => handleLabel(l.key)}
-                disabled={saving}
-              >
-                {l.display}
-              </button>
-            ))}
-          </div>
-
-          {/* Label Descriptions */}
-          <div style={{
-              marginTop: "8px",
-              padding: "14px 18px",
-              backgroundColor: "#1e293b",
-              borderRadius: "10px",
-              fontSize: "0.85rem",
-              lineHeight: 1.6,
-              color: "#cbd5e1",
-            }}>
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "#22c55e" }}>Genuine Smile</strong>
-                <div>A smile driven by true positive emotion. Some physical things to look for are wrinkled skin near corners of eyes, cheeks pushing upwards, eyebrows lowered, and straightening of the lowered eyelid. Genuine smiles build in intensity over time and usually do not fade instantly. Some behaviors to look for are &ldquo;sparkles&rdquo; in the eyes or remembering something fondly. These smiles may feel somewhat more natural and &ldquo;fluid&rdquo; than polite smiles.
-              <br />
-              
-              Note: You should use behaviors only as helpful context, as polite and genuine smiles can have overlapping behaviors. </div>
-              </div>
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "#3b82f6" }}>Polite Smile</strong>
-                <div>A controlled smile meant for social etiquette, or oftentimes acknowledgement of an interviewer's question. Polite smiles can also indicate positive emotions sometimes: in these cases, the interview context and physical features should be considered. Some physical things to look for are eyes remaining relatively static and/or open even as the mouth moves. They often appear and disappear quicker than genuine smiles. If the subject laughs, consider whether it is from joy (genuine smile) or from acknowledgement, nervousness, or as a social/communicative function (polite smile).</div>
-              </div>
-              <div style={{ marginBottom: "10px" }}>
-                <strong style={{ color: "#f59e0b" }}>Masking Smile</strong>
-                <div>A smile used to convey a different underlying emotion than happiness. Look for micro-expressions in other parts of the face that betray the smile: typical emotions with masking smiles include sadness, anger, contempt, irony, or frustration. Also, see if the smile disappears quickly by looking at the corners of the mouth. If a smile disappears quickly, it is likely either a masking smile or a polite smile. In these cases, use behaviors, speech audio, and narrative context to make your decision.</div>
-              </div>
-              <div>
-                <strong style={{ color: "#64748b" }}>Not a Smile</strong>
-                <div>For segments where the subject is not smiling. If you're unsure, then assume it is a smile.</div>
-              </div>
-            </div>
         </div>
 
-        {/* Transcript panel -- full transcript, scrollable */}
+        {/* Transcript panel */}
         <div style={st.rightPanel}>
-          <h3 style={st.sectionTitle}>Transcript</h3>
           <TranscriptTrack
             utterances={taskData.utterances}
             currentTimeMs={currentTime * 1000}
             onSeek={(ms) => seek(ms / 1000)}
             smileStartMs={task.smile_start * 1000}
             smileEndMs={task.smile_end * 1000}
-            maxHeight="calc(100vh - 180px)"
+            maxHeight="calc(100vh - 60px)"
             initialScrollToMs={task.smile_start * 1000}
           />
         </div>
