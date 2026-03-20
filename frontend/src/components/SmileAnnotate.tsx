@@ -523,7 +523,12 @@ export default function SmileAnnotate() {
           Label the <strong>highlighted</strong> smile. Ignore others.
         </span>
         <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-          {task.video_id}
+          {(() => {
+            const [subject, tape] = task.video_id.split(".");
+            return tape
+              ? <span>Subject <strong style={{ color: "#94a3b8" }}>{subject}</strong> · Tape <strong style={{ color: "#94a3b8" }}>{tape}</strong></span>
+              : task.video_id;
+          })()}
         </span>
         <button
           onClick={() => setShowHelp(true)}
