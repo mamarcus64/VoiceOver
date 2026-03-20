@@ -18,7 +18,7 @@ Then open **http://localhost:1945** in your browser.
 
 ### Prerequisites
 
-- **Git LFS** (data files are stored with Git Large File Storage)
+- **Git LFS** (data files use Git Large File Storage; **they are not auto-downloaded** on `git pull` in a normal setup—see below)
 - **Python 3.10+**
 - **Node.js 18+** and npm
 - **ffmpeg** (for video processing)
@@ -38,10 +38,18 @@ brew install git-lfs python node ffmpeg yt-dlp
 ### Step-by-step
 
 ```bash
-# 0. Clone (Git LFS pulls data automatically)
+# 0. Clone without downloading LFS blobs (recommended; saves many GB)
 git lfs install
-git clone https://github.com/mamarcus64/VoiceOver.git
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/mamarcus64/VoiceOver.git
 cd VoiceOver
+# setup.sh configures this repo for lazy LFS; or run manually:
+#   bash scripts/git-lfs-lazy.sh
+
+# Pull only the LFS paths you need, e.g. manifest + one transcript type:
+# git lfs pull --include='data/manifest.json'
+# git lfs pull --include='data/transcripts_llm/*.json'
+# Everything (very large):
+# git lfs pull --include='*'
 
 # 1. Install dependencies and build frontend
 bash setup.sh

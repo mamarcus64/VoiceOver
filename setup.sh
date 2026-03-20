@@ -7,6 +7,14 @@ cd "$SCRIPT_DIR"
 echo "=== VoiceOver Setup ==="
 echo ""
 
+# --- Git LFS: do not auto-download large files on pull/checkout (this clone only) ---
+if [ -d .git ] && command -v git-lfs &>/dev/null; then
+  echo "[0/4] Git LFS: lazy download (skip smudge on checkout/pull)..."
+  git lfs install --local --skip-smudge --force
+  echo "      Large files stay as pointers until: git lfs pull --include='…'"
+  echo ""
+fi
+
 # --- Python virtual environment ---
 # Require Python 3.10+ (3.9 is not supported by yt-dlp)
 PYTHON_BIN=""
