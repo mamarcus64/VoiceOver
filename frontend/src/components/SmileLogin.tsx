@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const STORAGE_KEY = "smile_annotator_name";
 const HELP_SEEN_KEY = "smile_help_seen";
@@ -73,8 +73,14 @@ const st: Record<string, React.CSSProperties> = {
   },
 };
 
+function safeNextPath(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 export default function SmileLogin() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -82,8 +88,11 @@ export default function SmileLogin() {
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) navigate("/smile-annotate", { replace: true });
-  }, [navigate]);
+    if (saved) {
+      const dest = safeNextPath(searchParams.get("next")) ?? "/smile-annotate";
+      navigate(dest, { replace: true });
+    }
+  }, [navigate, searchParams]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -103,7 +112,8 @@ export default function SmileLogin() {
       localStorage.setItem(STORAGE_KEY, data.annotator);
       const isFirstLogin = !localStorage.getItem(HELP_SEEN_KEY);
       if (isFirstLogin) localStorage.setItem(HELP_SEEN_KEY, "1");
-      navigate("/smile-annotate", { replace: true, state: { showHelp: isFirstLogin } });
+      const dest = safeNextPath(searchParams.get("next")) ?? "/smile-annotate";
+      navigate(dest, { replace: true, state: { showHelp: isFirstLogin && dest === "/smile-annotate" } });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
