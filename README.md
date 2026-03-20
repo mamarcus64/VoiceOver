@@ -99,7 +99,7 @@ VoiceOver/
 │   ├── transcripts_llm/  # LLM-corrected transcripts
 │   ├── audio_vad/        # Audio emotion data (per video)
 │   ├── eyegaze_vad/      # Eyegaze emotion data (per video, from GLASS)
-│   ├── eyegaze_vectors/  # Per-frame binocular gaze vectors (OpenFace-style CSV)
+│   ├── eyegaze_vectors/  # Binocular gaze CSVs (local only — see data/eyegaze_vectors/README.md)
 │   ├── smiling_segments/ # Pre-extracted AU12 smile segments (per video)
 │   ├── annotations/      # User annotations (gitignored, per annotator)
 │   └── videos/           # Downloaded .mp4 files (gitignored)
@@ -121,6 +121,9 @@ All data files under `data/` are tracked with **Git LFS** (~2.6 GB total). They 
 
 ### Videos
 Videos are **not** included (5,000+ files, too large). Use the browser UI to selectively download videos from YouTube, or use yt-dlp directly.
+
+### Eyegaze vectors
+Per-frame binocular gaze CSVs under `data/eyegaze_vectors/` are **not** in git (too large for LFS in this repo). Add them locally if you want the gaze figure in the player; see `data/eyegaze_vectors/README.md`. If your clone used to have them as tracked LFS files, **back up that folder before `git pull`** after this change, then restore it so existing copies stay on disk.
 
 ### Annotations
 Annotations are user-generated and stored locally in `data/annotations/` (not tracked in git).
