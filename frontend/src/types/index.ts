@@ -180,6 +180,32 @@ export interface SmilePreviewStats {
 
 export type SmileLabel = "genuine" | "polite" | "masking" | "not_a_smile";
 
+export interface SmileAgreementPairwise {
+  annotator_a: string;
+  annotator_b: string;
+  n_tasks: number;
+  cohen_kappa: number | null;
+  coarse_cohen_kappa: number | null;
+  percent_agreement: number | null;
+  coarse_percent_agreement: number | null;
+  confusion: number[][];
+  coarse_confusion: number[][];
+}
+
+export interface SmileAgreementStats {
+  annotators: string[];
+  valid_labels: string[];
+  coarse_labels: string[];
+  per_annotator_counts: Record<string, Record<string, number>>;
+  tasks_with_any_label: number;
+  tasks_fully_labeled: number;
+  percent_full_agreement: number | null;
+  coarse_percent_full_agreement: number | null;
+  fleiss_kappa: number | null;
+  coarse_fleiss_kappa: number | null;
+  pairwise: SmileAgreementPairwise[];
+}
+
 export const SMILE_LABELS: { key: SmileLabel; display: string; color: string; desc: string }[] = [
   { key: "genuine", display: "Genuine Smile", color: "#22c55e",
     desc: "A smile that demonstrates true happiness. Look for laughter, \u201Csparkles\u201D in the eyes, closed eyes, and contextually happy words and speech." },
