@@ -4,6 +4,7 @@ import PlayerPage from "./components/PlayerPage";
 import SmileLogin from "./components/SmileLogin";
 import SmileConfig from "./components/SmileConfig";
 import SmileAnnotate from "./components/SmileAnnotate";
+import SmileAgreement from "./components/SmileAgreement";
 
 const HIDE_DEV_TABS = import.meta.env.VITE_HIDE_DEV_TABS === "true";
 
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/smile-login" replace />} />
           <Route path="/smile-login" element={<SmileLogin />} />
           <Route path="/smile-annotate" element={<SmileAnnotate />} />
+          <Route path="/agreement" element={<SmileAgreement />} />
           <Route path="*" element={<Navigate to="/smile-login" replace />} />
         </Routes>
       </BrowserRouter>
@@ -29,6 +31,7 @@ export default function App() {
         <Route path="/smile-login" element={<SmileLogin />} />
         <Route path="/smile-config" element={<SmileConfig />} />
         <Route path="/smile-annotate" element={<SmileAnnotate />} />
+        <Route path="/agreement" element={<SmileAgreement />} />
       </Routes>
     </BrowserRouter>
   );
