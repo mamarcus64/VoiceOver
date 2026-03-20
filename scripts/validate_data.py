@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate the integrity of all VoiceOver data files."""
 
+import csv
 import json
 import os
 import sys
@@ -106,6 +107,41 @@ def validate_eyegaze_vad():
     print(f"  {len(files)} eyegaze_vad files found")
 
 
+def validate_eyegaze_vectors():
+    print("Checking eyegaze_vectors/...")
+    gdir = DATA_DIR / "eyegaze_vectors"
+    if not gdir.is_dir():
+        warn("eyegaze_vectors/ not found (run scripts/extract_eyegaze_vectors.py)")
+        return
+    files = list(gdir.glob("*.csv"))
+    if not files:
+        warn("no eyegaze_vectors CSV files yet")
+        return
+
+    required = (
+        "frame",
+        "timestamp",
+        "gaze_0_x",
+        "gaze_0_y",
+        "gaze_0_z",
+        "gaze_1_x",
+        "gaze_1_y",
+        "gaze_1_z",
+    )
+
+    for f in files[:5]:
+        with open(f, newline="", encoding="utf-8") as fh:
+            r = csv.reader(fh)
+            header = next(r, None)
+        if not header:
+            check(False, f"{f.name}: empty file")
+            continue
+        for col in required:
+            check(col in header, f"{f.name}: missing column '{col}'")
+
+    print(f"  {len(files)} eyegaze_vectors files, schema OK on sample")
+
+
 def validate_annotations_dir():
     print("Checking annotations/...")
     ann_dir = DATA_DIR / "annotations"
@@ -122,6 +158,7 @@ def main():
     validate_transcripts()
     validate_audio_vad()
     validate_eyegaze_vad()
+    validate_eyegaze_vectors()
     validate_annotations_dir()
 
     print()
