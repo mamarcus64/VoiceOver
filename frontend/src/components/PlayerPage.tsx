@@ -4,7 +4,8 @@ import { usePlayback } from "../hooks/usePlayback";
 import TranscriptTrack from "./TranscriptTrack";
 import EmotionTrack from "./EmotionTrack";
 import SmilingMoments from "./SmilingMoments";
-import type { Utterance, AudioVADData, EyegazeVADData } from "../types";
+import GazeVectorsFigure from "./GazeVectorsFigure";
+import type { Utterance, AudioVADData, EyegazeVADData, EyegazeVectorsData } from "../types";
 
 const API_BASE = "/api/videos";
 
@@ -80,6 +81,7 @@ export default function PlayerPage() {
   const [utterances, setUtterances] = useState<Utterance[]>([]);
   const [audioEmotion, setAudioEmotion] = useState<AudioVADData | null>(null);
   const [eyegazeEmotion, setEyegazeEmotion] = useState<EyegazeVADData | null>(null);
+  const [eyegazeVectors, setEyegazeVectors] = useState<EyegazeVectorsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"default" | "smiling">("default");
@@ -90,17 +92,21 @@ export default function PlayerPage() {
     (async () => {
       setLoading(true);
       setError(null);
+      setEyegazeVectors(null);
       try {
-        const [tRes, aRes, eRes] = await Promise.all([
+        const [tRes, aRes, eRes, gRes] = await Promise.all([
           fetch(`${API_BASE}/${videoId}/transcript`),
           fetch(`${API_BASE}/${videoId}/audio-emotion`),
           fetch(`${API_BASE}/${videoId}/eyegaze-emotion`).catch(() => null),
+          fetch(`${API_BASE}/${videoId}/eyegaze-vectors`).catch(() => null),
         ]);
         if (cancelled) return;
         if (!tRes.ok) { setError(`Transcript: ${tRes.status}`); return; }
         setUtterances(await tRes.json());
         if (aRes.ok) setAudioEmotion(await aRes.json());
         if (eRes?.ok) setEyegazeEmotion(await eRes.json());
+        if (gRes?.ok) setEyegazeVectors(await gRes.json());
+        else setEyegazeVectors(null);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Load failed");
       } finally {
@@ -152,6 +158,10 @@ export default function PlayerPage() {
             <input type="range" min={0} max={state.duration || 1} step={0.1} value={state.currentTime}
               onChange={(e) => seek(Number(e.target.value))} style={st.seekBar} />
           </div>
+
+          {eyegazeVectors && eyegazeVectors.samples.length > 0 && (
+            <GazeVectorsFigure videoRef={videoRef} samples={eyegazeVectors.samples} />
+          )}
 
           {viewMode === "smiling" && (
             <div style={{ marginTop: "8px" }}>
