@@ -39,6 +39,33 @@ async def get_eyegaze_emotion(video_id: str):
     return {"video_id": video_id, "segments": segments}
 
 
+@router.get("/videos/{video_id:path}/eyegaze-vectors")
+async def get_eyegaze_vectors(video_id: str):
+    path = DATA_DIR / "eyegaze_vectors" / f"{video_id}.csv"
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Eyegaze vector data not found for video {video_id}",
+        )
+    samples = []
+    with open(path, newline="") as f:
+        for row in csv.DictReader(f):
+            samples.append({
+                "t": float(row["timestamp"]),
+                "g0": [
+                    float(row["gaze_0_x"]),
+                    float(row["gaze_0_y"]),
+                    float(row["gaze_0_z"]),
+                ],
+                "g1": [
+                    float(row["gaze_1_x"]),
+                    float(row["gaze_1_y"]),
+                    float(row["gaze_1_z"]),
+                ],
+            })
+    return {"video_id": video_id, "samples": samples}
+
+
 @router.get("/videos/{video_id:path}/smiling-segments")
 async def get_smiling_segments(video_id: str):
     path = DATA_DIR / "smiling_segments" / f"{video_id}.json"
