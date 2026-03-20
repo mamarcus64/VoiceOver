@@ -51,6 +51,18 @@ export interface EyegazeVADData {
   segments: EyegazeVADSegment[];
 }
 
+/** Per-eye gaze direction in head space (OpenFace-style gaze_0 / gaze_1). */
+export interface EyegazeVectorSample {
+  t: number;
+  g0: [number, number, number];
+  g1: [number, number, number];
+}
+
+export interface EyegazeVectorsData {
+  video_id: string;
+  samples: EyegazeVectorSample[];
+}
+
 export interface AnnotationEntry {
   start_sec: number;
   end_sec: number;

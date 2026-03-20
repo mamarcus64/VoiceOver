@@ -99,6 +99,7 @@ VoiceOver/
 │   ├── transcripts_llm/  # LLM-corrected transcripts
 │   ├── audio_vad/        # Audio emotion data (per video)
 │   ├── eyegaze_vad/      # Eyegaze emotion data (per video, from GLASS)
+│   ├── eyegaze_vectors/  # Per-frame binocular gaze vectors (OpenFace-style CSV)
 │   ├── smiling_segments/ # Pre-extracted AU12 smile segments (per video)
 │   ├── annotations/      # User annotations (gitignored, per annotator)
 │   └── videos/           # Downloaded .mp4 files (gitignored)
@@ -194,6 +195,7 @@ python scripts/validate_data.py
 | `/api/videos/{id}/transcript` | GET | Standardized transcript |
 | `/api/videos/{id}/audio-emotion` | GET | Audio VAD data |
 | `/api/videos/{id}/eyegaze-emotion` | GET | Eyegaze VAD data |
+| `/api/videos/{id}/eyegaze-vectors` | GET | Binocular gaze vectors (`gaze_0_*`, `gaze_1_*`) time-aligned to video |
 | `/api/videos/{id}/smiling-segments` | GET | Pre-extracted AU12 smile segments |
 | `/api/annotations` | GET | Load annotations |
 | `/api/annotations` | POST | Save annotations |
