@@ -185,18 +185,24 @@ export interface SmileAgreementPairwise {
   annotator_b: string;
   n_tasks: number;
   cohen_kappa: number | null;
+  coarse_cohen_kappa: number | null;
   percent_agreement: number | null;
+  coarse_percent_agreement: number | null;
   confusion: number[][];
+  coarse_confusion: number[][];
 }
 
 export interface SmileAgreementStats {
   annotators: string[];
   valid_labels: string[];
+  coarse_labels: string[];
   per_annotator_counts: Record<string, Record<string, number>>;
   tasks_with_any_label: number;
   tasks_fully_labeled: number;
   percent_full_agreement: number | null;
+  coarse_percent_full_agreement: number | null;
   fleiss_kappa: number | null;
+  coarse_fleiss_kappa: number | null;
   pairwise: SmileAgreementPairwise[];
 }
 

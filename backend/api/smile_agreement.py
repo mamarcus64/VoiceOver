@@ -20,6 +20,10 @@ router = APIRouter()
 VALID_LABELS = ("genuine", "polite", "masking", "not_a_smile")
 LABEL_INDEX = {lab: i for i, lab in enumerate(VALID_LABELS)}
 
+# Coarse grouping: genuine+polite → "positive"; masking and not_a_smile unchanged
+COARSE_LABELS = ("positive", "masking", "not_a_smile")
+_COARSE_MAP = (0, 0, 1, 2)  # maps fine label index → coarse label index
+
 
 def _list_annotator_names() -> list[str]:
     if not ANNOTATIONS_DIR.is_dir():
@@ -91,9 +95,17 @@ def _cohen_kappa(confusion: list[list[int]]) -> float | None:
     return (po - pe) / (1.0 - pe)
 
 
-def _empty_confusion() -> list[list[int]]:
-    k = len(VALID_LABELS)
+def _empty_confusion(k: int = len(VALID_LABELS)) -> list[list[int]]:
     return [[0] * k for _ in range(k)]
+
+
+def _fine_to_coarse_confusion(fine: list[list[int]]) -> list[list[int]]:
+    k = len(COARSE_LABELS)
+    coarse = [[0] * k for _ in range(k)]
+    for ri in range(len(VALID_LABELS)):
+        for ci in range(len(VALID_LABELS)):
+            coarse[_COARSE_MAP[ri]][_COARSE_MAP[ci]] += fine[ri][ci]
+    return coarse
 
 
 @router.get("/smile-agreement/annotators")
@@ -126,20 +138,33 @@ async def agreement_stats(annotators: str = Query(..., description="Comma-separa
             fully_labeled_tasks.append(task_key)
 
     fleiss: float | None = None
+    coarse_fleiss: float | None = None
     percent_full_agreement: float | None = None
+    coarse_percent_full_agreement: float | None = None
     if len(names) >= 2 and fully_labeled_tasks:
-        count_matrix: list[list[int]] = []
+        fine_count_matrix: list[list[int]] = []
+        coarse_count_matrix: list[list[int]] = []
         agree = 0
+        coarse_agree = 0
         for task_key in fully_labeled_tasks:
             labs = by_task[task_key]
-            row = [0] * len(VALID_LABELS)
+            row_fine = [0] * len(VALID_LABELS)
+            row_coarse = [0] * len(COARSE_LABELS)
             for a in names:
-                row[LABEL_INDEX[labs[a]]] += 1
-            count_matrix.append(row)
+                fi = LABEL_INDEX[labs[a]]
+                row_fine[fi] += 1
+                row_coarse[_COARSE_MAP[fi]] += 1
+            fine_count_matrix.append(row_fine)
+            coarse_count_matrix.append(row_coarse)
             if len(set(labs[a] for a in names)) == 1:
                 agree += 1
-        percent_full_agreement = 100.0 * agree / len(fully_labeled_tasks)
-        fleiss = _fleiss_kappa(count_matrix)
+            if len(set(_COARSE_MAP[LABEL_INDEX[labs[a]]] for a in names)) == 1:
+                coarse_agree += 1
+        n_full = len(fully_labeled_tasks)
+        percent_full_agreement = 100.0 * agree / n_full
+        coarse_percent_full_agreement = 100.0 * coarse_agree / n_full
+        fleiss = _fleiss_kappa(fine_count_matrix)
+        coarse_fleiss = _fleiss_kappa(coarse_count_matrix)
 
     pairwise: list[dict[str, Any]] = []
     for i, a in enumerate(names):
@@ -153,6 +178,7 @@ async def agreement_stats(annotators: str = Query(..., description="Comma-separa
                 ia = LABEL_INDEX[labs[a]]
                 ib = LABEL_INDEX[labs[b]]
                 conf[ia][ib] += 1
+            coarse_conf = _fine_to_coarse_confusion(conf)
             if n_both == 0:
                 pairwise.append(
                     {
@@ -160,32 +186,44 @@ async def agreement_stats(annotators: str = Query(..., description="Comma-separa
                         "annotator_b": b,
                         "n_tasks": 0,
                         "cohen_kappa": None,
+                        "coarse_cohen_kappa": None,
                         "percent_agreement": None,
+                        "coarse_percent_agreement": None,
                         "confusion": conf,
+                        "coarse_confusion": coarse_conf,
                     }
                 )
                 continue
             agree_pair = sum(conf[j][j] for j in range(len(VALID_LABELS)))
+            coarse_agree_pair = sum(coarse_conf[j][j] for j in range(len(COARSE_LABELS)))
             pct = 100.0 * agree_pair / n_both
+            coarse_pct = 100.0 * coarse_agree_pair / n_both
             kap = _cohen_kappa(conf)
+            coarse_kap = _cohen_kappa(coarse_conf)
             pairwise.append(
                 {
                     "annotator_a": a,
                     "annotator_b": b,
                     "n_tasks": n_both,
                     "cohen_kappa": kap,
+                    "coarse_cohen_kappa": coarse_kap,
                     "percent_agreement": pct,
+                    "coarse_percent_agreement": coarse_pct,
                     "confusion": conf,
+                    "coarse_confusion": coarse_conf,
                 }
             )
 
     return {
         "annotators": names,
         "valid_labels": list(VALID_LABELS),
+        "coarse_labels": list(COARSE_LABELS),
         "per_annotator_counts": per_annotator_counts,
         "tasks_with_any_label": len(by_task),
         "tasks_fully_labeled": len(fully_labeled_tasks),
         "percent_full_agreement": percent_full_agreement,
+        "coarse_percent_full_agreement": coarse_percent_full_agreement,
         "fleiss_kappa": fleiss,
+        "coarse_fleiss_kappa": coarse_fleiss,
         "pairwise": pairwise,
     }
