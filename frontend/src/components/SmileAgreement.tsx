@@ -13,16 +13,16 @@ import {
   YAxis,
 } from "recharts";
 import type { SmileAgreementStats } from "../types";
-import { SMILE_LABELS } from "../types";
+import { ALL_SMILE_LABELS } from "../types";
 
 const STORAGE_KEY = "smile_annotator_name";
 const API = "/api";
 
 const LABEL_DISPLAY: Record<string, string> = Object.fromEntries(
-  SMILE_LABELS.map((x) => [x.key, x.display])
+  ALL_SMILE_LABELS.map((x) => [x.key, x.display])
 );
 const LABEL_COLOR: Record<string, string> = {
-  ...Object.fromEntries(SMILE_LABELS.map((x) => [x.key, x.color])),
+  ...Object.fromEntries(ALL_SMILE_LABELS.map((x) => [x.key, x.color])),
   positive: "#60a5fa",
   masking: "#f59e0b",
   not_a_smile: "#64748b",

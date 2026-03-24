@@ -84,6 +84,22 @@ export default function HelpModal({ onClose }: Props) {
           </div>
         </Section>
 
+        {/* Section: Not a Smile toggle */}
+        <Section title="Not a Smile">
+          <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7 }}>
+            If the detector flagged something that is <strong style={{ color: "#e2e8f0" }}>not actually a smile</strong>,
+            click the{" "}
+            <span style={{
+              backgroundColor: "#475569", color: "#f8fafc",
+              padding: "1px 7px", borderRadius: "4px", fontSize: "0.82rem", fontWeight: 600,
+            }}>
+              Not a Smile
+            </span>{" "}
+            toggle to mark it. You still need to assign an emotion label (Genuine, Polite, or Masking) —
+            this way we preserve what the expression <em>looks like</em> even when it isn't a true smile.
+          </p>
+        </Section>
+
         {/* Section: Workflow */}
         <Section title="Workflow">
           <ul style={{ margin: 0, paddingLeft: "18px", color: "#94a3b8", lineHeight: 1.8, fontSize: "0.9rem" }}>
@@ -116,7 +132,7 @@ export default function HelpModal({ onClose }: Props) {
             <li>Read the transcript — the <em>words</em> often clarify the emotional context.</li>
             <li>When unsure, go with your first instinct. Speed matters more than perfection.</li>
             <li>Use <strong style={{ color: "#e2e8f0" }}>Notes</strong> for anything worth flagging to the research team.</li>
-            <li>If a smile is simply mislabelled by the detector, pick <strong style={{ color: "#e2e8f0" }}>Not a Smile</strong>.</li>
+            <li>If a smile is simply mislabelled by the detector, toggle <strong style={{ color: "#e2e8f0" }}>Not a Smile</strong> on, then still pick an emotion label.</li>
           </ul>
         </Section>
 
