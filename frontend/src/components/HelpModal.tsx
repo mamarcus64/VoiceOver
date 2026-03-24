@@ -95,9 +95,18 @@ export default function HelpModal({ onClose }: Props) {
             }}>
               Not a Smile
             </span>{" "}
-            toggle to mark it. You still need to assign an emotion label (Genuine, Polite, or Masking) —
-            this way we preserve what the expression <em>looks like</em> even when it isn't a true smile.
+            toggle. This reveals two options:
           </p>
+          <ul style={{ margin: "8px 0 0", paddingLeft: "18px", color: "#94a3b8", lineHeight: 1.8, fontSize: "0.9rem" }}>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Assign an emotion label anyway</strong> — pick Genuine, Polite, or Masking
+              so we preserve what the expression <em>looks like</em> even when it isn't a true smile.
+            </li>
+            <li>
+              <strong style={{ color: "#e2e8f0" }}>Definitely Not a Smile</strong> — use this only when you are 100% certain
+              there is no smile at all. If there is any ambiguity, prefer assigning an emotion label.
+            </li>
+          </ul>
         </Section>
 
         {/* Section: Workflow */}

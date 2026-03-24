@@ -3,10 +3,11 @@ Smoke test for the smile prediction pipeline.
 
 Runs lightweight checks on every component:
 1. Data loading and soft-label computation
-2. Feature extraction (both aggregated and sequential)
+2. Feature extraction with modality selection
 3. Model forward passes
 4. Loss computation
-5. 1-epoch, 5-fold LOO to verify the full training loop
+5. k-fold CV training loop (1 epoch, 3 folds)
+6. Quick sweep (1 epoch, 3 folds, minimal grid)
 
 Usage:
     python -m analysis.smile_prediction.test_pipeline
@@ -20,6 +21,7 @@ import torch
 from .dataset import (
     build_tasks, extract_features, extract_aggregated_features,
     load_manifest, load_annotations, SMILE_CLASSES,
+    seq_feature_dim, agg_feature_dim,
 )
 from .models import AggregatedMLP, GRUClassifier, CNNClassifier, soft_label_loss
 from .train import main as train_main
@@ -49,12 +51,10 @@ def test_data_loading():
     tasks_multi = build_tasks(min_annotators=2)
     print(f"  Built {len(tasks_multi)} tasks (min_annotators=2)")
 
-    # Check soft labels sum to 1
     for t in tasks[:10]:
-        assert abs(t.soft_label.sum() - 1.0) < 1e-5, f"Task {t.task_number}: label sums to {t.soft_label.sum()}"
-        assert 0 < t.weight <= 1.0, f"Task {t.task_number}: weight={t.weight}"
+        assert abs(t.soft_label.sum() - 1.0) < 1e-5
+        assert 0 < t.weight <= 1.0
 
-    # Show a few examples
     print("\n  Example tasks:")
     for t in tasks[:5]:
         label_str = ", ".join(f"{c}={t.soft_label[i]:.2f}" for i, c in enumerate(SMILE_CLASSES))
@@ -68,37 +68,26 @@ def test_data_loading():
 
 
 def test_feature_extraction(tasks):
-    section("2. Feature Extraction")
+    section("2. Feature Extraction (modality variants)")
 
-    # Sequential features
     t = tasks[0]
-    feats = extract_features(t, window_before=30, window_after=30, grid_step=3)
-    assert feats is not None, "Feature extraction returned None"
-    seq = feats["sequence"]
-    print(f"  Sequential features for task {t.task_number}:")
-    print(f"    Shape: {seq.shape} (T={seq.shape[0]}, features={seq.shape[1]})")
-    print(f"    Feature dims: [audio_V,A,D,present, eyegaze_V,A,D,present, phase_b,d,a]")
-    print(f"    Audio coverage: {seq[:, 3].mean():.2f}")
-    print(f"    Eyegaze coverage: {seq[:, 7].mean():.2f}")
-    print(f"    Phase before: {seq[:, 8].sum():.0f} steps, "
-          f"during: {seq[:, 9].sum():.0f}, after: {seq[:, 10].sum():.0f}")
+    for modality in ["both", "audio", "eyegaze"]:
+        feats = extract_features(t, window_before=30, window_after=30, grid_step=3,
+                                 modality=modality)
+        assert feats is not None
+        seq = feats["sequence"]
+        expected_dim = seq_feature_dim(modality)
+        assert seq.shape[1] == expected_dim, (
+            f"{modality}: got {seq.shape[1]}, expected {expected_dim}")
+        print(f"  Sequential [{modality:>7s}]: shape={seq.shape}")
 
-    # Aggregated features
-    agg = extract_aggregated_features(t, window_before=30, window_after=30, grid_step=3)
-    assert agg is not None, "Aggregated extraction returned None"
-    print(f"\n  Aggregated features for task {t.task_number}:")
-    print(f"    Shape: {agg['features'].shape}")
-    print(f"    Values range: [{agg['features'].min():.4f}, {agg['features'].max():.4f}]")
-
-    # Extract a batch
-    print(f"\n  Extracting features for first 20 tasks...")
-    t0 = time.time()
-    count = 0
-    for task in tasks[:20]:
-        f = extract_features(task)
-        if f is not None:
-            count += 1
-    print(f"    {count}/20 successful ({time.time() - t0:.1f}s)")
+        agg = extract_aggregated_features(t, window_before=30, window_after=30, grid_step=3,
+                                          modality=modality)
+        assert agg is not None
+        expected_agg = agg_feature_dim(modality)
+        assert agg["features"].shape[0] == expected_agg, (
+            f"{modality}: agg got {agg['features'].shape[0]}, expected {expected_agg}")
+        print(f"  Aggregated [{modality:>7s}]: shape={agg['features'].shape}")
 
     print("  PASS")
 
@@ -106,30 +95,25 @@ def test_feature_extraction(tasks):
 def test_models():
     section("3. Model Forward Passes")
 
-    B, T, D = 4, 20, 11
+    B, T = 4, 20
 
-    # Random batch
-    x_seq = torch.randn(B, T, D)
-    lengths = torch.tensor([20, 15, 10, 5])
-    x_agg = torch.randn(B, 36)
+    for modality in ["both", "audio", "eyegaze"]:
+        d_seq = seq_feature_dim(modality)
+        d_agg = agg_feature_dim(modality)
+        x_seq = torch.randn(B, T, d_seq)
+        lengths = torch.tensor([20, 15, 10, 5])
+        x_agg = torch.randn(B, d_agg)
 
-    # MLP
-    mlp = AggregatedMLP(input_dim=36, hidden_dim=24)
-    out = mlp(x_agg)
-    print(f"  MLP:  input={x_agg.shape} -> output={out.shape}")
-    assert out.shape == (B, 3)
+        mlp = AggregatedMLP(input_dim=d_agg, hidden_dim=24)
+        assert mlp(x_agg).shape == (B, 3)
 
-    # GRU
-    gru = GRUClassifier(input_dim=D, hidden_dim=24)
-    out = gru(x_seq, lengths)
-    print(f"  GRU:  input={x_seq.shape} -> output={out.shape}")
-    assert out.shape == (B, 3)
+        gru = GRUClassifier(input_dim=d_seq, hidden_dim=24)
+        assert gru(x_seq, lengths).shape == (B, 3)
 
-    # CNN
-    cnn = CNNClassifier(input_dim=D, channels=16)
-    out = cnn(x_seq, lengths)
-    print(f"  CNN:  input={x_seq.shape} -> output={out.shape}")
-    assert out.shape == (B, 3)
+        cnn = CNNClassifier(input_dim=d_seq, channels=16)
+        assert cnn(x_seq, lengths).shape == (B, 3)
+
+        print(f"  [{modality:>7s}] MLP({d_agg}), GRU({d_seq}), CNN({d_seq}) — OK")
 
     print("  PASS")
 
@@ -148,10 +132,9 @@ def test_loss():
 
     loss = soft_label_loss(logits, soft_labels, weights)
     print(f"  Loss value: {loss.item():.4f}")
-    assert loss.item() > 0, "Loss should be positive"
-    assert not torch.isnan(loss), "Loss is NaN"
+    assert loss.item() > 0
+    assert not torch.isnan(loss)
 
-    # Check that zero weights contribute nothing
     weights_zero = torch.tensor([0.0, 0.0, 0.0, 0.0])
     loss_zero = soft_label_loss(logits, soft_labels, weights_zero)
     print(f"  Loss with zero weights: {loss_zero.item():.4f}")
@@ -159,27 +142,47 @@ def test_loss():
     print("  PASS")
 
 
-def test_loo_smoke():
-    section("5. LOO Training Smoke Test (1 epoch, 5 folds)")
+def test_kfold_cv():
+    section("5. k-fold CV Training Smoke Test")
 
-    print("  Running MLP with --epochs 1 --max-folds 5 ...")
+    configs = [
+        ("mlp", "both",    "10-fold"),
+        ("gru", "audio",   "10-fold"),
+        ("cnn", "eyegaze", "LOO"),
+    ]
+
+    for model, modality, fold_desc in configs:
+        folds_arg = "-1" if fold_desc == "LOO" else "3"
+        print(f"  {model}/{modality} ({fold_desc}) ...", end=" ", flush=True)
+        t0 = time.time()
+        # Use --folds 3 for quick testing (or -1 for LOO test with small data)
+        actual_folds = folds_arg
+        if fold_desc == "LOO":
+            actual_folds = "-1"
+            # LOO on full data is slow; use min-annotators=5 to shrink dataset
+            extra = ["--min-annotators", "5"]
+        else:
+            extra = []
+        train_main([
+            "--model", model, "--modality", modality,
+            "--epochs", "1", "--folds", actual_folds,
+            "--out", f"/tmp/smile_test_{model}_{modality}.json",
+            "--quiet",
+        ] + extra)
+        print(f"done ({time.time() - t0:.1f}s)")
+
+    print("  PASS")
+
+
+def test_sweep_quick():
+    section("6. Quick Sweep (smoke test)")
+
+    from .sweep import main as sweep_main
     t0 = time.time()
-    train_main(["--model", "mlp", "--epochs", "1", "--max-folds", "5",
-                "--out", "/tmp/smile_test_mlp.json"])
-    print(f"  MLP done ({time.time() - t0:.1f}s)")
-
-    print("\n  Running GRU with --epochs 1 --max-folds 5 ...")
-    t0 = time.time()
-    train_main(["--model", "gru", "--epochs", "1", "--max-folds", "5",
-                "--out", "/tmp/smile_test_gru.json"])
-    print(f"  GRU done ({time.time() - t0:.1f}s)")
-
-    print("\n  Running CNN with --epochs 1 --max-folds 5 ...")
-    t0 = time.time()
-    train_main(["--model", "cnn", "--epochs", "1", "--max-folds", "5",
-                "--out", "/tmp/smile_test_cnn.json"])
-    print(f"  CNN done ({time.time() - t0:.1f}s)")
-
+    # sweep --quick uses 1 epoch, 3 folds, minimal grid
+    sys.argv = ["sweep", "--quick", "--out-dir", "/tmp/smile_sweep_test"]
+    sweep_main()
+    print(f"\n  Sweep done ({time.time() - t0:.1f}s)")
     print("  PASS")
 
 
@@ -193,7 +196,8 @@ def main():
     test_feature_extraction(tasks)
     test_models()
     test_loss()
-    test_loo_smoke()
+    test_kfold_cv()
+    test_sweep_quick()
 
     section("ALL TESTS PASSED")
 

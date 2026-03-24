@@ -11,12 +11,14 @@ import os
 import numpy as np
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Literal
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 SMILE_CLASSES = ["genuine", "polite", "masking"]
 CLASS_TO_IDX = {c: i for i, c in enumerate(SMILE_CLASSES)}
+
+Modality = Literal["both", "audio", "eyegaze"]
 
 
 @dataclass
@@ -69,7 +71,6 @@ def build_tasks(
 
     task_by_num = {t["task_number"]: t for t in manifest["tasks"]}
 
-    # Collect per-task labels from all annotators
     task_labels: dict[int, list[str]] = {}
     for _name, anns in annotations.items():
         for k, v in anns.items():
@@ -163,7 +164,6 @@ def _audio_to_grid(segments: list[dict], grid: np.ndarray, grid_step: float) -> 
                 out[i, :3] += v * frac
                 out[i, 3] += frac
 
-    # Normalize where we have coverage
     mask = out[:, 3] > 0
     out[mask, :3] /= out[mask, 3:4]
     out[:, 3] = mask.astype(np.float32)
@@ -201,49 +201,55 @@ def extract_features(
     window_before: float = 30.0,
     window_after: float = 30.0,
     grid_step: float = 3.0,
+    modality: Modality = "both",
 ) -> Optional[dict]:
     """
     Extract time-aligned feature sequence for a single smile task.
 
+    Args:
+        modality: "both", "audio", or "eyegaze" — which VAD signals to include.
+
     Returns dict with:
-        "sequence": np.ndarray (T, 11)
-            [audio_V, audio_A, audio_D, audio_present,
-             eyegaze_V, eyegaze_A, eyegaze_D, eyegaze_present,
-             phase_before, phase_during, phase_after]
+        "sequence": np.ndarray (T, D) where D depends on modality:
+            both=11, audio=7, eyegaze=7
+            audio cols:   [audio_V, A, D, present, phase_b, d, a]
+            eyegaze cols: [eyegaze_V, A, D, present, phase_b, d, a]
+            both cols:    [audio_V, A, D, present, eyegaze_V, A, D, present, phase_b, d, a]
         "soft_label": np.ndarray (3,)
         "weight": float
         "task_number": int
     """
-    audio_data = load_audio_vad(task.video_id)
-    eyegaze_data = load_eyegaze_vad(task.video_id)
-
-    t_start = task.smile_start - window_before
+    t_start = max(task.smile_start - window_before, 0.0)
     t_end = task.smile_end + window_after
-    t_start = max(t_start, 0.0)
 
     grid = np.arange(t_start, t_end, grid_step, dtype=np.float32)
     if len(grid) == 0:
         return None
 
-    # Audio features (T, 4)
-    if audio_data and audio_data.get("segments"):
-        audio_feats = _audio_to_grid(audio_data["segments"], grid, grid_step)
-    else:
-        audio_feats = np.zeros((len(grid), 4), dtype=np.float32)
+    parts = []
 
-    # Eyegaze features (T, 4)
-    if eyegaze_data:
-        eyegaze_feats = _eyegaze_to_grid(eyegaze_data, grid, grid_step)
-    else:
-        eyegaze_feats = np.zeros((len(grid), 4), dtype=np.float32)
+    if modality in ("both", "audio"):
+        audio_data = load_audio_vad(task.video_id)
+        if audio_data and audio_data.get("segments"):
+            parts.append(_audio_to_grid(audio_data["segments"], grid, grid_step))
+        else:
+            parts.append(np.zeros((len(grid), 4), dtype=np.float32))
+
+    if modality in ("both", "eyegaze"):
+        eyegaze_data = load_eyegaze_vad(task.video_id)
+        if eyegaze_data:
+            parts.append(_eyegaze_to_grid(eyegaze_data, grid, grid_step))
+        else:
+            parts.append(np.zeros((len(grid), 4), dtype=np.float32))
 
     # Phase indicators (T, 3): before / during / after
     phase = np.zeros((len(grid), 3), dtype=np.float32)
     phase[:, 0] = (grid < task.smile_start).astype(np.float32)
     phase[:, 1] = ((grid >= task.smile_start) & (grid <= task.smile_end)).astype(np.float32)
     phase[:, 2] = (grid > task.smile_end).astype(np.float32)
+    parts.append(phase)
 
-    sequence = np.concatenate([audio_feats, eyegaze_feats, phase], axis=1)
+    sequence = np.concatenate(parts, axis=1)
 
     return {
         "sequence": sequence,
@@ -253,40 +259,45 @@ def extract_features(
     }
 
 
+def seq_feature_dim(modality: Modality) -> int:
+    """Return the feature dimension for a given modality config."""
+    return {"both": 11, "audio": 7, "eyegaze": 7}[modality]
+
+
 def extract_aggregated_features(
     task: SmileTask,
     window_before: float = 30.0,
     window_after: float = 30.0,
     grid_step: float = 3.0,
+    modality: Modality = "both",
 ) -> Optional[dict]:
     """
     Compute summary statistics per phase for the aggregated (Tier 1) baseline.
 
-    Returns dict with:
-        "features": np.ndarray (36,)
-            For each phase (before/during/after):
-                For each modality (audio/eyegaze):
-                    mean_V, mean_A, mean_D, std_V, std_A, std_D
-        "soft_label": np.ndarray (3,)
-        "weight": float
-        "task_number": int
+    Feature dim = 3 phases * n_modalities * 2 stats * 3 dims
+        both=36, audio=18, eyegaze=18
     """
-    raw = extract_features(task, window_before, window_after, grid_step)
+    raw = extract_features(task, window_before, window_after, grid_step, modality)
     if raw is None:
         return None
 
-    seq = raw["sequence"]  # (T, 11)
-    audio_vad = seq[:, :3]
-    audio_present = seq[:, 3]
-    eyegaze_vad = seq[:, 4:7]
-    eyegaze_present = seq[:, 7]
-    phase_before = seq[:, 8].astype(bool)
-    phase_during = seq[:, 9].astype(bool)
-    phase_after = seq[:, 10].astype(bool)
+    seq = raw["sequence"]  # (T, D)
+
+    # Parse columns based on modality
+    if modality == "both":
+        modality_blocks = [(seq[:, 0:3], seq[:, 3]), (seq[:, 4:7], seq[:, 7])]
+        phase_cols = seq[:, 8:11]
+    else:
+        modality_blocks = [(seq[:, 0:3], seq[:, 3])]
+        phase_cols = seq[:, 4:7]
+
+    phase_before = phase_cols[:, 0].astype(bool)
+    phase_during = phase_cols[:, 1].astype(bool)
+    phase_after = phase_cols[:, 2].astype(bool)
 
     parts = []
     for phase_mask in [phase_before, phase_during, phase_after]:
-        for vad, present in [(audio_vad, audio_present), (eyegaze_vad, eyegaze_present)]:
+        for vad, present in modality_blocks:
             mask = phase_mask & (present > 0.5)
             if mask.sum() > 0:
                 vals = vad[mask]
@@ -294,7 +305,7 @@ def extract_aggregated_features(
             else:
                 parts.extend([np.zeros(3, dtype=np.float32), np.zeros(3, dtype=np.float32)])
 
-    features = np.concatenate(parts)  # 3 phases * 2 modalities * 2 stats * 3 dims = 36
+    features = np.concatenate(parts)
 
     return {
         "features": features,
@@ -302,3 +313,9 @@ def extract_aggregated_features(
         "weight": raw["weight"],
         "task_number": raw["task_number"],
     }
+
+
+def agg_feature_dim(modality: Modality) -> int:
+    """Return the aggregated feature dimension for a given modality config."""
+    n_modalities = 2 if modality == "both" else 1
+    return 3 * n_modalities * 2 * 3

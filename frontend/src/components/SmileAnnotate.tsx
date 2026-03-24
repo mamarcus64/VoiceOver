@@ -707,8 +707,47 @@ export default function SmileAnnotate() {
             </button>
             {notASmile && (
               <span style={{ fontSize: "0.8rem", color: "#fbbf24", fontWeight: 500 }}>
-                Still assign an emotion label ↓
+                Still assign an emotion label, or:
               </span>
+            )}
+            {notASmile && (
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "10px",
+                overflow: "hidden",
+                border: currentLabel === "not_a_smile" ? "2px solid #64748b" : "2px solid #334155",
+                transition: "border-color 0.15s",
+                maxWidth: "260px",
+              }}>
+                <button
+                  style={{
+                    padding: "8px 14px",
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#fff",
+                    backgroundColor: "#64748b",
+                    opacity: saving ? 0.6 : 1,
+                    textAlign: "center",
+                  }}
+                  onClick={() => handleLabel("not_a_smile")}
+                  disabled={saving}
+                >
+                  Definitely Not a Smile
+                </button>
+                <div style={{
+                  padding: "6px 10px",
+                  fontSize: "0.72rem",
+                  lineHeight: 1.5,
+                  color: "#94a3b8",
+                  backgroundColor: "#1e293b",
+                  textAlign: "center",
+                }}>
+                  Click this if you are 100% sure this is not a smile. If there is ambiguity, please assign an emotion label.
+                </div>
+              </div>
             )}
           </div>
 
