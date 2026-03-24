@@ -116,9 +116,10 @@ class AnnotateBody(BaseModel):
     label: str
     notes: str = ""
     runner_up: str = ""
+    not_a_smile: bool = False
 
 
-VALID_LABELS = {"genuine", "polite", "masking", "not_a_smile"}
+VALID_LABELS = {"genuine", "polite", "masking"}
 
 
 @router.post("/smile-annotations")
@@ -141,6 +142,8 @@ async def save_annotation(body: AnnotateBody):
         if body.runner_up not in VALID_LABELS:
             raise HTTPException(status_code=400, detail=f"Invalid runner_up '{body.runner_up}'")
         entry["runner_up"] = body.runner_up
+    if body.not_a_smile:
+        entry["not_a_smile"] = True
     data["annotations"][str(body.task_number)] = entry
     _save_annotations(body.annotator, data)
-    return {"ok": True, "task_number": body.task_number, "label": body.label}
+    return {"ok": True, "task_number": body.task_number, "label": body.label, "not_a_smile": body.not_a_smile}

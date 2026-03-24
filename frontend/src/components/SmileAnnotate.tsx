@@ -8,7 +8,7 @@ import type {
   SmileConfigData,
   Utterance,
 } from "../types";
-import { SMILE_LABELS } from "../types";
+import { SMILE_LABELS, ALL_SMILE_LABELS } from "../types";
 
 const STORAGE_KEY = "smile_annotator_name";
 const CONTEXT_BEFORE_KEY = "smile_context_before";
@@ -221,6 +221,7 @@ export default function SmileAnnotate() {
   const [notes, setNotes] = useState("");
   const [twoLabelMode, setTwoLabelMode] = useState(false);
   const [pendingPrimary, setPendingPrimary] = useState<string | null>(null);
+  const [notASmile, setNotASmile] = useState(false);
   const [showHelp, setShowHelp] = useState(() => !!(location.state as { showHelp?: boolean } | null)?.showHelp);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
@@ -373,6 +374,7 @@ export default function SmileAnnotate() {
         label,
         notes,
         runner_up: runnerUp,
+        not_a_smile: notASmile,
       }),
     });
     setAnnotations((prev) => {
@@ -384,11 +386,12 @@ export default function SmileAnnotate() {
           timestamp: new Date().toISOString(),
           notes: notes || undefined,
           runner_up: runnerUp || undefined,
+          not_a_smile: notASmile || undefined,
         },
       };
       return a;
     });
-  }, [annotator, taskData, notes]);
+  }, [annotator, taskData, notes, notASmile]);
 
   const cancelPrimary = useCallback(() => setPendingPrimary(null), []);
 
@@ -444,6 +447,10 @@ export default function SmileAnnotate() {
     setNotes(currentAnnotation?.notes ?? "");
     setPendingPrimary(null);
     setTwoLabelMode(!!currentAnnotation?.runner_up);
+    setNotASmile(
+      currentAnnotation?.not_a_smile === true ||
+      currentAnnotation?.label === "not_a_smile"
+    );
   }, [taskNum]);
 
   const seekBarSmileLeft = useMemo(() => {
@@ -506,14 +513,17 @@ export default function SmileAnnotate() {
         {currentLabel && (
           <span style={{
             fontSize: "0.8rem", fontWeight: 600,
-            color: SMILE_LABELS.find((l) => l.key === currentLabel)?.color ?? "#94a3b8",
+            color: ALL_SMILE_LABELS.find((l) => l.key === currentLabel)?.color ?? "#94a3b8",
             padding: "2px 8px", backgroundColor: "#0f172a", borderRadius: "5px",
           }}>
-            {SMILE_LABELS.find((l) => l.key === currentLabel)?.display ?? currentLabel}
+            {(currentAnnotation?.not_a_smile || currentLabel === "not_a_smile") && (
+              <span style={{ color: "#64748b", marginRight: "4px" }}>✗ Not a Smile ·</span>
+            )}
+            {ALL_SMILE_LABELS.find((l) => l.key === currentLabel)?.display ?? currentLabel}
             {currentRunnerUp && (
               <span style={{ color: "#64748b", fontWeight: 400 }}>
                 {" / "}
-                {SMILE_LABELS.find((l) => l.key === currentRunnerUp)?.display ?? currentRunnerUp}
+                {ALL_SMILE_LABELS.find((l) => l.key === currentRunnerUp)?.display ?? currentRunnerUp}
               </span>
             )}
           </span>
@@ -653,10 +663,59 @@ export default function SmileAnnotate() {
             </div>
           )}
 
-          {/* Label cards: 4-column grid, button + description */}
+          {/* Not a Smile toggle */}
+          <div style={{
+            marginTop: "8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+          }}>
+            <button
+              onClick={() => setNotASmile((v) => !v)}
+              style={{
+                padding: "8px 18px",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                border: notASmile ? "2px solid #64748b" : "2px solid #334155",
+                borderRadius: "8px",
+                cursor: "pointer",
+                backgroundColor: notASmile ? "#475569" : "#1e293b",
+                color: notASmile ? "#f8fafc" : "#64748b",
+                transition: "all 0.15s",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "18px",
+                height: "18px",
+                borderRadius: "4px",
+                backgroundColor: notASmile ? "#f8fafc" : "transparent",
+                border: notASmile ? "none" : "2px solid #64748b",
+                fontSize: "0.7rem",
+                color: "#0f172a",
+                fontWeight: 800,
+                transition: "all 0.15s",
+              }}>
+                {notASmile ? "✓" : ""}
+              </span>
+              Not a Smile
+            </button>
+            {notASmile && (
+              <span style={{ fontSize: "0.8rem", color: "#fbbf24", fontWeight: 500 }}>
+                Still assign an emotion label ↓
+              </span>
+            )}
+          </div>
+
+          {/* Label cards: 3-column grid, button + description */}
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(3, 1fr)",
             gap: "8px",
             marginTop: "8px",
           }}>

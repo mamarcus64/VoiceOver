@@ -39,16 +39,32 @@ def _load_annotations(annotator: str) -> dict[str, Any]:
         return json.load(f)
 
 
+def _effective_label(entry: dict[str, Any]) -> str | None:
+    """Derive the agreement-level label from an annotation entry.
+
+    New format: not_a_smile is a boolean flag; label is always an emotion.
+    Old format: label may be "not_a_smile" directly.
+    """
+    label = entry.get("label")
+    if label == "not_a_smile":
+        return "not_a_smile"
+    if entry.get("not_a_smile"):
+        return "not_a_smile"
+    if label in VALID_LABELS:
+        return label
+    return None
+
+
 def _labels_for_tasks(annotators: list[str]) -> dict[str, dict[str, str]]:
-    """task_number -> annotator -> label (only valid labels)."""
+    """task_number -> annotator -> effective label (only valid labels)."""
     out: dict[str, dict[str, str]] = {}
     for name in annotators:
         data = _load_annotations(name)
         for task_key, entry in data.get("annotations", {}).items():
-            label = entry.get("label")
-            if label not in VALID_LABELS:
+            eff = _effective_label(entry)
+            if eff is None:
                 continue
-            out.setdefault(task_key, {})[name] = label
+            out.setdefault(task_key, {})[name] = eff
     return out
 
 
