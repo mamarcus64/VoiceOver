@@ -119,7 +119,7 @@ class AnnotateBody(BaseModel):
     not_a_smile: bool = False
 
 
-VALID_LABELS = {"genuine", "polite", "masking"}
+VALID_LABELS = {"genuine", "polite", "masking", "not_a_smile"}
 
 
 @router.post("/smile-annotations")
