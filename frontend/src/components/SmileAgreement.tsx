@@ -27,7 +27,7 @@ function smileApi(apiPrefix: string, path: string): string {
 
 const LABEL_DISPLAY: Record<string, string> = {
   ...Object.fromEntries(ALL_SMILE_LABELS.map((x) => [x.key, x.display])),
-  positive: "Positive (genuine + polite)",
+  positive: "Positive (felt + false)",
   smile: "Smile",
 };
 const LABEL_COLOR: Record<string, string> = {
@@ -39,10 +39,10 @@ const LABEL_COLOR: Record<string, string> = {
 };
 
 const MODE_DISPLAY: Record<SmileModeKey, string> = {
-  fine: "4-class (G / P / M / NaS)",
-  coarse: "3-class (Pos / M / NaS)",
-  smile_fine: "3-class smiles only (G / P / M)",
-  smile_coarse: "2-class smiles only (Pos / M)",
+  fine: "4-class (Felt / False / Mis / NaS)",
+  coarse: "3-class (Pos / Mis / NaS)",
+  smile_fine: "3-class smiles only (Felt / False / Mis)",
+  smile_coarse: "2-class smiles only (Pos / Mis)",
   binary: "Binary (Smile / NaS)",
 };
 
@@ -423,7 +423,7 @@ export default function SmileAgreement({ apiPrefix = "" }: { apiPrefix?: string 
             <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "16px 28px", alignItems: "center" }}>
               <label style={st.toggle}>
                 <input type="checkbox" checked={mergeClasses} onChange={() => setMergeClasses((v) => !v)} />
-                <span>Merge genuine + polite</span>
+                <span>Merge felt + false</span>
               </label>
               <label style={st.toggle}>
                 <input type="checkbox" checked={includeNaS} onChange={() => setIncludeNaS((v) => !v)} />

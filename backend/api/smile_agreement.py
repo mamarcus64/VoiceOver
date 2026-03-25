@@ -17,11 +17,11 @@ ANNOTATIONS_DIR = DATA_DIR / "smile_annotations"
 
 router = APIRouter()
 
-VALID_LABELS = ("genuine", "polite", "masking", "not_a_smile")
+VALID_LABELS = ("felt", "false", "miserable", "not_a_smile")
 LABEL_INDEX = {lab: i for i, lab in enumerate(VALID_LABELS)}
 
-# Coarse grouping: genuine+polite → "positive"; masking and not_a_smile unchanged
-COARSE_LABELS = ("positive", "masking", "not_a_smile")
+# Coarse grouping: felt+false → "positive"; miserable and not_a_smile unchanged
+COARSE_LABELS = ("positive", "miserable", "not_a_smile")
 _COARSE_MAP = (0, 0, 1, 2)  # maps fine label index → coarse label index
 
 # ---------------------------------------------------------------------------
@@ -31,22 +31,22 @@ _COARSE_MAP = (0, 0, 1, 2)  # maps fine label index → coarse label index
 # ---------------------------------------------------------------------------
 MODES: dict[str, dict[str, Any]] = {
     "fine": {
-        "labels": ["genuine", "polite", "masking", "not_a_smile"],
+        "labels": ["felt", "false", "miserable", "not_a_smile"],
         "map": [0, 1, 2, 3],
         "filter_nas": False,
     },
     "coarse": {
-        "labels": ["positive", "masking", "not_a_smile"],
+        "labels": ["positive", "miserable", "not_a_smile"],
         "map": [0, 0, 1, 2],
         "filter_nas": False,
     },
     "smile_fine": {
-        "labels": ["genuine", "polite", "masking"],
+        "labels": ["felt", "false", "miserable"],
         "map": [0, 1, 2, -1],
         "filter_nas": True,
     },
     "smile_coarse": {
-        "labels": ["positive", "masking"],
+        "labels": ["positive", "miserable"],
         "map": [0, 0, 1, -1],
         "filter_nas": True,
     },
