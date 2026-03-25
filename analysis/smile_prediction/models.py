@@ -3,17 +3,20 @@ Model definitions for smile prediction.
 
 Tier 1: Aggregated feature baseline (logistic regression / small MLP)
 Tier 2: Sequence models (GRU, 1D-CNN)
+
+Loss: class-balanced soft CE with entropy regularization to prevent collapse.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 
 class AggregatedMLP(nn.Module):
     """
     Tier 1 baseline: small MLP over hand-crafted summary features.
-    Input: (batch, 36) aggregated stats.
+    Input: (batch, D) aggregated stats.
     Output: (batch, 3) logits over [genuine, polite, masking].
     """
 
@@ -34,7 +37,7 @@ class AggregatedMLP(nn.Module):
 class GRUClassifier(nn.Module):
     """
     Tier 2: small GRU over the time-aligned feature sequence.
-    Input: (batch, T, input_dim) where input_dim=11.
+    Input: (batch, T, input_dim).
     Output: (batch, 3) logits over [genuine, polite, masking].
     """
 
@@ -73,7 +76,7 @@ class GRUClassifier(nn.Module):
 class CNNClassifier(nn.Module):
     """
     Tier 2 alternative: small 1D-CNN over the time-aligned feature sequence.
-    Input: (batch, T, input_dim) where input_dim=11.
+    Input: (batch, T, input_dim).
     Output: (batch, 3) logits over [genuine, polite, masking].
     """
 
@@ -86,11 +89,9 @@ class CNNClassifier(nn.Module):
         self.head = nn.Linear(channels, num_classes)
 
     def forward(self, x: torch.Tensor, lengths: torch.Tensor | None = None) -> torch.Tensor:
-        # x: (B, T, C) -> (B, C, T) for conv1d
         x = x.transpose(1, 2)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
-        # Global average pool over time
         if lengths is not None:
             mask = torch.arange(x.size(2), device=x.device).unsqueeze(0) < lengths.unsqueeze(1)
             x = x * mask.unsqueeze(1).float()
@@ -101,23 +102,58 @@ class CNNClassifier(nn.Module):
         return self.head(x)
 
 
-def soft_label_loss(logits: torch.Tensor, soft_labels: torch.Tensor,
-                    weights: torch.Tensor) -> torch.Tensor:
+# ---------------------------------------------------------------------------
+# Loss functions
+# ---------------------------------------------------------------------------
+
+def compute_class_weights(soft_labels: torch.Tensor) -> torch.Tensor:
     """
-    Weighted KL-divergence loss against soft label targets.
+    Inverse-frequency class weights from the training soft labels.
+    Upweights rare classes (masking) so the loss doesn't ignore them.
+    """
+    # Effective count per class = sum of soft label mass
+    class_mass = soft_labels.sum(dim=0).clamp(min=1e-6)
+    # Inverse frequency, normalized to mean=1
+    inv_freq = 1.0 / class_mass
+    weights = inv_freq / inv_freq.mean()
+    return weights
+
+
+def soft_label_loss(
+    logits: torch.Tensor,
+    soft_labels: torch.Tensor,
+    weights: torch.Tensor,
+    class_weights: torch.Tensor | None = None,
+    entropy_reg: float = 0.1,
+) -> torch.Tensor:
+    """
+    Weighted soft cross-entropy with class balancing and entropy regularization.
 
     Args:
         logits: (B, C) raw model output
         soft_labels: (B, C) target distribution, sums to 1
         weights: (B,) per-sample weight (not-a-smile discount)
+        class_weights: (C,) inverse-frequency weights per class. If None, uniform.
+        entropy_reg: coefficient for output entropy bonus. Higher values push
+            the model away from collapsed (single-class) predictions.
 
     Returns:
-        Scalar loss (mean over batch, weighted).
+        Scalar loss.
     """
     log_probs = F.log_softmax(logits, dim=-1)
-    # KL(target || pred) = sum_c target_c * (log target_c - log pred_c)
-    # We skip the target entropy term (constant wrt model params)
-    per_sample = -(soft_labels * log_probs).sum(dim=-1)
+
+    # Class-weighted soft CE: sum_c class_weight_c * target_c * (-log pred_c)
+    if class_weights is not None:
+        per_sample = -(soft_labels * log_probs * class_weights.unsqueeze(0)).sum(dim=-1)
+    else:
+        per_sample = -(soft_labels * log_probs).sum(dim=-1)
+
+    # Entropy bonus: encourage the model to spread probability mass
+    # H(pred) = -sum_c pred_c * log pred_c — higher is more spread out
+    probs = torch.softmax(logits, dim=-1)
+    entropy = -(probs * log_probs).sum(dim=-1)
+    per_sample = per_sample - entropy_reg * entropy
+
     weighted = per_sample * weights
     if weights.sum() > 0:
         return weighted.sum() / weights.sum()

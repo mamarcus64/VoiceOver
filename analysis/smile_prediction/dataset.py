@@ -60,11 +60,18 @@ def build_tasks(
     manifest: Optional[dict] = None,
     annotations: Optional[dict[str, dict]] = None,
     min_annotators: int = 1,
+    label_smoothing: float = 0.1,
 ) -> list[SmileTask]:
     """
     Merge manifest and annotations into SmileTask objects with soft labels.
 
     Tasks where weight == 0 (all annotators said not_a_smile) are excluded.
+
+    Args:
+        label_smoothing: For single-annotator (hard) labels, blend toward uniform
+            by this amount. e.g. 0.1 turns [1,0,0] into [0.933, 0.033, 0.033].
+            Multi-annotator soft labels are not smoothed (they already express
+            uncertainty). Set to 0 to disable.
     """
     manifest = manifest or load_manifest()
     annotations = annotations or load_annotations()
@@ -77,6 +84,7 @@ def build_tasks(
             tn = int(k)
             task_labels.setdefault(tn, []).append(v["label"])
 
+    n_classes = len(SMILE_CLASSES)
     tasks = []
     for tn, labels in sorted(task_labels.items()):
         if len(labels) < min_annotators:
@@ -93,11 +101,17 @@ def build_tasks(
         if weight == 0:
             continue
 
-        soft = np.zeros(len(SMILE_CLASSES), dtype=np.float32)
+        soft = np.zeros(n_classes, dtype=np.float32)
         for l in smile_labels:
             if l in CLASS_TO_IDX:
                 soft[CLASS_TO_IDX[l]] += 1
         soft /= soft.sum()
+
+        # Smooth hard labels from single-annotator tasks
+        is_hard = len(smile_labels) == 1
+        if is_hard and label_smoothing > 0:
+            uniform = np.ones(n_classes, dtype=np.float32) / n_classes
+            soft = (1 - label_smoothing) * soft + label_smoothing * uniform
 
         tasks.append(SmileTask(
             task_number=tn,
@@ -319,3 +333,109 @@ def agg_feature_dim(modality: Modality) -> int:
     """Return the aggregated feature dimension for a given modality config."""
     n_modalities = 2 if modality == "both" else 1
     return 3 * n_modalities * 2 * 3
+
+
+# ---------------------------------------------------------------------------
+# LLM text feature loading
+# ---------------------------------------------------------------------------
+
+LLM_FEATURE_NAMES = [
+    "humor_level",
+    "emotional_weight",
+    "social_courtesy",
+    "coping_indicator",
+    "nostalgia",
+    "interviewer_prompt",
+    "topic_shift",
+    "self_referential",
+    "positive_content",
+    "negative_content",
+]
+
+N_LLM_FEATURES = len(LLM_FEATURE_NAMES)
+
+
+def load_llm_features(path: Path) -> dict[int, np.ndarray]:
+    """
+    Load LLM-extracted features from a JSON file.
+    Returns {task_number: (10,) ndarray scaled to 0-1}.
+    """
+    with open(path) as f:
+        data = json.load(f)
+
+    result = {}
+    for entry in data["results"]:
+        if "features" not in entry:
+            continue
+        tn = entry["task_number"]
+        feats = np.array(
+            [entry["features"].get(name, 5) for name in LLM_FEATURE_NAMES],
+            dtype=np.float32,
+        )
+        feats /= 10.0  # normalize 0-10 to 0-1
+        result[tn] = feats
+
+    return result
+
+
+def load_llm_annotations(path: Path) -> dict[int, dict]:
+    """
+    Load LLM annotation results (soft labels + confidence).
+    Returns {task_number: {"soft_label_3class": (3,), "weight": float, "confidence_4class": dict}}.
+    """
+    with open(path) as f:
+        data = json.load(f)
+
+    result = {}
+    for entry in data["results"]:
+        if "soft_label_3class" not in entry:
+            continue
+        tn = entry["task_number"]
+        soft = np.array(
+            [entry["soft_label_3class"].get(c, 1/3) for c in SMILE_CLASSES],
+            dtype=np.float32,
+        )
+        soft /= soft.sum()
+        result[tn] = {
+            "soft_label_3class": soft,
+            "weight": entry.get("weight", 1.0),
+            "confidence_4class": entry.get("confidence_4class", {}),
+        }
+
+    return result
+
+
+def attach_llm_features(
+    data_items: list[dict],
+    llm_feats: dict[int, np.ndarray],
+) -> list[dict]:
+    """
+    Attach LLM text features to feature items (from extract_features or extract_aggregated_features).
+
+    For aggregated (MLP) items: appends 10-dim vector to the flat feature vector.
+    For sequence items: tiles the 10-dim vector across all timesteps and concatenates.
+
+    Items without matching LLM features are dropped.
+    """
+    result = []
+    for item in data_items:
+        tn = item["task_number"]
+        if tn not in llm_feats:
+            continue
+
+        text_feat = llm_feats[tn]
+        new_item = dict(item)
+
+        if "features" in item:
+            # Aggregated: concat flat
+            new_item["features"] = np.concatenate([item["features"], text_feat])
+        elif "sequence" in item:
+            # Sequence: tile and concat along feature dim
+            seq = item["sequence"]  # (T, D)
+            T = seq.shape[0]
+            text_tiled = np.tile(text_feat, (T, 1))  # (T, 10)
+            new_item["sequence"] = np.concatenate([seq, text_tiled], axis=1)
+
+        result.append(new_item)
+
+    return result
