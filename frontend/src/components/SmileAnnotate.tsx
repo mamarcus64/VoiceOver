@@ -544,7 +544,7 @@ export default function SmileAnnotate({ apiPrefix = "" }: { apiPrefix?: string }
           </span>
         ) : (
           <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#fbbf24" }}>
-            Label the <strong>highlighted</strong> smile. Ignore others.
+            Label the smile occuring near the <strong>highlighted orange</strong>.
           </span>
         )}
         <span style={{ fontSize: "0.75rem", color: "#64748b" }}>

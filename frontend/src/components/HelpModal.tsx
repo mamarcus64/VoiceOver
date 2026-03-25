@@ -76,10 +76,7 @@ export default function HelpModal({ onClose }: Props) {
           <p>
             You will be shown short clips from interview videos. In each clip, a smile has been automatically
             detected and is <Hl>highlighted in amber</Hl> — on the border around the video, the seek bar, and
-            in the transcript. Your job is to classify that one smile.
-          </p>
-          <p style={{ marginTop: "8px" }}>
-            There may be other smiles in the clip. <strong>Ignore them</strong> — only label the highlighted one.
+            in the transcript. Your job is to classify that one smile. If a smile occurs near it but not in the amber, then still label it.
           </p>
         </Section>
 

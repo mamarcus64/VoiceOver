@@ -1,4 +1,7 @@
-"""Read-only pilot agreement stats, backed by pilot_smile_annotations/."""
+"""Read-only pilot agreement stats, backed by pilot_smile_annotations/.
+
+Uses the original pilot-study labels: genuine / polite / masking / not_a_smile.
+"""
 
 from __future__ import annotations
 
@@ -9,19 +12,151 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query
 
-from api.smile_agreement import (
-    VALID_LABELS,
-    LABEL_INDEX,
-    COARSE_LABELS,
-    _COARSE_MAP,
-    MODES,
-    _effective_label,
-    _compute_mode,
-    _fleiss_kappa,
-    _cohen_kappa,
-    _empty_confusion,
-    _fine_to_coarse_confusion,
-)
+from api.smile_agreement import _fleiss_kappa, _cohen_kappa
+
+# ---------------------------------------------------------------------------
+# Pilot-study label constants (genuine / polite / masking)
+# These are separate from smile_agreement.py, which uses the main-study labels.
+# ---------------------------------------------------------------------------
+VALID_LABELS = ("genuine", "polite", "masking", "not_a_smile")
+LABEL_INDEX = {lab: i for i, lab in enumerate(VALID_LABELS)}
+
+COARSE_LABELS = ("positive", "masking", "not_a_smile")
+_COARSE_MAP = (0, 0, 1, 2)
+
+MODES: dict[str, dict[str, Any]] = {
+    "fine": {
+        "labels": ["genuine", "polite", "masking", "not_a_smile"],
+        "map": [0, 1, 2, 3],
+        "filter_nas": False,
+    },
+    "coarse": {
+        "labels": ["positive", "masking", "not_a_smile"],
+        "map": [0, 0, 1, 2],
+        "filter_nas": False,
+    },
+    "smile_fine": {
+        "labels": ["genuine", "polite", "masking"],
+        "map": [0, 1, 2, -1],
+        "filter_nas": True,
+    },
+    "smile_coarse": {
+        "labels": ["positive", "masking"],
+        "map": [0, 0, 1, -1],
+        "filter_nas": True,
+    },
+    "binary": {
+        "labels": ["smile", "not_a_smile"],
+        "map": [0, 0, 0, 1],
+        "filter_nas": False,
+    },
+}
+
+
+def _effective_label(entry: dict[str, Any]) -> str | None:
+    """Derive the agreement-level label from a pilot annotation entry."""
+    label = entry.get("label")
+    if label == "not_a_smile":
+        return "not_a_smile"
+    if entry.get("not_a_smile"):
+        return "not_a_smile"
+    if label in VALID_LABELS:
+        return label
+    return None
+
+
+def _compute_mode(
+    mode_key: str,
+    by_task: dict[str, dict[str, str]],
+    annotators: list[str],
+) -> dict[str, Any]:
+    mdef = MODES[mode_key]
+    mode_labels: list[str] = mdef["labels"]
+    label_map: list[int] = mdef["map"]
+    filter_nas: bool = mdef["filter_nas"]
+    k = len(mode_labels)
+
+    def _map_label(lab: str) -> int | None:
+        fi = LABEL_INDEX.get(lab)
+        if fi is None:
+            return None
+        mi = label_map[fi]
+        if mi == -1:
+            return None
+        if filter_nas and lab == "not_a_smile":
+            return None
+        return mi
+
+    fully_labeled: list[str] = []
+    for task_key, labs in by_task.items():
+        if not all(a in labs for a in annotators):
+            continue
+        if all(_map_label(labs[a]) is not None for a in annotators):
+            fully_labeled.append(task_key)
+
+    fleiss: float | None = None
+    pct_full: float | None = None
+    if len(annotators) >= 2 and fully_labeled:
+        count_matrix: list[list[int]] = []
+        agree = 0
+        for task_key in fully_labeled:
+            labs = by_task[task_key]
+            row = [0] * k
+            mapped_set: set[int] = set()
+            for a in annotators:
+                mi = _map_label(labs[a])
+                assert mi is not None
+                row[mi] += 1
+                mapped_set.add(mi)
+            count_matrix.append(row)
+            if len(mapped_set) == 1:
+                agree += 1
+        pct_full = 100.0 * agree / len(fully_labeled)
+        fleiss = _fleiss_kappa(count_matrix)
+
+    pairwise: list[dict[str, Any]] = []
+    for i, a in enumerate(annotators):
+        for b in annotators[i + 1:]:
+            conf = [[0] * k for _ in range(k)]
+            n_both = 0
+            for task_key, labs in by_task.items():
+                if a not in labs or b not in labs:
+                    continue
+                mi_a = _map_label(labs[a])
+                mi_b = _map_label(labs[b])
+                if mi_a is None or mi_b is None:
+                    continue
+                n_both += 1
+                conf[mi_a][mi_b] += 1
+            if n_both == 0:
+                pairwise.append({
+                    "annotator_a": a,
+                    "annotator_b": b,
+                    "n_tasks": 0,
+                    "cohen_kappa": None,
+                    "percent_agreement": None,
+                    "confusion": conf,
+                })
+            else:
+                agree_pair = sum(conf[j][j] for j in range(k))
+                pct = 100.0 * agree_pair / n_both
+                kap = _cohen_kappa(conf)
+                pairwise.append({
+                    "annotator_a": a,
+                    "annotator_b": b,
+                    "n_tasks": n_both,
+                    "cohen_kappa": kap,
+                    "percent_agreement": pct,
+                    "confusion": conf,
+                })
+
+    return {
+        "labels": mode_labels,
+        "tasks_fully_labeled": len(fully_labeled),
+        "fleiss_kappa": fleiss,
+        "percent_full_agreement": pct_full,
+        "pairwise": pairwise,
+    }
 
 DATA_DIR = Path(
     os.environ.get(
