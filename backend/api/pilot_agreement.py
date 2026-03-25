@@ -195,7 +195,7 @@ def _pilot_labels_for_tasks(annotators: list[str]) -> dict[str, dict[str, str]]:
 
 @router.get("/pilot-smile-agreement/annotators")
 async def pilot_annotators():
-    return _list_pilot_annotators()
+    return {"annotators": _list_pilot_annotators()}
 
 
 @router.get("/pilot-smile-agreement/stats")
