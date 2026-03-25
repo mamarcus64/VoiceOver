@@ -1,20 +1,28 @@
 import { useEffect } from "react";
-import { SMILE_LABELS } from "../types";
 
 interface Props {
   onClose: () => void;
 }
 
+const EKMAN_URL =
+  "https://www.paulekman.com/wp-content/uploads/2013/07/Felt-False-And-Miserable-Smiles.pdf";
+
 export default function HelpModal({ onClose }: Props) {
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  function handleClose() {
+    onClose();
+  }
+
   return (
     <div
-      onClick={onClose}
+      onClick={handleClose}
       style={{
         position: "fixed", inset: 0, zIndex: 1000,
         backgroundColor: "rgba(0,0,0,0.65)",
@@ -22,13 +30,17 @@ export default function HelpModal({ onClose }: Props) {
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
+      <style>{`
+        details[open] .label-card-chevron { display: none !important; }
+        details summary::-webkit-details-marker { display: none; }
+      `}</style>
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: "#1e293b",
           borderRadius: "12px",
           padding: "32px 36px",
-          maxWidth: "640px",
+          maxWidth: "660px",
           width: "90vw",
           maxHeight: "88vh",
           overflowY: "auto",
@@ -39,11 +51,17 @@ export default function HelpModal({ onClose }: Props) {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
           <div>
-            <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#f8fafc" }}>How This Works</div>
-            <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginTop: "4px" }}>Smile Annotation Guide</div>
+            <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#f8fafc" }}>Annotation Instructions</div>
+            <div style={{ fontSize: "0.85rem", color: "#94a3b8", marginTop: "4px" }}>
+              Ekman smile taxonomy —{" "}
+              <a href={EKMAN_URL} target="_blank" rel="noopener noreferrer"
+                style={{ color: "#60a5fa", textDecoration: "underline" }}>
+                Felt, False, and Miserable Smiles (Ekman &amp; Friesen, 1982)
+              </a>
+            </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             style={{
               background: "none", border: "none", cursor: "pointer",
               color: "#64748b", fontSize: "1.4rem", lineHeight: 1, padding: "0 4px",
@@ -65,23 +83,53 @@ export default function HelpModal({ onClose }: Props) {
           </p>
         </Section>
 
-        {/* Section: Labels */}
+        {/* Section: Label definitions */}
         <Section title="Label definitions">
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" }}>
-            {SMILE_LABELS.map((l) => (
-              <div key={l.key} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                <span style={{
-                  flexShrink: 0, marginTop: "2px",
-                  width: "12px", height: "12px", borderRadius: "50%",
-                  backgroundColor: l.color, display: "inline-block",
-                }} />
-                <div>
-                  <span style={{ fontWeight: 700, color: "#f8fafc" }}>{l.display}: </span>
-                  <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>{l.desc}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <LabelCard
+            color="#22c55e"
+            title="Felt Smile"
+            short="A genuine smile of positive emotion, also known as the Duchenne smile. Physical indicators are the lip corners pulled up and the muscles around the eyes tightened, producing raised cheeks and wrinkles."
+          >
+            The felt smile, also known as the Duchenne smile, is a spontaneous expression of genuine positive
+            emotion such as enjoyment, amusement, relief, contentment, or pleasure. It is produced by the
+            zygomatic major muscle pulling the lip corners upward, and critically, it is accompanied by
+            tightening of the orbicularis oculi muscle around the eyes. This eye involvement produces raised
+            cheeks, bagged skin below the eyes, crow's feet wrinkles, and a slight lowering of the eyebrow. No
+            other muscles in the lower face are active. The felt smile lasts longer and is more intense when
+            the positive feeling is stronger. The key diagnostic feature is the eye muscle activation (the
+            "Duchenne marker").
+          </LabelCard>
+
+          <LabelCard
+            color="#3b82f6"
+            title="False Smile"
+            short="A deliberate smile intended to convince others that positive emotion is felt when it isn't. It typically lacks eye involvement and may appear asymmetrical, have abrupt timing, or show traces of a negative emotion leaking through."
+          >
+            The false smile is a deliberate attempt to convince another person that positive emotion is felt
+            when it isn't. The person may be feeling nothing in particular, or may be using the smile as a
+            mask to conceal a negative emotion. Unlike the miserable smile, the false smile is deceptive.
+            Distinguishing features: (1) typically more asymmetrical than a felt smile; (2) lacks orbicularis
+            oculi involvement — a slight-to-moderate false smile will not show raised cheeks, bagged skin, or
+            crow's feet; (3) timing may be inappropriate — it may drop off too abruptly or show a "stepped"
+            offset; (4) when used as a mask, traces of the concealed emotion may leak through, creating the
+            appearance of an emotion blend. In this dataset, false smiles are likely to appear when a speaker
+            is managing the interviewer's comfort or projecting composure they do not feel.
+          </LabelCard>
+
+          <LabelCard
+            color="#f59e0b"
+            title="Miserable Smile"
+            short="A smile that acknowledges negative emotion without trying to hide it. The person is not pretending to be happy. The subject is nonverbally commenting on their own unhappiness, embracing the negative emotion."
+          >
+            The miserable smile acknowledges the experience of negative emotion. It is not an attempt to
+            conceal unhappiness but rather a facial comment on being miserable. This smile is often
+            asymmetrical and is frequently superimposed on a clear negative expression (such as sadness, fear,
+            or distress) on the rest of the face or before the smile. It may also appear immediately after a
+            negative expression. A critical distinction from the false smile is that the miserable smile is
+            not deceptive. The person is not trying to convince anyone they are happy. They may also show felt
+            negative emotion in the eyebrows and forehead simultaneously. In this dataset, miserable smiles
+            are likely to appear when speakers acknowledge the severity of a traumatic experience.
+          </LabelCard>
         </Section>
 
         {/* Section: Not a Smile toggle */}
@@ -99,7 +147,7 @@ export default function HelpModal({ onClose }: Props) {
           </p>
           <ul style={{ margin: "8px 0 0", paddingLeft: "18px", color: "#94a3b8", lineHeight: 1.8, fontSize: "0.9rem" }}>
             <li>
-              <strong style={{ color: "#e2e8f0" }}>Assign an emotion label anyway</strong> — pick Genuine, Polite, or Masking
+              <strong style={{ color: "#e2e8f0" }}>Assign an emotion label anyway</strong> — pick Felt, False, or Miserable
               so we preserve what the expression <em>looks like</em> even when it isn't a true smile.
             </li>
             <li>
@@ -146,7 +194,7 @@ export default function HelpModal({ onClose }: Props) {
         </Section>
 
         <button
-          onClick={onClose}
+          onClick={handleClose}
           style={{
             marginTop: "24px", width: "100%",
             padding: "11px", fontSize: "0.95rem", fontWeight: 600,
@@ -154,7 +202,7 @@ export default function HelpModal({ onClose }: Props) {
             backgroundColor: "#3b82f6", color: "#fff", cursor: "pointer",
           }}
         >
-          Got it
+          Got it — start annotating
         </button>
       </div>
     </div>
@@ -177,4 +225,83 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Hl({ children }: { children: React.ReactNode }) {
   return <strong style={{ color: "#fbbf24" }}>{children}</strong>;
+}
+
+function LabelCard({
+  color,
+  title,
+  short,
+  children,
+}: {
+  color: string;
+  title: string;
+  short: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <details
+      style={{
+        marginBottom: "10px",
+        border: "1px solid #334155",
+        borderRadius: "8px",
+        overflow: "hidden",
+      }}
+    >
+      <summary
+        style={{
+          cursor: "pointer",
+          padding: "10px 14px",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "10px",
+          backgroundColor: "#0f172a",
+          listStyle: "none",
+          userSelect: "none",
+        }}
+      >
+        <span
+          style={{
+            flexShrink: 0,
+            marginTop: "4px",
+            width: "12px",
+            height: "12px",
+            borderRadius: "50%",
+            backgroundColor: color,
+            display: "inline-block",
+          }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontWeight: 700, color: "#f8fafc" }}>{title}: </span>
+          <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>{short}</span>
+        </div>
+        <span
+          className="label-card-chevron"
+          style={{
+            flexShrink: 0,
+            marginTop: "2px",
+            fontSize: "0.7rem",
+            color: "#475569",
+            display: "flex",
+            alignItems: "center",
+            gap: "3px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span style={{ fontSize: "0.65rem", letterSpacing: "0.03em" }}>full definition</span>
+          <span>▾</span>
+        </span>
+      </summary>
+      <div
+        style={{
+          padding: "12px 14px 14px 36px",
+          color: "#94a3b8",
+          fontSize: "0.875rem",
+          lineHeight: 1.75,
+          borderTop: "1px solid #1e293b",
+        }}
+      >
+        {children}
+      </div>
+    </details>
+  );
 }

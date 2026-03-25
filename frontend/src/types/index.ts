@@ -179,8 +179,8 @@ export interface SmilePreviewStats {
   params: Record<string, number>;
 }
 
-export type SmileLabel = "genuine" | "polite" | "masking" | "not_a_smile";
-export type SmileEmotionLabel = "genuine" | "polite" | "masking";
+export type SmileLabel = "felt" | "false" | "miserable" | "not_a_smile";
+export type SmileEmotionLabel = "felt" | "false" | "miserable";
 
 export interface SmileAgreementPairwise {
   annotator_a: string;
@@ -238,15 +238,35 @@ export interface AU12ScatterPoint {
 }
 
 export const SMILE_LABELS: { key: SmileEmotionLabel; display: string; color: string; desc: string }[] = [
-  { key: "genuine", display: "Genuine Smile", color: "#22c55e",
-    desc: "A smile that demonstrates true happiness. Look for laughter, \u201Csparkles\u201D in the eyes, closed eyes, and contextually happy words and speech." },
-  { key: "polite", display: "Polite Smile", color: "#3b82f6",
-    desc: "A smile used as a social function. Look for if the interviewer asked a recent question, if the subject is responding to something, or if the smile indicates conversational signaling. Nodding or head tilting is a potential sign of a polite smile." },
-  { key: "masking", display: "Masking Smile", color: "#f59e0b",
-    desc: "A smile used for complex emotion processing. Look for signs of trauma, irony, contradictory or negative emotions, or otherwise non-happy behaviors." },
+  {
+    key: "felt",
+    display: "Felt Smile",
+    color: "#22c55e",
+    desc: "A genuine smile of positive emotion (Duchenne smile). Look for lip corners pulled up AND muscles tightened around the eyes — raised cheeks, bagged skin below the eyes, crow's feet wrinkles.",
+  },
+  {
+    key: "false",
+    display: "False Smile",
+    color: "#3b82f6",
+    desc: "A deliberate smile to project positivity that isn't felt. Typically lacks eye involvement, may be asymmetrical, have abrupt timing, or show traces of a negative emotion leaking through.",
+  },
+  {
+    key: "miserable",
+    display: "Miserable Smile",
+    color: "#f59e0b",
+    desc: "A smile that acknowledges negative emotion without hiding it — not deceptive. Often asymmetrical, superimposed on or following a visible negative expression (sadness, distress, fear).",
+  },
 ];
 
 export const ALL_SMILE_LABELS: { key: SmileLabel; display: string; color: string }[] = [
   ...SMILE_LABELS.map(({ key, display, color }) => ({ key: key as SmileLabel, display, color })),
+  { key: "not_a_smile", display: "Not a Smile", color: "#64748b" },
+];
+
+/** Labels that were used in the pilot study (archived, read-only). */
+export const PILOT_SMILE_LABELS: { key: string; display: string; color: string }[] = [
+  { key: "genuine", display: "Genuine Smile", color: "#22c55e" },
+  { key: "polite", display: "Polite Smile", color: "#3b82f6" },
+  { key: "masking", display: "Masking Smile", color: "#f59e0b" },
   { key: "not_a_smile", display: "Not a Smile", color: "#64748b" },
 ];

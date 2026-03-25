@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import TranscriptTrack from "./TranscriptTrack";
 import HelpModal from "./HelpModal";
 import type {
@@ -205,7 +205,6 @@ async function fetchTaskData(taskNum: number, apiPrefix: string): Promise<TaskDa
 export default function SmileAnnotate({ apiPrefix = "" }: { apiPrefix?: string }) {
   const readOnly = apiPrefix !== "";
   const navigate = useNavigate();
-  const location = useLocation();
   const annotator = localStorage.getItem(STORAGE_KEY);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -227,7 +226,8 @@ export default function SmileAnnotate({ apiPrefix = "" }: { apiPrefix?: string }
   const [twoLabelMode, setTwoLabelMode] = useState(false);
   const [pendingPrimary, setPendingPrimary] = useState<string | null>(null);
   const [notASmile, setNotASmile] = useState(false);
-  const [showHelp, setShowHelp] = useState(() => !!(location.state as { showHelp?: boolean } | null)?.showHelp);
+  // Show instructions on every page load; user dismisses for the session by clicking "Got it"
+  const [showHelp, setShowHelp] = useState(true);
 
   const preloadRef = useRef<Map<number, Promise<TaskData>>>(new Map());
 
