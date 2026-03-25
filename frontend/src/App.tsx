@@ -17,6 +17,8 @@ export default function App() {
           <Route path="/smile-login" element={<SmileLogin />} />
           <Route path="/smile-annotate" element={<SmileAnnotate />} />
           <Route path="/agreement" element={<SmileAgreement />} />
+          <Route path="/pilot-smile-annotate" element={<SmileAnnotate apiPrefix="pilot-" />} />
+          <Route path="/pilot-agreement" element={<SmileAgreement apiPrefix="pilot-" />} />
           <Route path="*" element={<Navigate to="/smile-login" replace />} />
         </Routes>
       </BrowserRouter>
@@ -32,6 +34,8 @@ export default function App() {
         <Route path="/smile-config" element={<SmileConfig />} />
         <Route path="/smile-annotate" element={<SmileAnnotate />} />
         <Route path="/agreement" element={<SmileAgreement />} />
+        <Route path="/pilot-smile-annotate" element={<SmileAnnotate apiPrefix="pilot-" />} />
+        <Route path="/pilot-agreement" element={<SmileAgreement apiPrefix="pilot-" />} />
       </Routes>
     </BrowserRouter>
   );
