@@ -210,10 +210,13 @@ async def pilot_stats(
 
     by_task = _pilot_labels_for_tasks(names)
 
-    per_annotator_counts = {}
-    for name in names:
-        data = _load_pilot_annotations(name)
-        per_annotator_counts[name] = len(data.get("annotations", {}))
+    per_annotator_counts: dict[str, dict[str, int]] = {
+        a: {lab: 0 for lab in VALID_LABELS} for a in names
+    }
+    for _task, labs in by_task.items():
+        for a, lab in labs.items():
+            if a in per_annotator_counts:
+                per_annotator_counts[a][lab] += 1
 
     multi = {tk: labs for tk, labs in by_task.items() if len(labs) >= 2}
     fully_labeled = {tk: labs for tk, labs in multi.items() if len(labs) == len(names)}
