@@ -15,6 +15,10 @@ const CONTEXT_BEFORE_KEY = "smile_context_before";
 const CONTEXT_AFTER_KEY = "smile_context_after";
 const API = "/api";
 
+function smileApi(apiPrefix: string, path: string): string {
+  return `${API}/${apiPrefix}${path}`;
+}
+
 const BEFORE_OPTIONS = [3, 5, 10, 15, 20];
 const AFTER_OPTIONS = [2, 5, 10, 15];
 
@@ -180,10 +184,10 @@ interface TaskData {
   config: SmileConfigData;
 }
 
-async function fetchTaskData(taskNum: number): Promise<TaskData> {
+async function fetchTaskData(taskNum: number, apiPrefix: string): Promise<TaskData> {
   const [taskRes, cfgRes] = await Promise.all([
-    fetch(`${API}/smile-tasks/${taskNum}`),
-    fetch(`${API}/smile-config`),
+    fetch(smileApi(apiPrefix, `smile-tasks/${taskNum}`)),
+    fetch(smileApi(apiPrefix, "smile-config")),
   ]);
   if (!taskRes.ok) throw new Error(`Task ${taskNum}: ${taskRes.status}`);
   const task: SmileTask = await taskRes.json();
@@ -198,7 +202,8 @@ async function fetchTaskData(taskNum: number): Promise<TaskData> {
   return { task, utterances, config };
 }
 
-export default function SmileAnnotate() {
+export default function SmileAnnotate({ apiPrefix = "" }: { apiPrefix?: string }) {
+  const readOnly = apiPrefix !== "";
   const navigate = useNavigate();
   const location = useLocation();
   const annotator = localStorage.getItem(STORAGE_KEY);
@@ -237,8 +242,8 @@ export default function SmileAnnotate() {
     (async () => {
       try {
         const [nextRes, annRes] = await Promise.all([
-          fetch(`${API}/smile-tasks/next-incomplete?annotator=${encodeURIComponent(annotator)}`),
-          fetch(`${API}/smile-annotations/${encodeURIComponent(annotator)}`),
+          fetch(smileApi(apiPrefix, `smile-tasks/next-incomplete?annotator=${encodeURIComponent(annotator)}`)),
+          fetch(smileApi(apiPrefix, `smile-annotations/${encodeURIComponent(annotator)}`)),
         ]);
         const nextData = await nextRes.json();
         const annData = await annRes.json();
@@ -248,15 +253,19 @@ export default function SmileAnnotate() {
         setTaskNum(1);
       }
     })();
-  }, [annotator, navigate]);
+  }, [annotator, apiPrefix, navigate]);
+
+  useEffect(() => {
+    preloadRef.current.clear();
+  }, [apiPrefix]);
 
   const preloadTask = useCallback((num: number) => {
     const cache = preloadRef.current;
     if (!cache.has(num)) {
-      cache.set(num, fetchTaskData(num).catch(() => null as unknown as TaskData));
+      cache.set(num, fetchTaskData(num, apiPrefix).catch(() => null as unknown as TaskData));
     }
     return cache.get(num)!;
-  }, []);
+  }, [apiPrefix]);
 
   useEffect(() => {
     if (taskNum === null) return;
@@ -365,7 +374,7 @@ export default function SmileAnnotate() {
 
   const saveAnnotation = useCallback(async (label: string, runnerUp: string) => {
     if (!annotator || !taskData) return;
-    await fetch(`${API}/smile-annotations`, {
+    await fetch(smileApi(apiPrefix, "smile-annotations"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -391,7 +400,7 @@ export default function SmileAnnotate() {
       };
       return a;
     });
-  }, [annotator, taskData, notes, notASmile]);
+  }, [annotator, taskData, notes, notASmile, apiPrefix]);
 
   const cancelPrimary = useCallback(() => setPendingPrimary(null), []);
 
@@ -529,9 +538,15 @@ export default function SmileAnnotate() {
           </span>
         )}
 
-        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#fbbf24" }}>
-          Label the <strong>highlighted</strong> smile. Ignore others.
-        </span>
+        {readOnly ? (
+          <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#94a3b8", fontStyle: "italic" }}>
+            Pilot data — read only
+          </span>
+        ) : (
+          <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "#fbbf24" }}>
+            Label the <strong>highlighted</strong> smile. Ignore others.
+          </span>
+        )}
         <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
           {(() => {
             const [subject, tape] = task.video_id.split(".");
@@ -671,7 +686,7 @@ export default function SmileAnnotate() {
             gap: "12px",
           }}>
             <button
-              onClick={() => setNotASmile((v) => !v)}
+              onClick={() => !readOnly && setNotASmile((v) => !v)}
               style={{
                 padding: "8px 18px",
                 fontSize: "0.85rem",
@@ -732,8 +747,8 @@ export default function SmileAnnotate() {
                     opacity: saving ? 0.6 : 1,
                     textAlign: "center",
                   }}
-                  onClick={() => handleLabel("not_a_smile")}
-                  disabled={saving}
+                  onClick={() => !readOnly && handleLabel("not_a_smile")}
+                  disabled={saving || readOnly}
                 >
                   Definitely Not a Smile
                 </button>
@@ -785,8 +800,8 @@ export default function SmileAnnotate() {
                       opacity: saving ? 0.6 : 1,
                       textAlign: "center",
                     }}
-                    onClick={() => handleLabel(l.key)}
-                    disabled={saving}
+                    onClick={() => !readOnly && handleLabel(l.key)}
+                    disabled={saving || readOnly}
                   >
                     {l.display}
                   </button>
@@ -817,7 +832,8 @@ export default function SmileAnnotate() {
               type="text"
               placeholder="Notes (optional)"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              readOnly={readOnly}
+              onChange={(e) => !readOnly && setNotes(e.target.value)}
               style={{
                 flex: 1,
                 padding: "6px 10px",

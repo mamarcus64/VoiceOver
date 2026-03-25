@@ -13,12 +13,17 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipProps,
 } from "recharts";
 import type { AU12ScatterPoint, SmileAgreementStats, SmileModeKey } from "../types";
 import { ALL_SMILE_LABELS } from "../types";
 
 const STORAGE_KEY = "smile_annotator_name";
 const API = "/api";
+
+function smileApi(apiPrefix: string, path: string): string {
+  return `${API}/${apiPrefix}${path}`;
+}
 
 const LABEL_DISPLAY: Record<string, string> = {
   ...Object.fromEntries(ALL_SMILE_LABELS.map((x) => [x.key, x.display])),
@@ -236,9 +241,11 @@ function smileRateByIntensity(
   return rows;
 }
 
-export default function SmileAgreement() {
+export default function SmileAgreement({ apiPrefix = "" }: { apiPrefix?: string }) {
   const navigate = useNavigate();
   const me = localStorage.getItem(STORAGE_KEY);
+  const annotatePath = apiPrefix ? "/pilot-smile-annotate" : "/smile-annotate";
+  const agreementPath = apiPrefix ? "/pilot-agreement" : "/agreement";
   const [allNames, setAllNames] = useState<string[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<SmileAgreementStats | null>(null);
@@ -258,13 +265,13 @@ export default function SmileAgreement() {
   const binaryStats = stats?.modes?.binary;
 
   useEffect(() => {
-    if (!me) navigate("/smile-login?next=/agreement", { replace: true });
-  }, [me, navigate]);
+    if (!me) navigate(`/smile-login?next=${encodeURIComponent(agreementPath)}`, { replace: true });
+  }, [me, navigate, agreementPath]);
 
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API}/smile-agreement/annotators`);
+        const res = await fetch(smileApi(apiPrefix, "smile-agreement/annotators"));
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const names: string[] = data.annotators ?? [];
@@ -276,7 +283,7 @@ export default function SmileAgreement() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [apiPrefix]);
 
   const activeList = useMemo(
     () => allNames.filter((n) => selected[n]),
@@ -295,8 +302,8 @@ export default function SmileAgreement() {
     try {
       const qs = encodeURIComponent(activeList.join(","));
       const [statsRes, scatterRes] = await Promise.all([
-        fetch(`${API}/smile-agreement/stats?annotators=${qs}`),
-        fetch(`${API}/smile-agreement/au12-scatter?annotators=${qs}`),
+        fetch(smileApi(apiPrefix, `smile-agreement/stats?annotators=${qs}`)),
+        fetch(smileApi(apiPrefix, `smile-agreement/au12-scatter?annotators=${qs}`)),
       ]);
       if (!statsRes.ok) {
         const j = await statsRes.json().catch(() => null);
@@ -315,7 +322,7 @@ export default function SmileAgreement() {
     } finally {
       setLoading(false);
     }
-  }, [activeList]);
+  }, [activeList, apiPrefix]);
 
   useEffect(() => {
     if (allNames.length === 0) return;
@@ -380,7 +387,7 @@ export default function SmileAgreement() {
           </div>
         </div>
         <div style={st.nav}>
-          <button type="button" style={st.btn} onClick={() => navigate("/smile-annotate")}>
+          <button type="button" style={st.btn} onClick={() => navigate(annotatePath)}>
             Annotate
           </button>
           <button type="button" style={st.btn} onClick={() => void loadStats()} disabled={loading}>
@@ -498,12 +505,12 @@ export default function SmileAgreement() {
                     />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569", borderRadius: 8 }}
-                      formatter={(value: number, name: string, props) => {
-                        const tot = (props.payload as { total?: number }).total ?? 1;
+                      formatter={(value: number, name: string, item: { payload?: { total?: number } }) => {
+                        const tot = item.payload?.total ?? 1;
                         return [`${value.toFixed(1)}%  (n=${Math.round(value * tot / 100)})`, LABEL_DISPLAY[name] ?? name];
                       }}
                     />
-                    <Legend formatter={(key) => LABEL_DISPLAY[key] ?? key} />
+                    <Legend formatter={(key: string) => LABEL_DISPLAY[key] ?? key} />
                     {(stats.valid_labels as string[]).map((lab) => (
                       <Bar key={lab} dataKey={lab} stackId="a" fill={LABEL_COLOR[lab] ?? "#94a3b8"} />
                     ))}
@@ -533,13 +540,13 @@ export default function SmileAgreement() {
                     <ReferenceLine x={0} stroke="#475569" strokeDasharray="4 2" />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569", borderRadius: 8 }}
-                      formatter={(_v: number, name: string, props) => {
-                        const d = props.payload as KappaBarDatum;
+                      formatter={(_v: number, name: string, item: NonNullable<TooltipProps<number, string>["payload"]>[number]) => {
+                        const d = item.payload as KappaBarDatum;
                         const raw = name.startsWith("Binary") ? d.binaryRaw : d.modeRaw;
                         return [raw != null ? `${raw.toFixed(3)} (${kappaLabel(raw)})` : "—", name];
                       }}
-                      labelFormatter={(_, payload) => {
-                        const p = (payload?.[0]?.payload as KappaBarDatum | undefined);
+                      labelFormatter={(_: unknown, payload: ReadonlyArray<{ payload?: KappaBarDatum }>) => {
+                        const p = payload[0]?.payload;
                         return p ? `Shared tasks: ${p.n}` : "";
                       }}
                     />
@@ -605,7 +612,8 @@ export default function SmileAgreement() {
                     <ReferenceLine y={0.5} stroke="#475569" strokeDasharray="4 3" />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569", borderRadius: 8 }}
-                      content={({ payload }) => {
+                      content={(props: TooltipProps<number, string>) => {
+                        const { payload } = props;
                         if (!payload?.length) return null;
                         const d = payload[0].payload as SmileIntensityRow;
                         return (
