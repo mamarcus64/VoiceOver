@@ -194,6 +194,25 @@ export interface SmileAgreementPairwise {
   coarse_confusion: number[][];
 }
 
+export interface SmileModePairwise {
+  annotator_a: string;
+  annotator_b: string;
+  n_tasks: number;
+  cohen_kappa: number | null;
+  percent_agreement: number | null;
+  confusion: number[][];
+}
+
+export interface SmileModeStats {
+  labels: string[];
+  tasks_fully_labeled: number;
+  fleiss_kappa: number | null;
+  percent_full_agreement: number | null;
+  pairwise: SmileModePairwise[];
+}
+
+export type SmileModeKey = "fine" | "coarse" | "smile_fine" | "smile_coarse" | "binary";
+
 export interface SmileAgreementStats {
   annotators: string[];
   valid_labels: string[];
@@ -206,6 +225,16 @@ export interface SmileAgreementStats {
   fleiss_kappa: number | null;
   coarse_fleiss_kappa: number | null;
   pairwise: SmileAgreementPairwise[];
+  modes: Record<SmileModeKey, SmileModeStats>;
+}
+
+export interface AU12ScatterPoint {
+  task_number: number;
+  annotator: string;
+  mean_r: number;
+  peak_r: number;
+  is_not_a_smile: boolean;
+  label: string;
 }
 
 export const SMILE_LABELS: { key: SmileEmotionLabel; display: string; color: string; desc: string }[] = [

@@ -12,34 +12,43 @@
     "min_annotators": 1,
     "hidden_dim": 24,
     "dropout": 0.3,
+    "entropy_reg": 0.1,
+    "label_smoothing": 0.1,
+    "text_features": null,
     "seed": 42,
-    "out": "/Users/marcus/Desktop/usc/VoiceOver/analysis/smile_prediction/sweep_results/gru_both_before+during+after.json",
+    "out": "/home/ec2-user/VoiceOver/analysis/smile_prediction/sweep_results/gru_both_before+during+after.json",
     "quiet": true
   },
   "metrics": {
-    "n_samples": 267,
-    "accuracy": 0.4606741573033708,
-    "weighted_accuracy": 0.4692282854375203,
-    "weighted_cross_entropy": 1.0410650213018697,
-    "macro_f1": 0.2166604983962497,
+    "n_samples": 268,
+    "brier_score": 0.48297909458857685,
+    "weighted_ce": 1.1049386541328714,
+    "pred_entropy": 1.096423845469901,
+    "prior_brier": 0.44085788807053433,
+    "prior_ce": 1.0368332134395002,
+    "brier_skill": -0.09554372884738638,
+    "accuracy": 0.27238805970149255,
+    "weighted_accuracy": 0.27204127700741704,
+    "macro_f1": 0.24362831552374034,
+    "classes_predicted": 3,
     "per_class": {
       "genuine": {
-        "precision": 0.4765625,
-        "recall": 0.9384615384615385,
-        "f1": 0.6321243523316062,
-        "support": 130
+        "precision": 0.4485981308411215,
+        "recall": 0.366412213740458,
+        "f1": 0.4033613445378151,
+        "support": 131
       },
       "polite": {
-        "precision": 0.09090909090909091,
-        "recall": 0.009900990099009901,
-        "f1": 0.01785714285714286,
-        "support": 101
+        "precision": 0.21621621621621623,
+        "recall": 0.08080808080808081,
+        "f1": 0.11764705882352941,
+        "support": 99
       },
       "masking": {
-        "precision": 0.0,
-        "recall": 0.0,
-        "f1": 0.0,
-        "support": 36
+        "precision": 0.13709677419354838,
+        "recall": 0.4473684210526316,
+        "f1": 0.20987654320987656,
+        "support": 38
       }
     }
   },
@@ -47,11 +56,11 @@
     {
       "task_number": 11,
       "predicted_probs": [
-        0.4457840919494629,
-        0.36175283789634705,
-        0.1924630105495453
+        0.32322829961776733,
+        0.3039466142654419,
+        0.3728250563144684
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.20000000298023224,
         0.6000000238418579,
@@ -61,13 +70,29 @@
       "weight": 1.0
     },
     {
+      "task_number": 25,
+      "predicted_probs": [
+        0.3276923596858978,
+        0.31429731845855713,
+        0.35801032185554504
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
       "task_number": 27,
       "predicted_probs": [
-        0.43828892707824707,
-        0.37092992663383484,
-        0.1907811015844345
+        0.3272708058357239,
+        0.31799423694610596,
+        0.3547348976135254
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         1.0,
@@ -79,9 +104,9 @@
     {
       "task_number": 33,
       "predicted_probs": [
-        0.4298666715621948,
-        0.3856544494628906,
-        0.18447893857955933
+        0.34955039620399475,
+        0.34096869826316833,
+        0.3094809055328369
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -93,11 +118,459 @@
       "weight": 1.0
     },
     {
+      "task_number": 46,
+      "predicted_probs": [
+        0.33619171380996704,
+        0.3284629285335541,
+        0.33534538745880127
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.3333333432674408,
+        0.6666666865348816,
+        0.0
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 70,
+      "predicted_probs": [
+        0.31949159502983093,
+        0.30396580696105957,
+        0.3765425682067871
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 0.6666666666666666
+    },
+    {
+      "task_number": 71,
+      "predicted_probs": [
+        0.3193150460720062,
+        0.2998870015144348,
+        0.38079795241355896
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 0.3333333333333333
+    },
+    {
+      "task_number": 72,
+      "predicted_probs": [
+        0.3253878057003021,
+        0.31144797801971436,
+        0.3631642460823059
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 83,
+      "predicted_probs": [
+        0.3343358337879181,
+        0.3228779137134552,
+        0.3427862823009491
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.0,
+        0.3333333432674408,
+        0.6666666865348816
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 89,
+      "predicted_probs": [
+        0.32042285799980164,
+        0.30708011984825134,
+        0.3724970519542694
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 105,
+      "predicted_probs": [
+        0.3617273271083832,
+        0.34343382716178894,
+        0.2948388457298279
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 109,
+      "predicted_probs": [
+        0.3565380275249481,
+        0.3363015055656433,
+        0.30716052651405334
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 134,
+      "predicted_probs": [
+        0.3361525237560272,
+        0.3217828571796417,
+        0.34206461906433105
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 138,
+      "predicted_probs": [
+        0.3645309507846832,
+        0.34951138496398926,
+        0.2859576642513275
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 141,
+      "predicted_probs": [
+        0.36043795943260193,
+        0.34900936484336853,
+        0.29055270552635193
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 144,
+      "predicted_probs": [
+        0.32912564277648926,
+        0.316618949174881,
+        0.3542553782463074
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 167,
+      "predicted_probs": [
+        0.32624033093452454,
+        0.31072327494621277,
+        0.3630364239215851
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 176,
+      "predicted_probs": [
+        0.348978728055954,
+        0.34289655089378357,
+        0.3081248104572296
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 181,
+      "predicted_probs": [
+        0.33578991889953613,
+        0.32778412103652954,
+        0.3364259600639343
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 220,
+      "predicted_probs": [
+        0.36270979046821594,
+        0.34516391158103943,
+        0.29212626814842224
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 258,
+      "predicted_probs": [
+        0.3292868435382843,
+        0.3213001489639282,
+        0.3494130074977875
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 259,
+      "predicted_probs": [
+        0.3259419798851013,
+        0.3113637864589691,
+        0.3626941740512848
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 263,
+      "predicted_probs": [
+        0.3632467985153198,
+        0.3377581238746643,
+        0.2989950180053711
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 276,
+      "predicted_probs": [
+        0.3450789451599121,
+        0.331451416015625,
+        0.3234696388244629
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 296,
+      "predicted_probs": [
+        0.33063679933547974,
+        0.31347545981407166,
+        0.355887770652771
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 299,
+      "predicted_probs": [
+        0.343639999628067,
+        0.3289821743965149,
+        0.3273777365684509
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 330,
+      "predicted_probs": [
+        0.32144075632095337,
+        0.3228502571582794,
+        0.355709046125412
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 7,
+      "predicted_probs": [
+        0.3449324667453766,
+        0.3228304982185364,
+        0.33223703503608704
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.4000000059604645,
+        0.20000000298023224,
+        0.4000000059604645
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 18,
+      "predicted_probs": [
+        0.3362780213356018,
+        0.3530828058719635,
+        0.3106391131877899
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "true_top_class": "polite",
+      "weight": 0.6
+    },
+    {
+      "task_number": 22,
+      "predicted_probs": [
+        0.3287767469882965,
+        0.3170078992843628,
+        0.3542153537273407
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.20000000298023224,
+        0.4000000059604645,
+        0.4000000059604645
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 28,
+      "predicted_probs": [
+        0.3278864026069641,
+        0.3216575086116791,
+        0.3504561483860016
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.6000000238418579,
+        0.4000000059604645,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 36,
+      "predicted_probs": [
+        0.3467899560928345,
+        0.3187195062637329,
+        0.33449050784111023
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.0,
+        0.5,
+        0.5
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
       "task_number": 49,
       "predicted_probs": [
-        0.44634243845939636,
-        0.3665400743484497,
-        0.18711747229099274
+        0.3453823924064636,
+        0.317460834980011,
+        0.3371568024158478
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -111,11 +584,11 @@
     {
       "task_number": 50,
       "predicted_probs": [
-        0.43781137466430664,
-        0.37380897998809814,
-        0.18837954103946686
+        0.33043143153190613,
+        0.3324357271194458,
+        0.33713290095329285
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         1.0,
@@ -127,11 +600,11 @@
     {
       "task_number": 64,
       "predicted_probs": [
-        0.4418882131576538,
-        0.3688965439796448,
-        0.18921521306037903
+        0.3336198329925537,
+        0.317199170589447,
+        0.34918102622032166
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         1.0,
         0.0,
@@ -141,353 +614,305 @@
       "weight": 1.0
     },
     {
-      "task_number": 100,
+      "task_number": 101,
       "predicted_probs": [
-        0.44166961312294006,
-        0.3732864558696747,
-        0.18504397571086884
+        0.3512697219848633,
+        0.35076242685317993,
+        0.2979678511619568
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.5,
-        0.5,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 121,
+      "task_number": 107,
       "predicted_probs": [
-        0.44384250044822693,
-        0.3677417039871216,
-        0.1884157955646515
+        0.32472845911979675,
+        0.32443752884864807,
+        0.35083404183387756
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 125,
+      "task_number": 120,
       "predicted_probs": [
-        0.4332168400287628,
-        0.3774953782558441,
-        0.18928773701190948
+        0.3340650796890259,
+        0.31889691948890686,
+        0.34703800082206726
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 131,
-      "predicted_probs": [
-        0.442233145236969,
-        0.37160155177116394,
-        0.18616536259651184
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 142,
-      "predicted_probs": [
-        0.4127400815486908,
-        0.39892128109931946,
-        0.18833865225315094
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
       "weight": 1.0
     },
     {
       "task_number": 145,
       "predicted_probs": [
-        0.4314553141593933,
-        0.3759154677391052,
-        0.19262924790382385
+        0.3293226957321167,
+        0.32485345005989075,
+        0.3458237946033478
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 164,
+      "task_number": 162,
       "predicted_probs": [
-        0.43972718715667725,
-        0.369625449180603,
-        0.19064736366271973
+        0.33125048875808716,
+        0.31254446506500244,
+        0.3562050759792328
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 200,
-      "predicted_probs": [
-        0.4367113709449768,
-        0.37475913763046265,
-        0.18852952122688293
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 214,
+      "task_number": 168,
       "predicted_probs": [
-        0.4513151943683624,
-        0.35628780722618103,
-        0.19239693880081177
+        0.3289000689983368,
+        0.3183198571205139,
+        0.3527800142765045
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 257,
-      "predicted_probs": [
-        0.4342128336429596,
-        0.3761650621891022,
-        0.1896221935749054
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 259,
-      "predicted_probs": [
-        0.4451223313808441,
-        0.36522430181503296,
-        0.18965335190296173
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 263,
-      "predicted_probs": [
-        0.4235073924064636,
-        0.38756099343299866,
-        0.1889316290616989
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 274,
-      "predicted_probs": [
-        0.459287166595459,
-        0.36666199564933777,
-        0.17405085265636444
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 276,
-      "predicted_probs": [
-        0.4675373136997223,
-        0.36015427112579346,
-        0.17230843007564545
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 281,
-      "predicted_probs": [
-        0.43883469700813293,
-        0.3788192868232727,
-        0.18234609067440033
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 299,
-      "predicted_probs": [
-        0.43094322085380554,
-        0.3833087384700775,
-        0.18574802577495575
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 312,
-      "predicted_probs": [
-        0.40556949377059937,
-        0.403333842754364,
-        0.1910967081785202
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 342,
-      "predicted_probs": [
-        0.4357532262802124,
-        0.38125449419021606,
-        0.18299226462841034
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 346,
-      "predicted_probs": [
-        0.4278412461280823,
-        0.37778255343437195,
-        0.19437623023986816
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 377,
-      "predicted_probs": [
-        0.44851431250572205,
-        0.3685438334941864,
-        0.18294180929660797
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 380,
+      "task_number": 200,
       "predicted_probs": [
-        0.4250586926937103,
-        0.38874709606170654,
-        0.18619424104690552
+        0.3310253620147705,
+        0.3407808840274811,
+        0.32819369435310364
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 7,
+      "task_number": 206,
       "predicted_probs": [
-        0.46981021761894226,
-        0.3658329248428345,
-        0.16435682773590088
+        0.3395726978778839,
+        0.32185402512550354,
+        0.33857324719429016
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.4000000059604645,
-        0.20000000298023224,
-        0.4000000059604645
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 214,
+      "predicted_probs": [
+        0.3257004916667938,
+        0.3073999285697937,
+        0.3668995499610901
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 228,
+      "predicted_probs": [
+        0.3354452848434448,
+        0.3570672869682312,
+        0.307487428188324
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 262,
+      "predicted_probs": [
+        0.3524198532104492,
+        0.325396329164505,
+        0.32218387722969055
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 281,
+      "predicted_probs": [
+        0.34139320254325867,
+        0.34021836519241333,
+        0.3183884620666504
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 289,
+      "predicted_probs": [
+        0.35982489585876465,
+        0.3218737244606018,
+        0.31830134987831116
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 346,
+      "predicted_probs": [
+        0.32119226455688477,
+        0.3204808235168457,
+        0.35832688212394714
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 354,
+      "predicted_probs": [
+        0.3356739580631256,
+        0.3202909529209137,
+        0.3440350890159607
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 355,
+      "predicted_probs": [
+        0.3976215422153473,
+        0.3550838232040405,
+        0.24729466438293457
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 359,
+      "predicted_probs": [
+        0.3385462760925293,
+        0.3158475458621979,
+        0.34560611844062805
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 365,
+      "predicted_probs": [
+        0.3490358889102936,
+        0.3229340612888336,
+        0.328029990196228
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 374,
+      "predicted_probs": [
+        0.3277175724506378,
+        0.3129633665084839,
+        0.35931912064552307
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -495,11 +920,11 @@
     {
       "task_number": 12,
       "predicted_probs": [
-        0.4693376123905182,
-        0.3624466061592102,
-        0.1682157963514328
+        0.3362932503223419,
+        0.32142341136932373,
+        0.34228336811065674
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.20000000298023224,
         0.4000000059604645,
@@ -509,29 +934,13 @@
       "weight": 1.0
     },
     {
-      "task_number": 18,
-      "predicted_probs": [
-        0.4491780698299408,
-        0.37633752822875977,
-        0.17448440194129944
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 0.6
-    },
-    {
       "task_number": 19,
       "predicted_probs": [
-        0.475016325712204,
-        0.35197579860687256,
-        0.17300790548324585
+        0.3285331726074219,
+        0.3039394021034241,
+        0.36752748489379883
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.20000000298023224,
         0.800000011920929,
@@ -541,397 +950,13 @@
       "weight": 1.0
     },
     {
-      "task_number": 22,
-      "predicted_probs": [
-        0.46835556626319885,
-        0.36094698309898376,
-        0.170697420835495
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.20000000298023224,
-        0.4000000059604645,
-        0.4000000059604645
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 36,
-      "predicted_probs": [
-        0.4671749770641327,
-        0.36389783024787903,
-        0.16892720758914948
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.5,
-        0.5
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 70,
-      "predicted_probs": [
-        0.46662452816963196,
-        0.3573807179927826,
-        0.17599475383758545
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 0.6666666666666666
-    },
-    {
-      "task_number": 77,
-      "predicted_probs": [
-        0.46606677770614624,
-        0.36538437008857727,
-        0.1685488522052765
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.5,
-        0.5
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 79,
-      "predicted_probs": [
-        0.4756181240081787,
-        0.3549720346927643,
-        0.169409841299057
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 90,
-      "predicted_probs": [
-        0.4657614529132843,
-        0.36444956064224243,
-        0.1697889268398285
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.5,
-        0.0,
-        0.5
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 109,
-      "predicted_probs": [
-        0.4641469120979309,
-        0.3633488714694977,
-        0.17250420153141022
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 136,
-      "predicted_probs": [
-        0.4634591042995453,
-        0.36673542857170105,
-        0.16980546712875366
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 138,
-      "predicted_probs": [
-        0.45639026165008545,
-        0.37160658836364746,
-        0.17200317978858948
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 140,
-      "predicted_probs": [
-        0.4638763964176178,
-        0.36184513568878174,
-        0.17427845299243927
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 146,
-      "predicted_probs": [
-        0.4575413465499878,
-        0.37231457233428955,
-        0.17014409601688385
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 147,
-      "predicted_probs": [
-        0.46892696619033813,
-        0.3647778332233429,
-        0.16629520058631897
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 148,
-      "predicted_probs": [
-        0.4514322578907013,
-        0.37166354060173035,
-        0.17690420150756836
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 195,
-      "predicted_probs": [
-        0.4392775297164917,
-        0.38428518176078796,
-        0.17643727362155914
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 205,
-      "predicted_probs": [
-        0.4667477011680603,
-        0.3656121790409088,
-        0.1676401048898697
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 212,
-      "predicted_probs": [
-        0.4587986171245575,
-        0.3612701892852783,
-        0.1799311488866806
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 230,
-      "predicted_probs": [
-        0.4662247598171234,
-        0.363418847322464,
-        0.1703563630580902
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 235,
-      "predicted_probs": [
-        0.46657857298851013,
-        0.35883253812789917,
-        0.17458884418010712
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 296,
-      "predicted_probs": [
-        0.4746524691581726,
-        0.3576466143131256,
-        0.16770096123218536
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 314,
-      "predicted_probs": [
-        0.4542188346385956,
-        0.37101584672927856,
-        0.17476527392864227
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 355,
-      "predicted_probs": [
-        0.46835166215896606,
-        0.3646232485771179,
-        0.1670251488685608
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 364,
-      "predicted_probs": [
-        0.46678176522254944,
-        0.36158424615859985,
-        0.17163391411304474
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 374,
-      "predicted_probs": [
-        0.46646344661712646,
-        0.3592566251754761,
-        0.17428003251552582
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
       "task_number": 21,
       "predicted_probs": [
-        0.4251719117164612,
-        0.399684339761734,
-        0.17514368891716003
+        0.32660651206970215,
+        0.31669381260871887,
+        0.35669976472854614
       ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.6000000238418579,
-        0.4000000059604645,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 28,
-      "predicted_probs": [
-        0.4332520067691803,
-        0.3965227007865906,
-        0.1702253520488739
-      ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.6000000238418579,
         0.4000000059604645,
@@ -943,9 +968,9 @@
     {
       "task_number": 42,
       "predicted_probs": [
-        0.45802927017211914,
-        0.38141441345214844,
-        0.16055628657341003
+        0.35897526144981384,
+        0.33502519130706787,
+        0.3059995472431183
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -959,11 +984,11 @@
     {
       "task_number": 59,
       "predicted_probs": [
-        0.4334399700164795,
-        0.390056312084198,
-        0.1765037477016449
+        0.33463314175605774,
+        0.3152030408382416,
+        0.3501638174057007
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.6666666865348816,
         0.3333333432674408,
@@ -973,59 +998,59 @@
       "weight": 1.0
     },
     {
-      "task_number": 71,
+      "task_number": 77,
       "predicted_probs": [
-        0.43094485998153687,
-        0.38877975940704346,
-        0.18027539551258087
+        0.3365252912044525,
+        0.323451429605484,
+        0.34002333879470825
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 0.3333333333333333
-    },
-    {
-      "task_number": 72,
-      "predicted_probs": [
-        0.431294322013855,
-        0.3958510458469391,
-        0.17285463213920593
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.3333333432674408,
+        0.3333333432674408,
+        0.3333333432674408
       ],
       "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 79,
+      "predicted_probs": [
+        0.35283130407333374,
+        0.31567394733428955,
+        0.3314947187900543
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 81,
       "predicted_probs": [
-        0.4324328899383545,
-        0.39481019973754883,
-        0.17275694012641907
+        0.3324277400970459,
+        0.30846166610717773,
+        0.35911065340042114
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.5,
-        0.5,
+        0.6666666865348816,
+        0.3333333432674408,
         0.0
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 83,
+      "task_number": 91,
       "predicted_probs": [
-        0.43539169430732727,
-        0.3961549401283264,
-        0.1684534251689911
+        0.3409205675125122,
+        0.32237663865089417,
+        0.336702823638916
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -1037,225 +1062,161 @@
       "weight": 1.0
     },
     {
-      "task_number": 102,
+      "task_number": 124,
       "predicted_probs": [
-        0.43654850125312805,
-        0.3886411488056183,
-        0.17481032013893127
+        0.3340114951133728,
+        0.31825336813926697,
+        0.347735196352005
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 106,
-      "predicted_probs": [
-        0.43631359934806824,
-        0.3909915089607239,
-        0.17269492149353027
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 141,
-      "predicted_probs": [
-        0.44925013184547424,
-        0.3913809061050415,
-        0.15936896204948425
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 144,
+      "task_number": 130,
       "predicted_probs": [
-        0.43082255125045776,
-        0.40017104148864746,
-        0.16900645196437836
+        0.34382903575897217,
+        0.32479363679885864,
+        0.3313773572444916
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 135,
+      "predicted_probs": [
+        0.3497818410396576,
+        0.32683104276657104,
+        0.32338711619377136
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 146,
+      "predicted_probs": [
+        0.34300732612609863,
+        0.3226318955421448,
+        0.3343607485294342
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 171,
+      "task_number": 195,
       "predicted_probs": [
-        0.43374499678611755,
-        0.389815092086792,
-        0.17643989622592926
+        0.3445971608161926,
+        0.3395017087459564,
+        0.31590110063552856
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 177,
+      "task_number": 199,
       "predicted_probs": [
-        0.43724873661994934,
-        0.3880538046360016,
-        0.17469754815101624
+        0.31951645016670227,
+        0.31864047050476074,
+        0.3618431091308594
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 210,
+      "task_number": 230,
       "predicted_probs": [
-        0.43420249223709106,
-        0.3910975754261017,
-        0.17469993233680725
+        0.3461879789829254,
+        0.32806596159935,
+        0.325746089220047
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 221,
-      "predicted_probs": [
-        0.45428451895713806,
-        0.3854218125343323,
-        0.16029363870620728
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 256,
       "predicted_probs": [
-        0.4393598437309265,
-        0.3914777636528015,
-        0.16916240751743317
+        0.3411667048931122,
+        0.32359778881073,
+        0.33523550629615784
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 258,
-      "predicted_probs": [
-        0.4354188144207001,
-        0.3914228677749634,
-        0.17315830290317535
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 266,
-      "predicted_probs": [
-        0.4324229061603546,
-        0.3943723440170288,
-        0.17320474982261658
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
       "weight": 1.0
     },
     {
       "task_number": 273,
       "predicted_probs": [
-        0.46944254636764526,
-        0.3584716320037842,
-        0.17208576202392578
+        0.40844449400901794,
+        0.3467349708080292,
+        0.2448204755783081
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 277,
+      "task_number": 312,
       "predicted_probs": [
-        0.43086686730384827,
-        0.3944598138332367,
-        0.17467330396175385
+        0.3499357998371124,
+        0.3397336006164551,
+        0.3103306293487549
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 301,
-      "predicted_probs": [
-        0.4375747740268707,
-        0.3958466351032257,
-        0.16657856106758118
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -1263,63 +1224,111 @@
     {
       "task_number": 313,
       "predicted_probs": [
-        0.4407236576080322,
-        0.38903266191482544,
-        0.17024372518062592
+        0.3356756865978241,
+        0.31231796741485596,
+        0.35200637578964233
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 328,
+      "task_number": 316,
       "predicted_probs": [
-        0.43305128812789917,
-        0.3956344425678253,
-        0.1713142693042755
+        0.3432748019695282,
+        0.3153728246688843,
+        0.3413523733615875
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 356,
+      "task_number": 342,
       "predicted_probs": [
-        0.4445498287677765,
-        0.38918066024780273,
-        0.16626951098442078
+        0.36545273661613464,
+        0.3282320499420166,
+        0.30631524324417114
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "masking",
+      "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 357,
+      "task_number": 364,
       "predicted_probs": [
-        0.4468677341938019,
-        0.39061519503593445,
-        0.16251708567142487
+        0.3443855345249176,
+        0.32712113857269287,
+        0.3284933865070343
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 376,
+      "predicted_probs": [
+        0.34278154373168945,
+        0.3274717926979065,
+        0.32974666357040405
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 380,
+      "predicted_probs": [
+        0.3549816906452179,
+        0.33263641595840454,
+        0.31238192319869995
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 394,
+      "predicted_probs": [
+        0.31986331939697266,
+        0.31556224822998047,
+        0.3645743727684021
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -1327,15 +1336,15 @@
     {
       "task_number": 396,
       "predicted_probs": [
-        0.43103769421577454,
-        0.3953106701374054,
-        0.17365163564682007
+        0.3349502384662628,
+        0.3196965754032135,
+        0.34535324573516846
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -1343,9 +1352,9 @@
     {
       "task_number": 3,
       "predicted_probs": [
-        0.4478771388530731,
-        0.36846593022346497,
-        0.1836569458246231
+        0.3548390567302704,
+        0.2993922233581543,
+        0.3457687199115753
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -1357,61 +1366,13 @@
       "weight": 1.0
     },
     {
-      "task_number": 6,
-      "predicted_probs": [
-        0.43554413318634033,
-        0.3863432705402374,
-        0.17811262607574463
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.4000000059604645,
-        0.4000000059604645,
-        0.20000000298023224
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 32,
-      "predicted_probs": [
-        0.39287033677101135,
-        0.4453224837779999,
-        0.16180714964866638
-      ],
-      "predicted_class": "polite",
-      "true_soft_label": [
-        0.5,
-        0.5,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 0.5
-    },
-    {
-      "task_number": 60,
-      "predicted_probs": [
-        0.41812610626220703,
-        0.401502400636673,
-        0.18037152290344238
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
       "task_number": 73,
       "predicted_probs": [
-        0.44251522421836853,
-        0.37729668617248535,
-        0.1801881343126297
+        0.3484472632408142,
+        0.2975917458534241,
+        0.35396096110343933
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         1.0,
@@ -1423,14 +1384,14 @@
     {
       "task_number": 78,
       "predicted_probs": [
-        0.44971102476119995,
-        0.36507362127304077,
-        0.18521538376808167
+        0.38119661808013916,
+        0.31536003947257996,
+        0.30344337224960327
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.5,
-        0.5,
+        0.6666666865348816,
+        0.3333333432674408,
         0.0
       ],
       "true_top_class": "genuine",
@@ -1439,9 +1400,9 @@
     {
       "task_number": 80,
       "predicted_probs": [
-        0.41995009779930115,
-        0.40067222714424133,
-        0.1793777048587799
+        0.34542322158813477,
+        0.3348170220851898,
+        0.319759726524353
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -1455,95 +1416,95 @@
     {
       "task_number": 82,
       "predicted_probs": [
-        0.4432663023471832,
-        0.3725401759147644,
-        0.18419352173805237
+        0.36250030994415283,
+        0.3036837875843048,
+        0.3338159918785095
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.5,
+        0.6666666865348816,
         0.0,
-        0.5
+        0.3333333432674408
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 120,
+      "task_number": 114,
       "predicted_probs": [
-        0.4468255043029785,
-        0.3725466728210449,
-        0.18062780797481537
+        0.3514106273651123,
+        0.2973346412181854,
+        0.35125476121902466
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 139,
+      "task_number": 137,
       "predicted_probs": [
-        0.3903171122074127,
-        0.44666945934295654,
-        0.16301335394382477
+        0.35874226689338684,
+        0.30546003580093384,
+        0.3357977271080017
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 142,
+      "predicted_probs": [
+        0.2739282250404358,
+        0.3961236774921417,
+        0.32994815707206726
       ],
       "predicted_class": "polite",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "masking",
+      "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 167,
+      "task_number": 164,
       "predicted_probs": [
-        0.4487251937389374,
-        0.36574503779411316,
-        0.18552979826927185
+        0.3500393331050873,
+        0.29837262630462646,
+        0.35158801078796387
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 168,
+      "task_number": 187,
       "predicted_probs": [
-        0.4429894983768463,
-        0.3742722272872925,
-        0.1827382594347
+        0.3226974606513977,
+        0.3176206350326538,
+        0.3596819043159485
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 182,
-      "predicted_probs": [
-        0.4493102431297302,
-        0.37030160427093506,
-        0.1803881675004959
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -1551,31 +1512,47 @@
     {
       "task_number": 196,
       "predicted_probs": [
-        0.4003920555114746,
-        0.4307330548763275,
-        0.16887490451335907
+        0.30976539850234985,
+        0.3614252209663391,
+        0.32880932092666626
       ],
       "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 201,
+      "task_number": 198,
       "predicted_probs": [
-        0.44171562790870667,
-        0.37677881121635437,
-        0.18150560557842255
+        0.34601324796676636,
+        0.2795625329017639,
+        0.37442415952682495
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 202,
+      "predicted_probs": [
+        0.3006381392478943,
+        0.3679809272289276,
+        0.3313809335231781
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -1583,47 +1560,47 @@
     {
       "task_number": 203,
       "predicted_probs": [
-        0.4073247015476227,
-        0.4164043366909027,
-        0.17627094686031342
+        0.34515419602394104,
+        0.4178173243999481,
+        0.23702841997146606
       ],
       "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 232,
+      "task_number": 211,
       "predicted_probs": [
-        0.43516889214515686,
-        0.3857164680957794,
-        0.17911462485790253
+        0.35978639125823975,
+        0.2781860828399658,
+        0.36202752590179443
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
-      "true_top_class": "genuine",
+      "true_top_class": "masking",
       "weight": 1.0
     },
     {
       "task_number": 234,
       "predicted_probs": [
-        0.4513857662677765,
-        0.3563273549079895,
-        0.19228686392307281
+        0.35381853580474854,
+        0.29195457696914673,
+        0.35422688722610474
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -1631,95 +1608,127 @@
     {
       "task_number": 245,
       "predicted_probs": [
-        0.4423322379589081,
-        0.37967047095298767,
-        0.17799732089042664
+        0.3406120240688324,
+        0.32278817892074585,
+        0.336599737405777
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 262,
+      "task_number": 257,
       "predicted_probs": [
-        0.44487982988357544,
-        0.3744676113128662,
-        0.18065255880355835
+        0.33466094732284546,
+        0.32202064990997314,
+        0.343318372964859
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "polite",
+      "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 265,
+      "task_number": 264,
       "predicted_probs": [
-        0.40417125821113586,
-        0.4207248091697693,
-        0.17510393261909485
+        0.35084912180900574,
+        0.3156610131263733,
+        0.33348986506462097
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 270,
+      "predicted_probs": [
+        0.2963045537471771,
+        0.3783111870288849,
+        0.325384259223938
       ],
       "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 282,
+      "task_number": 272,
       "predicted_probs": [
-        0.45028752088546753,
-        0.36631718277931213,
-        0.18339528143405914
+        0.26588648557662964,
+        0.38686156272888184,
+        0.34725192189216614
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 285,
+      "predicted_probs": [
+        0.36566540598869324,
+        0.3092552423477173,
+        0.3250793516635895
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
-      "true_top_class": "genuine",
+      "true_top_class": "masking",
       "weight": 1.0
     },
     {
       "task_number": 287,
       "predicted_probs": [
-        0.4488230049610138,
-        0.37067314982414246,
-        0.18050378561019897
+        0.3582122325897217,
+        0.330789178609848,
+        0.3109985589981079
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 288,
+      "task_number": 300,
       "predicted_probs": [
-        0.4476250112056732,
-        0.36558809876441956,
-        0.186786949634552
+        0.36822018027305603,
+        0.295746386051178,
+        0.3360334634780884
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -1727,47 +1736,63 @@
     {
       "task_number": 304,
       "predicted_probs": [
-        0.4002024531364441,
-        0.4343451261520386,
-        0.16545243561267853
+        0.30979689955711365,
+        0.3649158477783203,
+        0.3252872824668884
       ],
       "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 316,
+      "task_number": 356,
       "predicted_probs": [
-        0.45502978563308716,
-        0.3607826232910156,
-        0.18418756127357483
+        0.3100380599498749,
+        0.3578126132488251,
+        0.3321494162082672
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
-      "true_top_class": "genuine",
+      "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 376,
+      "task_number": 377,
       "predicted_probs": [
-        0.43594858050346375,
-        0.3840585947036743,
-        0.17999286949634552
+        0.37331801652908325,
+        0.3170934319496155,
+        0.3095885217189789
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 6,
+      "predicted_probs": [
+        0.32658806443214417,
+        0.32250332832336426,
+        0.3509085476398468
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.4000000059604645,
+        0.4000000059604645,
+        0.20000000298023224
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -1775,11 +1800,11 @@
     {
       "task_number": 15,
       "predicted_probs": [
-        0.43274393677711487,
-        0.39434486627578735,
-        0.1729111224412918
+        0.32817551493644714,
+        0.3226345479488373,
+        0.3491899073123932
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         0.5,
@@ -1789,29 +1814,13 @@
       "weight": 0.4
     },
     {
-      "task_number": 25,
-      "predicted_probs": [
-        0.43752872943878174,
-        0.3949075937271118,
-        0.16756367683410645
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
       "task_number": 31,
       "predicted_probs": [
-        0.4459576904773712,
-        0.3897850811481476,
-        0.16425716876983643
+        0.34649085998535156,
+        0.35414427518844604,
+        0.2993648052215576
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.6666666865348816,
         0.3333333432674408,
@@ -1821,11 +1830,27 @@
       "weight": 0.6
     },
     {
+      "task_number": 32,
+      "predicted_probs": [
+        0.3480910062789917,
+        0.353714257478714,
+        0.2981947660446167
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.5,
+        0.5,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 0.5
+    },
+    {
       "task_number": 34,
       "predicted_probs": [
-        0.4568772614002228,
-        0.3758043944835663,
-        0.16731832921504974
+        0.3661666214466095,
+        0.35862457752227783,
+        0.2752087712287903
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -1839,9 +1864,9 @@
     {
       "task_number": 38,
       "predicted_probs": [
-        0.4654296636581421,
-        0.36152082681655884,
-        0.17304961383342743
+        0.3854615390300751,
+        0.3701989948749542,
+        0.2443394958972931
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -1855,11 +1880,11 @@
     {
       "task_number": 45,
       "predicted_probs": [
-        0.441773384809494,
-        0.3890530467033386,
-        0.16917353868484497
+        0.33307376503944397,
+        0.3153066039085388,
+        0.35161957144737244
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.6666666865348816,
         0.3333333432674408,
@@ -1869,43 +1894,43 @@
       "weight": 1.0
     },
     {
-      "task_number": 46,
-      "predicted_probs": [
-        0.44941723346710205,
-        0.38148048520088196,
-        0.16910232603549957
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.3333333432674408,
-        0.6666666865348816,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
       "task_number": 55,
       "predicted_probs": [
-        0.4545566141605377,
-        0.38178446888923645,
-        0.16365881264209747
+        0.3547588586807251,
+        0.34027886390686035,
+        0.30496230721473694
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 0.3333333333333333
     },
     {
+      "task_number": 60,
+      "predicted_probs": [
+        0.3451402187347412,
+        0.32873377203941345,
+        0.3261260390281677
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
       "task_number": 69,
       "predicted_probs": [
-        0.44564899802207947,
-        0.38915741443634033,
-        0.16519363224506378
+        0.348328173160553,
+        0.33941513299942017,
+        0.31225669384002686
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -1917,97 +1942,81 @@
       "weight": 0.6666666666666666
     },
     {
-      "task_number": 101,
+      "task_number": 100,
       "predicted_probs": [
-        0.4577443301677704,
-        0.3788398802280426,
-        0.16341572999954224
+        0.34591376781463623,
+        0.3285905420780182,
+        0.3254956603050232
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
+        0.5,
+        0.5,
         0.0
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 110,
+      "task_number": 111,
       "predicted_probs": [
-        0.4337835907936096,
-        0.3938266932964325,
-        0.17238971590995789
+        0.34554511308670044,
+        0.3390573263168335,
+        0.31539759039878845
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 114,
-      "predicted_probs": [
-        0.4357452094554901,
-        0.3953265845775604,
-        0.16892819106578827
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 135,
+      "task_number": 139,
       "predicted_probs": [
-        0.4522675573825836,
-        0.38151875138282776,
-        0.16621366143226624
+        0.34889093041419983,
+        0.3564222455024719,
+        0.29468679428100586
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
-      "true_top_class": "genuine",
+      "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 198,
+      "task_number": 140,
       "predicted_probs": [
-        0.4263719618320465,
-        0.40107595920562744,
-        0.17255210876464844
+        0.346922367811203,
+        0.33491310477256775,
+        0.31816452741622925
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
-      "true_top_class": "genuine",
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 199,
+      "task_number": 147,
       "predicted_probs": [
-        0.4254533648490906,
-        0.40349864959716797,
-        0.17104798555374146
+        0.3301209509372711,
+        0.31790050864219666,
+        0.3519785404205322
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -2015,191 +2024,191 @@
     {
       "task_number": 204,
       "predicted_probs": [
-        0.4360487461090088,
-        0.39486023783683777,
-        0.16909103095531464
+        0.3270851671695709,
+        0.31150054931640625,
+        0.36141437292099
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 220,
+      "task_number": 213,
       "predicted_probs": [
-        0.44589605927467346,
-        0.3862781226634979,
-        0.16782578825950623
+        0.3249901235103607,
+        0.3051271438598633,
+        0.3698827922344208
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 243,
-      "predicted_probs": [
-        0.437689870595932,
-        0.3928895592689514,
-        0.16942061483860016
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 264,
+      "task_number": 225,
       "predicted_probs": [
-        0.44487908482551575,
-        0.3865666687488556,
-        0.16855429112911224
+        0.32028651237487793,
+        0.3163541257381439,
+        0.36335936188697815
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 233,
+      "predicted_probs": [
+        0.3279470205307007,
+        0.3052438497543335,
+        0.36680909991264343
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 236,
+      "predicted_probs": [
+        0.326777845621109,
+        0.30544668436050415,
+        0.36777541041374207
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 244,
+      "predicted_probs": [
+        0.33697181940078735,
+        0.327732652425766,
+        0.33529552817344666
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "masking",
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 265,
+      "predicted_probs": [
+        0.34560781717300415,
+        0.3371206521987915,
+        0.3172715902328491
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 274,
+      "predicted_probs": [
+        0.3560534417629242,
+        0.3374802768230438,
+        0.306466281414032
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 280,
       "predicted_probs": [
-        0.44453927874565125,
-        0.38920941948890686,
-        0.16625133156776428
+        0.33680838346481323,
+        0.32163676619529724,
+        0.3415548503398895
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 291,
+      "task_number": 314,
       "predicted_probs": [
-        0.45585572719573975,
-        0.3791978359222412,
-        0.16494646668434143
+        0.3274356424808502,
+        0.3205670118331909,
+        0.3519972860813141
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 300,
+      "task_number": 328,
       "predicted_probs": [
-        0.4378645420074463,
-        0.3961641788482666,
-        0.1659713089466095
+        0.32587844133377075,
+        0.33021146059036255,
+        0.3439100980758667
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 331,
-      "predicted_probs": [
-        0.442303866147995,
-        0.39073091745376587,
-        0.16696520149707794
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 354,
+      "task_number": 337,
       "predicted_probs": [
-        0.43958231806755066,
-        0.391134113073349,
-        0.16928361356258392
+        0.3292699456214905,
+        0.31164056062698364,
+        0.3590894937515259
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 359,
-      "predicted_probs": [
-        0.44145795702934265,
-        0.3901599943637848,
-        0.1683819741010666
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 362,
-      "predicted_probs": [
-        0.45482462644577026,
-        0.37980300188064575,
-        0.16537240147590637
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 394,
-      "predicted_probs": [
-        0.42782947421073914,
-        0.4010574519634247,
-        0.17111311852931976
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -2207,11 +2216,11 @@
     {
       "task_number": 1,
       "predicted_probs": [
-        0.4299413561820984,
-        0.39767804741859436,
-        0.17238062620162964
+        0.3316466212272644,
+        0.3559212386608124,
+        0.3124321699142456
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.800000011920929,
         0.20000000298023224,
@@ -2223,9 +2232,9 @@
     {
       "task_number": 5,
       "predicted_probs": [
-        0.4700387716293335,
-        0.3563340902328491,
-        0.17362718284130096
+        0.34734466671943665,
+        0.3210451304912567,
+        0.33161023259162903
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2239,11 +2248,11 @@
     {
       "task_number": 13,
       "predicted_probs": [
-        0.48308441042900085,
-        0.34554940462112427,
-        0.17136622965335846
+        0.33718007802963257,
+        0.3157259523868561,
+        0.34709399938583374
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         0.5,
@@ -2255,9 +2264,9 @@
     {
       "task_number": 29,
       "predicted_probs": [
-        0.45836207270622253,
-        0.3670477271080017,
-        0.17459018528461456
+        0.3393729329109192,
+        0.32387638092041016,
+        0.33675065636634827
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2271,9 +2280,9 @@
     {
       "task_number": 30,
       "predicted_probs": [
-        0.3914283514022827,
-        0.43174129724502563,
-        0.17683035135269165
+        0.33758309483528137,
+        0.36709776520729065,
+        0.29531916975975037
       ],
       "predicted_class": "polite",
       "true_soft_label": [
@@ -2287,9 +2296,9 @@
     {
       "task_number": 35,
       "predicted_probs": [
-        0.4155653119087219,
-        0.40256649255752563,
-        0.18186818063259125
+        0.37294870615005493,
+        0.3661055564880371,
+        0.2609456479549408
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2303,9 +2312,9 @@
     {
       "task_number": 39,
       "predicted_probs": [
-        0.40555089712142944,
-        0.4155990779399872,
-        0.1788499653339386
+        0.3276423513889313,
+        0.3567592203617096,
+        0.31559839844703674
       ],
       "predicted_class": "polite",
       "true_soft_label": [
@@ -2319,11 +2328,11 @@
     {
       "task_number": 65,
       "predicted_probs": [
-        0.48123911023139954,
-        0.3457813858985901,
-        0.17297951877117157
+        0.3378317952156067,
+        0.3138080835342407,
+        0.3483600914478302
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.3333333432674408,
         0.0,
@@ -2333,161 +2342,129 @@
       "weight": 1.0
     },
     {
-      "task_number": 66,
+      "task_number": 121,
       "predicted_probs": [
-        0.47731441259384155,
-        0.34764355421066284,
-        0.17504200339317322
+        0.3357192575931549,
+        0.3189988434314728,
+        0.34528180956840515
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 123,
+      "predicted_probs": [
+        0.3282855749130249,
+        0.32455798983573914,
+        0.34715646505355835
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 159,
+      "predicted_probs": [
+        0.3600473701953888,
+        0.364165335893631,
+        0.27578726410865784
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 180,
+      "predicted_probs": [
+        0.34800079464912415,
+        0.3260399401187897,
+        0.3259592652320862
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 122,
+      "task_number": 182,
       "predicted_probs": [
-        0.47596511244773865,
-        0.348804771900177,
-        0.17523013055324554
+        0.3554183840751648,
+        0.3215380609035492,
+        0.3230435848236084
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 124,
+      "task_number": 219,
       "predicted_probs": [
-        0.4767165780067444,
-        0.35028406977653503,
-        0.1729993224143982
+        0.38223448395729065,
+        0.36551907658576965,
+        0.2522464394569397
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 160,
-      "predicted_probs": [
-        0.4746653437614441,
-        0.35137856006622314,
-        0.17395608127117157
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 181,
+      "task_number": 239,
       "predicted_probs": [
-        0.4618780016899109,
-        0.3614365756511688,
-        0.17668545246124268
+        0.3331891894340515,
+        0.3092595636844635,
+        0.3575512170791626
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 187,
-      "predicted_probs": [
-        0.44274675846099854,
-        0.3779364228248596,
-        0.17931675910949707
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 216,
-      "predicted_probs": [
-        0.38524341583251953,
-        0.4376547038555145,
-        0.17710189521312714
-      ],
-      "predicted_class": "polite",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 226,
-      "predicted_probs": [
-        0.3912694454193115,
-        0.43068838119506836,
-        0.1780421882867813
-      ],
-      "predicted_class": "polite",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 238,
-      "predicted_probs": [
-        0.4766659736633301,
-        0.3470795154571533,
-        0.17625446617603302
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 240,
       "predicted_probs": [
-        0.4803996980190277,
-        0.34159910678863525,
-        0.17800122499465942
+        0.3383585512638092,
+        0.3068958520889282,
+        0.3547455966472626
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -2495,15 +2472,15 @@
     {
       "task_number": 261,
       "predicted_probs": [
-        0.46930429339408875,
-        0.3556172549724579,
-        0.17507848143577576
+        0.3376990854740143,
+        0.3184880018234253,
+        0.3438129425048828
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -2511,95 +2488,127 @@
     {
       "task_number": 275,
       "predicted_probs": [
-        0.4843527376651764,
-        0.34309908747673035,
-        0.1725481003522873
+        0.3535436689853668,
+        0.3109847903251648,
+        0.3354715406894684
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 278,
+      "task_number": 277,
       "predicted_probs": [
-        0.4621395766735077,
-        0.36281079053878784,
-        0.1750495880842209
+        0.3312934339046478,
+        0.31826794147491455,
+        0.35043856501579285
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 283,
+      "task_number": 279,
       "predicted_probs": [
-        0.4496007561683655,
-        0.3729234039783478,
-        0.17747575044631958
+        0.3259640038013458,
+        0.3664337396621704,
+        0.307602196931839
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 282,
+      "predicted_probs": [
+        0.33858802914619446,
+        0.3169611692428589,
+        0.34445080161094666
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 291,
+      "predicted_probs": [
+        0.34599027037620544,
+        0.365580290555954,
+        0.28842952847480774
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 303,
+      "predicted_probs": [
+        0.33361563086509705,
+        0.325530081987381,
+        0.34085434675216675
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 311,
       "predicted_probs": [
-        0.3704359829425812,
-        0.4483189880847931,
-        0.18124495446681976
+        0.3192339539527893,
+        0.3697011470794678,
+        0.3110649287700653
       ],
       "predicted_class": "polite",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 330,
+      "task_number": 357,
       "predicted_probs": [
-        0.45603927969932556,
-        0.3706132769584656,
-        0.17334751784801483
+        0.3414430618286133,
+        0.35935378074645996,
+        0.29920312762260437
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 365,
-      "predicted_probs": [
-        0.4605555236339569,
-        0.363916277885437,
-        0.17552819848060608
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -2607,15 +2616,15 @@
     {
       "task_number": 391,
       "predicted_probs": [
-        0.46103259921073914,
-        0.36380112171173096,
-        0.1751662790775299
+        0.3316080868244171,
+        0.31900471448898315,
+        0.34938716888427734
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -2623,41 +2632,25 @@
     {
       "task_number": 395,
       "predicted_probs": [
-        0.46967190504074097,
-        0.3542099893093109,
-        0.1761181503534317
+        0.32884517312049866,
+        0.31771835684776306,
+        0.35343649983406067
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 4,
-      "predicted_probs": [
-        0.41081923246383667,
-        0.4029116630554199,
-        0.18626916408538818
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.6000000238418579,
-        0.20000000298023224,
-        0.20000000298023224
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
       "task_number": 26,
       "predicted_probs": [
-        0.4419601559638977,
-        0.37852782011032104,
-        0.17951205372810364
+        0.3453174829483032,
+        0.3165286183357239,
+        0.3381538689136505
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2671,11 +2664,11 @@
     {
       "task_number": 43,
       "predicted_probs": [
-        0.41818296909332275,
-        0.40302154421806335,
-        0.17879550158977509
+        0.32981863617897034,
+        0.33522123098373413,
+        0.3349601924419403
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.3333333432674408,
         0.6666666865348816,
@@ -2687,11 +2680,11 @@
     {
       "task_number": 44,
       "predicted_probs": [
-        0.439958781003952,
-        0.3780021071434021,
-        0.18203911185264587
+        0.33350178599357605,
+        0.32757994532585144,
+        0.3389183282852173
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.5,
         0.5,
@@ -2703,9 +2696,9 @@
     {
       "task_number": 47,
       "predicted_probs": [
-        0.45828330516815186,
-        0.36347588896751404,
-        0.17824086546897888
+        0.3731048107147217,
+        0.3448123335838318,
+        0.28208285570144653
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2719,9 +2712,9 @@
     {
       "task_number": 48,
       "predicted_probs": [
-        0.46564438939094543,
-        0.35399553179740906,
-        0.18036000430583954
+        0.39038577675819397,
+        0.34274235367774963,
+        0.266871839761734
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2735,9 +2728,9 @@
     {
       "task_number": 51,
       "predicted_probs": [
-        0.4441659450531006,
-        0.3794803023338318,
-        0.17635373771190643
+        0.3481252193450928,
+        0.31560423970222473,
+        0.3362704813480377
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2749,11 +2742,27 @@
       "weight": 1.0
     },
     {
+      "task_number": 66,
+      "predicted_probs": [
+        0.3429008722305298,
+        0.31577903032302856,
+        0.3413201868534088
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
       "task_number": 68,
       "predicted_probs": [
-        0.46537959575653076,
-        0.3537168502807617,
-        0.18090349435806274
+        0.3906998336315155,
+        0.342617005109787,
+        0.2666831314563751
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -2767,409 +2776,9 @@
     {
       "task_number": 74,
       "predicted_probs": [
-        0.4497251808643341,
-        0.3751484155654907,
-        0.1751263439655304
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 89,
-      "predicted_probs": [
-        0.4336681663990021,
-        0.38412314653396606,
-        0.18220870196819305
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 111,
-      "predicted_probs": [
-        0.410037100315094,
-        0.40720054507255554,
-        0.1827622801065445
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 162,
-      "predicted_probs": [
-        0.43755120038986206,
-        0.38271400332450867,
-        0.17973487079143524
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 173,
-      "predicted_probs": [
-        0.42827174067497253,
-        0.3853926956653595,
-        0.18633563816547394
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 180,
-      "predicted_probs": [
-        0.44771334528923035,
-        0.37721601128578186,
-        0.17507067322731018
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 202,
-      "predicted_probs": [
-        0.42204657196998596,
-        0.3978414535522461,
-        0.18011200428009033
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 213,
-      "predicted_probs": [
-        0.4280910789966583,
-        0.3871612548828125,
-        0.18474768102169037
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 218,
-      "predicted_probs": [
-        0.4270929992198944,
-        0.3874758183956146,
-        0.18543118238449097
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 225,
-      "predicted_probs": [
-        0.423831969499588,
-        0.38984760642051697,
-        0.18632036447525024
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 260,
-      "predicted_probs": [
-        0.43922024965286255,
-        0.3805409371852875,
-        0.18023881316184998
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 271,
-      "predicted_probs": [
-        0.4312135577201843,
-        0.38886788487434387,
-        0.17991849780082703
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 286,
-      "predicted_probs": [
-        0.44293084740638733,
-        0.3823796212673187,
-        0.17468953132629395
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 290,
-      "predicted_probs": [
-        0.4278271794319153,
-        0.39577147364616394,
-        0.17640134692192078
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 292,
-      "predicted_probs": [
-        0.4255450963973999,
-        0.39658933877944946,
-        0.17786556482315063
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 295,
-      "predicted_probs": [
-        0.43131232261657715,
-        0.38510459661483765,
-        0.18358314037322998
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 297,
-      "predicted_probs": [
-        0.4458782374858856,
-        0.3777618110179901,
-        0.1763598918914795
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 326,
-      "predicted_probs": [
-        0.43725040555000305,
-        0.3859364688396454,
-        0.17681309580802917
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 367,
-      "predicted_probs": [
-        0.45603039860725403,
-        0.36629021167755127,
-        0.1776794046163559
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 8,
-      "predicted_probs": [
-        0.4325433075428009,
-        0.41634660959243774,
-        0.15111012756824493
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 0.2
-    },
-    {
-      "task_number": 10,
-      "predicted_probs": [
-        0.43125128746032715,
-        0.41266319155693054,
-        0.1560855358839035
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.800000011920929,
-        0.0,
-        0.20000000298023224
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 16,
-      "predicted_probs": [
-        0.4685579538345337,
-        0.3583562970161438,
-        0.1730857938528061
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 37,
-      "predicted_probs": [
-        0.4610912501811981,
-        0.3693040907382965,
-        0.16960471868515015
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.5,
-        0.25,
-        0.25
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 53,
-      "predicted_probs": [
-        0.4614085555076599,
-        0.36858421564102173,
-        0.17000716924667358
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 0.6666666666666666
-    },
-    {
-      "task_number": 57,
-      "predicted_probs": [
-        0.4641464948654175,
-        0.3668054938316345,
-        0.16904796659946442
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.3333333432674408,
-        0.3333333432674408,
-        0.3333333432674408
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 63,
-      "predicted_probs": [
-        0.46217671036720276,
-        0.36338096857070923,
-        0.17444229125976562
+        0.3574756383895874,
+        0.31789901852607727,
+        0.32462531328201294
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -3183,207 +2792,639 @@
     {
       "task_number": 86,
       "predicted_probs": [
-        0.458100289106369,
-        0.36975136399269104,
-        0.17214839160442352
+        0.3415767252445221,
+        0.32349124550819397,
+        0.33493196964263916
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.5,
-        0.5,
+        0.6666666865348816,
+        0.3333333432674408,
         0.0
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 91,
+      "task_number": 110,
       "predicted_probs": [
-        0.4595666527748108,
-        0.37099140882492065,
-        0.16944192349910736
+        0.33925414085388184,
+        0.3130790889263153,
+        0.34766674041748047
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 160,
+      "predicted_probs": [
+        0.33816802501678467,
+        0.3169063925743103,
+        0.34492558240890503
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 171,
+      "predicted_probs": [
+        0.34224677085876465,
+        0.3138768672943115,
+        0.34387630224227905
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 179,
+      "predicted_probs": [
+        0.3383265435695648,
+        0.32720836997032166,
+        0.33446499705314636
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 201,
+      "predicted_probs": [
+        0.33271145820617676,
+        0.324554443359375,
+        0.34273409843444824
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 212,
+      "predicted_probs": [
+        0.32907381653785706,
+        0.3162142038345337,
+        0.35471194982528687
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 216,
+      "predicted_probs": [
+        0.3173578977584839,
+        0.3470665216445923,
+        0.3355756103992462
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 222,
+      "predicted_probs": [
+        0.30973654985427856,
+        0.34793901443481445,
+        0.3423243761062622
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 260,
+      "predicted_probs": [
+        0.3399614691734314,
+        0.320034921169281,
+        0.3400035500526428
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 286,
+      "predicted_probs": [
+        0.35161158442497253,
+        0.3339918553829193,
+        0.3143965005874634
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 290,
+      "predicted_probs": [
+        0.34372395277023315,
+        0.3330525755882263,
+        0.3232234716415405
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 292,
+      "predicted_probs": [
+        0.3318350911140442,
+        0.337398499250412,
+        0.3307664096355438
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 295,
+      "predicted_probs": [
+        0.33992254734039307,
+        0.3118797838687897,
+        0.34819766879081726
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 326,
+      "predicted_probs": [
+        0.3334430158138275,
+        0.32553455233573914,
+        0.34102243185043335
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 362,
+      "predicted_probs": [
+        0.3371965289115906,
+        0.3350830078125,
+        0.3277205228805542
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 367,
+      "predicted_probs": [
+        0.3520495593547821,
+        0.3268738389015198,
+        0.3210766315460205
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 379,
+      "predicted_probs": [
+        0.34716805815696716,
+        0.3152899742126465,
+        0.33754196763038635
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 4,
+      "predicted_probs": [
+        0.2867732644081116,
+        0.3931402564048767,
+        0.3200865089893341
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.6000000238418579,
+        0.20000000298023224,
+        0.20000000298023224
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 8,
+      "predicted_probs": [
+        0.30699804425239563,
+        0.3749554455280304,
+        0.31804654002189636
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 0.2
+    },
+    {
+      "task_number": 10,
+      "predicted_probs": [
+        0.30652377009391785,
+        0.3685567378997803,
+        0.3249194622039795
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.800000011920929,
+        0.0,
+        0.20000000298023224
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 16,
+      "predicted_probs": [
+        0.34992700815200806,
+        0.29377833008766174,
+        0.3562946319580078
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 37,
+      "predicted_probs": [
+        0.34721753001213074,
+        0.3060190975666046,
+        0.34676337242126465
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.5,
+        0.25,
+        0.25
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 53,
+      "predicted_probs": [
+        0.35055404901504517,
+        0.3017784059047699,
+        0.34766754508018494
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
         0.0,
+        1.0,
+        0.0
+      ],
+      "true_top_class": "polite",
+      "weight": 0.6666666666666666
+    },
+    {
+      "task_number": 57,
+      "predicted_probs": [
+        0.3475790023803711,
+        0.3077690601348877,
+        0.34465184807777405
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.3333333432674408,
+        0.3333333432674408,
+        0.3333333432674408
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 63,
+      "predicted_probs": [
+        0.34633368253707886,
+        0.2995932102203369,
+        0.35407310724258423
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 84,
+      "predicted_probs": [
+        0.32410699129104614,
+        0.34998732805252075,
+        0.3259057402610779
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
+      ],
+      "true_top_class": "masking",
+      "weight": 0.3333333333333333
+    },
+    {
+      "task_number": 90,
+      "predicted_probs": [
+        0.3424871563911438,
+        0.3251390755176544,
+        0.332373708486557
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
         0.5,
+        0.0,
         0.5
       ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 104,
+      "predicted_probs": [
+        0.3604612648487091,
+        0.3051826059818268,
+        0.3343561291694641
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 105,
+      "task_number": 106,
       "predicted_probs": [
-        0.4357618987560272,
-        0.4076753258705139,
-        0.15656276047229767
+        0.3438599109649658,
+        0.3022659122943878,
+        0.35387417674064636
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 107,
+      "task_number": 129,
       "predicted_probs": [
-        0.45711660385131836,
-        0.3732283115386963,
-        0.16965514421463013
+        0.3375018835067749,
+        0.31119802594184875,
+        0.35130009055137634
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 130,
+      "task_number": 131,
       "predicted_probs": [
-        0.46682655811309814,
-        0.3640458881855011,
-        0.16912755370140076
+        0.3410474359989166,
+        0.3171827495098114,
+        0.34176984429359436
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 132,
+      "task_number": 136,
       "predicted_probs": [
-        0.4624537229537964,
-        0.36718541383743286,
-        0.17036087810993195
+        0.33586907386779785,
+        0.3170628845691681,
+        0.34706804156303406
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 137,
-      "predicted_probs": [
-        0.46453842520713806,
-        0.364560067653656,
-        0.1709015667438507
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 176,
-      "predicted_probs": [
-        0.4392836391925812,
-        0.397652804851532,
-        0.16306358575820923
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 178,
-      "predicted_probs": [
-        0.44649288058280945,
-        0.3873016834259033,
-        0.16620545089244843
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 228,
+      "task_number": 175,
       "predicted_probs": [
-        0.43613284826278687,
-        0.41171056032180786,
-        0.15215657651424408
+        0.333509624004364,
+        0.3313291072845459,
+        0.3351612687110901
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 239,
-      "predicted_probs": [
-        0.4639762043952942,
-        0.3598223626613617,
-        0.1762014478445053
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 279,
+      "task_number": 177,
       "predicted_probs": [
-        0.4331591725349426,
-        0.41126278042793274,
-        0.15557809174060822
+        0.3455718457698822,
+        0.3135465383529663,
+        0.3408815860748291
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "masking",
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 226,
+      "predicted_probs": [
+        0.3010421395301819,
+        0.38912296295166016,
+        0.3098348379135132
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 238,
+      "predicted_probs": [
+        0.3457074463367462,
+        0.295095294713974,
+        0.3591972291469574
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 278,
+      "predicted_probs": [
+        0.3388741910457611,
+        0.31071218848228455,
+        0.35041356086730957
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 298,
+      "predicted_probs": [
+        0.3326417803764343,
+        0.33152928948402405,
+        0.33582890033721924
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 317,
       "predicted_probs": [
-        0.44430258870124817,
-        0.399837464094162,
-        0.15585993230342865
+        0.33881017565727234,
+        0.33658045530319214,
+        0.3246093690395355
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -3391,15 +3432,15 @@
     {
       "task_number": 329,
       "predicted_probs": [
-        0.46234560012817383,
-        0.36944982409477234,
-        0.16820451617240906
+        0.3296363353729248,
+        0.3070753216743469,
+        0.36328840255737305
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -3407,15 +3448,15 @@
     {
       "task_number": 350,
       "predicted_probs": [
-        0.4616420865058899,
-        0.36839759349823,
-        0.16996033489704132
+        0.3432384431362152,
+        0.30603209137916565,
+        0.35072943568229675
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
@@ -3423,15 +3464,15 @@
     {
       "task_number": 363,
       "predicted_probs": [
-        0.4650847017765045,
-        0.367287278175354,
-        0.16762802004814148
+        0.34217169880867004,
+        0.3346937894821167,
+        0.32313451170921326
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -3439,15 +3480,15 @@
     {
       "task_number": 371,
       "predicted_probs": [
-        0.4679696559906006,
-        0.36029577255249023,
-        0.17173457145690918
+        0.3491717576980591,
+        0.3093531131744385,
+        0.34147509932518005
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -3455,43 +3496,27 @@
     {
       "task_number": 372,
       "predicted_probs": [
-        0.4648989737033844,
-        0.36244815587997437,
-        0.17265285551548004
+        0.3547147512435913,
+        0.29397153854370117,
+        0.3513137102127075
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 379,
-      "predicted_probs": [
-        0.46696823835372925,
-        0.36183473467826843,
-        0.1711970865726471
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
       "task_number": 17,
       "predicted_probs": [
-        0.42988714575767517,
-        0.4031042158603668,
-        0.1670086681842804
+        0.3384843170642853,
+        0.36277905106544495,
+        0.29873669147491455
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.6000000238418579,
         0.20000000298023224,
@@ -3503,11 +3528,11 @@
     {
       "task_number": 20,
       "predicted_probs": [
-        0.4530322551727295,
-        0.3701672852039337,
-        0.17680047452449799
+        0.33610332012176514,
+        0.3099563717842102,
+        0.35394036769866943
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.6000000238418579,
         0.0,
@@ -3519,9 +3544,9 @@
     {
       "task_number": 24,
       "predicted_probs": [
-        0.44840413331985474,
-        0.3758256733417511,
-        0.17577017843723297
+        0.3438858985900879,
+        0.3202627897262573,
+        0.33585137128829956
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -3535,11 +3560,11 @@
     {
       "task_number": 52,
       "predicted_probs": [
-        0.45305389165878296,
-        0.3711758852005005,
-        0.17577016353607178
+        0.34002089500427246,
+        0.3083551228046417,
+        0.3516239821910858
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         1.0,
@@ -3551,9 +3576,9 @@
     {
       "task_number": 54,
       "predicted_probs": [
-        0.46475136280059814,
-        0.360393762588501,
-        0.1748548448085785
+        0.3473791778087616,
+        0.30769768357276917,
+        0.3449231684207916
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -3567,11 +3592,11 @@
     {
       "task_number": 58,
       "predicted_probs": [
-        0.42325133085250854,
-        0.4117075800895691,
-        0.16504104435443878
+        0.34108051657676697,
+        0.38440316915512085,
+        0.27451637387275696
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.3333333432674408,
         0.3333333432674408,
@@ -3583,11 +3608,11 @@
     {
       "task_number": 62,
       "predicted_probs": [
-        0.4532022476196289,
-        0.36858224868774414,
-        0.17821542918682098
+        0.3399026393890381,
+        0.3195663094520569,
+        0.34053105115890503
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.3333333432674408,
         0.3333333432674408,
@@ -3599,11 +3624,11 @@
     {
       "task_number": 67,
       "predicted_probs": [
-        0.4555862247943878,
-        0.36695489287376404,
-        0.17745885252952576
+        0.3401980996131897,
+        0.30259332060813904,
+        0.35720857977867126
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.6666666865348816,
         0.0,
@@ -3615,175 +3640,175 @@
     {
       "task_number": 76,
       "predicted_probs": [
-        0.4620891213417053,
-        0.361023873090744,
-        0.17688703536987305
+        0.3440721035003662,
+        0.30511000752449036,
+        0.35081785917282104
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.5,
-        0.5,
+        0.6666666865348816,
+        0.3333333432674408,
         0.0
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 104,
+      "task_number": 103,
       "predicted_probs": [
-        0.46907317638397217,
-        0.3565070331096649,
-        0.1744198501110077
+        0.33429571986198425,
+        0.30900314450263977,
+        0.3567011058330536
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 134,
+      "task_number": 133,
       "predicted_probs": [
-        0.44974029064178467,
-        0.3736051917076111,
-        0.17665451765060425
+        0.3425457179546356,
+        0.3284117579460144,
+        0.32904255390167236
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 179,
+      "task_number": 178,
       "predicted_probs": [
-        0.4449007511138916,
-        0.3818315267562866,
-        0.17326776683330536
+        0.3425365686416626,
+        0.3483140766620636,
+        0.3091493248939514
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "masking",
+      "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 233,
+      "task_number": 232,
       "predicted_probs": [
-        0.46005722880363464,
-        0.35918328166007996,
-        0.1807595193386078
+        0.3335477113723755,
+        0.3312056362628937,
+        0.33524665236473083
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 235,
+      "predicted_probs": [
+        0.34194156527519226,
+        0.3061467409133911,
+        0.3519116938114166
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 236,
+      "task_number": 243,
       "predicted_probs": [
-        0.46069762110710144,
-        0.3598262667655945,
-        0.17947609722614288
+        0.3301568925380707,
+        0.3216027319431305,
+        0.34824034571647644
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 244,
+      "task_number": 269,
       "predicted_probs": [
-        0.4441062808036804,
-        0.38488686084747314,
-        0.17100684344768524
+        0.3332693874835968,
+        0.3189459443092346,
+        0.34778469800949097
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 270,
-      "predicted_probs": [
-        0.41981637477874756,
-        0.41531965136528015,
-        0.16486401855945587
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
-      ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 289,
-      "predicted_probs": [
-        0.459606796503067,
-        0.36879175901412964,
-        0.17160148918628693
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
+      "weight": 1.0
+    },
+    {
+      "task_number": 288,
+      "predicted_probs": [
+        0.33452311158180237,
+        0.3117254376411438,
+        0.3537514805793762
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 301,
+      "predicted_probs": [
+        0.33717402815818787,
+        0.3160105347633362,
+        0.34681540727615356
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
       "weight": 1.0
     },
     {
       "task_number": 302,
       "predicted_probs": [
-        0.45333144068717957,
-        0.37332192063331604,
-        0.173346608877182
+        0.3399130403995514,
+        0.3164350390434265,
+        0.34365198016166687
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 303,
-      "predicted_probs": [
-        0.4515076279640198,
-        0.37640929222106934,
-        0.17208312451839447
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -3791,15 +3816,15 @@
     {
       "task_number": 315,
       "predicted_probs": [
-        0.4632590711116791,
-        0.36690017580986023,
-        0.1698407381772995
+        0.35912400484085083,
+        0.3162786662578583,
+        0.3245972990989685
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -3807,15 +3832,15 @@
     {
       "task_number": 318,
       "predicted_probs": [
-        0.45748332142829895,
-        0.37147822976112366,
-        0.171038419008255
+        0.3424568176269531,
+        0.3240423798561096,
+        0.33350077271461487
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -3823,15 +3848,15 @@
     {
       "task_number": 322,
       "predicted_probs": [
-        0.44536522030830383,
-        0.3786691427230835,
-        0.17596562206745148
+        0.32871243357658386,
+        0.3170144855976105,
+        0.3542730510234833
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -3839,15 +3864,15 @@
     {
       "task_number": 360,
       "predicted_probs": [
-        0.45227184891700745,
-        0.36961299180984497,
-        0.1781150847673416
+        0.34543487429618835,
+        0.31465160846710205,
+        0.3399134576320648
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
@@ -3855,15 +3880,15 @@
     {
       "task_number": 361,
       "predicted_probs": [
-        0.4563012421131134,
-        0.3663020730018616,
-        0.177396759390831
+        0.3424190878868103,
+        0.31825020909309387,
+        0.3393307328224182
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -3871,15 +3896,15 @@
     {
       "task_number": 366,
       "predicted_probs": [
-        0.45454058051109314,
-        0.36857470870018005,
-        0.1768846958875656
+        0.34146222472190857,
+        0.31130000948905945,
+        0.347237765789032
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -3887,15 +3912,15 @@
     {
       "task_number": 375,
       "predicted_probs": [
-        0.44834449887275696,
-        0.3757206201553345,
-        0.175934836268425
+        0.33543163537979126,
+        0.32448896765708923,
+        0.34007933735847473
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -3903,11 +3928,11 @@
     {
       "task_number": 2,
       "predicted_probs": [
-        0.44776129722595215,
-        0.36955034732818604,
-        0.18268844485282898
+        0.3464008569717407,
+        0.3509700298309326,
+        0.3026290833950043
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.800000011920929,
         0.0,
@@ -3919,9 +3944,9 @@
     {
       "task_number": 23,
       "predicted_probs": [
-        0.4522663950920105,
-        0.37325912714004517,
-        0.17447446286678314
+        0.3411060869693756,
+        0.32351696491241455,
+        0.33537688851356506
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
@@ -3935,11 +3960,11 @@
     {
       "task_number": 41,
       "predicted_probs": [
-        0.4601445496082306,
-        0.3680340051651001,
-        0.1718214750289917
+        0.33954715728759766,
+        0.319891095161438,
+        0.34056180715560913
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         1.0,
@@ -3951,11 +3976,11 @@
     {
       "task_number": 56,
       "predicted_probs": [
-        0.4401121139526367,
-        0.3760426938533783,
-        0.18384523689746857
+        0.34223735332489014,
+        0.35905084013938904,
+        0.2987118065357208
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "polite",
       "true_soft_label": [
         0.0,
         1.0,
@@ -3967,11 +3992,11 @@
     {
       "task_number": 61,
       "predicted_probs": [
-        0.4553980529308319,
-        0.37294936180114746,
-        0.17165257036685944
+        0.3340190351009369,
+        0.31546032428741455,
+        0.35052064061164856
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
         0.0,
         0.0,
@@ -3983,95 +4008,111 @@
     {
       "task_number": 75,
       "predicted_probs": [
-        0.4580598771572113,
-        0.36744141578674316,
-        0.17449866235256195
+        0.3438744843006134,
+        0.33893173933029175,
+        0.31719377636909485
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
+        0.3333333432674408,
+        0.6666666865348816,
         0.0
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 103,
+      "task_number": 102,
       "predicted_probs": [
-        0.4557725191116333,
-        0.37233632802963257,
-        0.17189110815525055
+        0.3427654504776001,
+        0.31824013590812683,
+        0.33899441361427307
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 123,
-      "predicted_probs": [
-        0.4505413770675659,
-        0.37755104899406433,
-        0.1719076931476593
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 129,
+      "task_number": 122,
       "predicted_probs": [
-        0.4553588628768921,
-        0.3720584809780121,
-        0.17258262634277344
+        0.32684969902038574,
+        0.3168245255947113,
+        0.35632574558258057
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 133,
+      "task_number": 125,
       "predicted_probs": [
-        0.4611762464046478,
-        0.36454981565475464,
-        0.17427395284175873
+        0.332409143447876,
+        0.3245740830898285,
+        0.3430168032646179
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 132,
+      "predicted_probs": [
+        0.34567657113075256,
+        0.32359686493873596,
+        0.3307265341281891
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
+      ],
+      "true_top_class": "polite",
+      "weight": 1.0
+    },
+    {
+      "task_number": 148,
+      "predicted_probs": [
+        0.3907303512096405,
+        0.36370596289634705,
+        0.24556368589401245
+      ],
+      "predicted_class": "genuine",
+      "true_soft_label": [
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 159,
+      "task_number": 173,
       "predicted_probs": [
-        0.4522973597049713,
-        0.36354026198387146,
-        0.18416237831115723
+        0.32922160625457764,
+        0.3168223798274994,
+        0.353956013917923
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
@@ -4079,191 +4120,175 @@
     {
       "task_number": 174,
       "predicted_probs": [
-        0.46244174242019653,
-        0.3635011613368988,
-        0.17405706644058228
+        0.36471250653266907,
+        0.3261622190475464,
+        0.30912530422210693
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0
     },
     {
-      "task_number": 175,
+      "task_number": 205,
       "predicted_probs": [
-        0.4560704231262207,
-        0.36706942319869995,
-        0.17686015367507935
+        0.341920405626297,
+        0.3272222876548767,
+        0.3308573365211487
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 206,
+      "task_number": 210,
       "predicted_probs": [
-        0.4568120539188385,
-        0.3716462552547455,
-        0.1715417355298996
+        0.33278581500053406,
+        0.3092026710510254,
+        0.3580114543437958
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
-      "true_top_class": "polite",
+      "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 211,
+      "task_number": 218,
       "predicted_probs": [
-        0.45776665210723877,
-        0.37053170800209045,
-        0.17170162498950958
+        0.32614487409591675,
+        0.31286126375198364,
+        0.3609938323497772
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 221,
+      "predicted_probs": [
+        0.345003604888916,
+        0.3536524474620819,
+        0.3013439476490021
+      ],
+      "predicted_class": "polite",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 219,
+      "task_number": 266,
       "predicted_probs": [
-        0.447913259267807,
-        0.35785162448883057,
-        0.194235160946846
+        0.32870277762413025,
+        0.3162893056869507,
+        0.3550078868865967
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
-      "true_top_class": "genuine",
-      "weight": 1.0
-    },
-    {
-      "task_number": 222,
-      "predicted_probs": [
-        0.43218621611595154,
-        0.37893953919410706,
-        0.18887430429458618
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
+      "true_top_class": "masking",
       "weight": 1.0
     },
     {
       "task_number": 268,
       "predicted_probs": [
-        0.46073776483535767,
-        0.3680732846260071,
-        0.17118902504444122
+        0.35055848956108093,
+        0.3249652087688446,
+        0.32447633147239685
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 269,
+      "task_number": 271,
       "predicted_probs": [
-        0.44903886318206787,
-        0.37766316533088684,
-        0.17329803109169006
+        0.33001893758773804,
+        0.31923016905784607,
+        0.3507509231567383
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
-      ],
-      "true_top_class": "masking",
-      "weight": 1.0
-    },
-    {
-      "task_number": 272,
-      "predicted_probs": [
-        0.43672364950180054,
-        0.3761462867259979,
-        0.18712997436523438
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
     },
     {
-      "task_number": 285,
+      "task_number": 283,
       "predicted_probs": [
-        0.463692843914032,
-        0.3636954128742218,
-        0.17261169850826263
+        0.32237371802330017,
+        0.32160937786102295,
+        0.3560168743133545
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        0.0,
-        1.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
+      ],
+      "true_top_class": "genuine",
+      "weight": 1.0
+    },
+    {
+      "task_number": 297,
+      "predicted_probs": [
+        0.34081530570983887,
+        0.3177345097064972,
+        0.34145021438598633
+      ],
+      "predicted_class": "masking",
+      "true_soft_label": [
+        0.03333333507180214,
+        0.03333333507180214,
+        0.9333333373069763
       ],
       "true_top_class": "masking",
       "weight": 1.0
     },
     {
-      "task_number": 298,
+      "task_number": 331,
       "predicted_probs": [
-        0.4536806046962738,
-        0.3725290894508362,
-        0.17379029095172882
+        0.33507630228996277,
+        0.31773725152015686,
+        0.34718644618988037
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
-      ],
-      "true_top_class": "polite",
-      "weight": 1.0
-    },
-    {
-      "task_number": 337,
-      "predicted_probs": [
-        0.4620686173439026,
-        0.37021952867507935,
-        0.16771191358566284
-      ],
-      "predicted_class": "genuine",
-      "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -4271,15 +4296,15 @@
     {
       "task_number": 378,
       "predicted_probs": [
-        0.4580368995666504,
-        0.36989593505859375,
-        0.1720670610666275
+        0.33197832107543945,
+        0.315360963344574,
+        0.3526607155799866
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -4287,15 +4312,15 @@
     {
       "task_number": 392,
       "predicted_probs": [
-        0.46232378482818604,
-        0.36504870653152466,
-        0.1726275533437729
+        0.337737500667572,
+        0.31080228090286255,
+        0.3514602780342102
       ],
-      "predicted_class": "genuine",
+      "predicted_class": "masking",
       "true_soft_label": [
-        1.0,
-        0.0,
-        0.0
+        0.9333333373069763,
+        0.03333333507180214,
+        0.03333333507180214
       ],
       "true_top_class": "genuine",
       "weight": 1.0
@@ -4303,15 +4328,15 @@
     {
       "task_number": 398,
       "predicted_probs": [
-        0.4490274488925934,
-        0.3667922019958496,
-        0.18418027460575104
+        0.3525756299495697,
+        0.34963658452033997,
+        0.29778775572776794
       ],
       "predicted_class": "genuine",
       "true_soft_label": [
-        0.0,
-        1.0,
-        0.0
+        0.03333333507180214,
+        0.9333333373069763,
+        0.03333333507180214
       ],
       "true_top_class": "polite",
       "weight": 1.0

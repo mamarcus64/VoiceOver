@@ -24,6 +24,39 @@ LABEL_INDEX = {lab: i for i, lab in enumerate(VALID_LABELS)}
 COARSE_LABELS = ("positive", "masking", "not_a_smile")
 _COARSE_MAP = (0, 0, 1, 2)  # maps fine label index → coarse label index
 
+# ---------------------------------------------------------------------------
+# Mode definitions for the 2×2 toggle grid + binary
+#   map[i] converts VALID_LABELS[i] → mode label index (-1 = exclude)
+#   filter_nas: when True, exclude tasks where any relevant annotator said NaS
+# ---------------------------------------------------------------------------
+MODES: dict[str, dict[str, Any]] = {
+    "fine": {
+        "labels": ["genuine", "polite", "masking", "not_a_smile"],
+        "map": [0, 1, 2, 3],
+        "filter_nas": False,
+    },
+    "coarse": {
+        "labels": ["positive", "masking", "not_a_smile"],
+        "map": [0, 0, 1, 2],
+        "filter_nas": False,
+    },
+    "smile_fine": {
+        "labels": ["genuine", "polite", "masking"],
+        "map": [0, 1, 2, -1],
+        "filter_nas": True,
+    },
+    "smile_coarse": {
+        "labels": ["positive", "masking"],
+        "map": [0, 0, 1, -1],
+        "filter_nas": True,
+    },
+    "binary": {
+        "labels": ["smile", "not_a_smile"],
+        "map": [0, 0, 0, 1],
+        "filter_nas": False,
+    },
+}
+
 
 def _list_annotator_names() -> list[str]:
     if not ANNOTATIONS_DIR.is_dir():
@@ -122,6 +155,103 @@ def _fine_to_coarse_confusion(fine: list[list[int]]) -> list[list[int]]:
         for ci in range(len(VALID_LABELS)):
             coarse[_COARSE_MAP[ri]][_COARSE_MAP[ci]] += fine[ri][ci]
     return coarse
+
+
+def _compute_mode(
+    mode_key: str,
+    by_task: dict[str, dict[str, str]],
+    annotators: list[str],
+) -> dict[str, Any]:
+    """Compute agreement stats for a particular label mode."""
+    mdef = MODES[mode_key]
+    mode_labels: list[str] = mdef["labels"]
+    label_map: list[int] = mdef["map"]
+    filter_nas: bool = mdef["filter_nas"]
+    k = len(mode_labels)
+
+    def _map_label(lab: str) -> int | None:
+        fi = LABEL_INDEX.get(lab)
+        if fi is None:
+            return None
+        mi = label_map[fi]
+        if mi == -1:
+            return None
+        if filter_nas and lab == "not_a_smile":
+            return None
+        return mi
+
+    # --- Fleiss κ (requires ALL annotators to have a valid mapped label) ---
+    fully_labeled: list[str] = []
+    for task_key, labs in by_task.items():
+        if not all(a in labs for a in annotators):
+            continue
+        if all(_map_label(labs[a]) is not None for a in annotators):
+            fully_labeled.append(task_key)
+
+    fleiss: float | None = None
+    pct_full: float | None = None
+    if len(annotators) >= 2 and fully_labeled:
+        count_matrix: list[list[int]] = []
+        agree = 0
+        for task_key in fully_labeled:
+            labs = by_task[task_key]
+            row = [0] * k
+            mapped_set: set[int] = set()
+            for a in annotators:
+                mi = _map_label(labs[a])
+                assert mi is not None
+                row[mi] += 1
+                mapped_set.add(mi)
+            count_matrix.append(row)
+            if len(mapped_set) == 1:
+                agree += 1
+        pct_full = 100.0 * agree / len(fully_labeled)
+        fleiss = _fleiss_kappa(count_matrix)
+
+    # --- Pairwise stats ---
+    pairwise: list[dict[str, Any]] = []
+    for i, a in enumerate(annotators):
+        for b in annotators[i + 1 :]:
+            conf = [[0] * k for _ in range(k)]
+            n_both = 0
+            for task_key, labs in by_task.items():
+                if a not in labs or b not in labs:
+                    continue
+                mi_a = _map_label(labs[a])
+                mi_b = _map_label(labs[b])
+                if mi_a is None or mi_b is None:
+                    continue
+                n_both += 1
+                conf[mi_a][mi_b] += 1
+            if n_both == 0:
+                pairwise.append({
+                    "annotator_a": a,
+                    "annotator_b": b,
+                    "n_tasks": 0,
+                    "cohen_kappa": None,
+                    "percent_agreement": None,
+                    "confusion": conf,
+                })
+            else:
+                agree_pair = sum(conf[j][j] for j in range(k))
+                pct = 100.0 * agree_pair / n_both
+                kap = _cohen_kappa(conf)
+                pairwise.append({
+                    "annotator_a": a,
+                    "annotator_b": b,
+                    "n_tasks": n_both,
+                    "cohen_kappa": kap,
+                    "percent_agreement": pct,
+                    "confusion": conf,
+                })
+
+    return {
+        "labels": mode_labels,
+        "tasks_fully_labeled": len(fully_labeled),
+        "fleiss_kappa": fleiss,
+        "percent_full_agreement": pct_full,
+        "pairwise": pairwise,
+    }
 
 
 @router.get("/smile-agreement/annotators")
@@ -230,6 +360,9 @@ async def agreement_stats(annotators: str = Query(..., description="Comma-separa
                 }
             )
 
+    # Compute all modes
+    modes = {key: _compute_mode(key, by_task, names) for key in MODES}
+
     return {
         "annotators": names,
         "valid_labels": list(VALID_LABELS),
@@ -242,4 +375,44 @@ async def agreement_stats(annotators: str = Query(..., description="Comma-separa
         "fleiss_kappa": fleiss,
         "coarse_fleiss_kappa": coarse_fleiss,
         "pairwise": pairwise,
+        "modes": modes,
     }
+
+
+@router.get("/smile-agreement/au12-scatter")
+async def au12_scatter(annotators: str = Query(..., description="Comma-separated annotator names")):
+    names = [s.strip() for s in annotators.split(",") if s.strip()]
+    known = set(_list_annotator_names())
+    for n in names:
+        if n not in known:
+            raise HTTPException(status_code=400, detail=f"Unknown annotator '{n}'")
+
+    manifest_path = DATA_DIR / "smile_task_manifest.json"
+    if not manifest_path.is_file():
+        raise HTTPException(status_code=500, detail="Task manifest not found")
+    with open(manifest_path) as f:
+        manifest = json.load(f)
+    task_lookup: dict[str, dict[str, Any]] = {
+        str(t["task_number"]): t for t in manifest.get("tasks", [])
+    }
+
+    points: list[dict[str, Any]] = []
+    for name in names:
+        data = _load_annotations(name)
+        for task_key, entry in data.get("annotations", {}).items():
+            eff = _effective_label(entry)
+            if eff is None:
+                continue
+            task_info = task_lookup.get(task_key)
+            if task_info is None:
+                continue
+            points.append({
+                "task_number": int(task_key),
+                "annotator": name,
+                "mean_r": task_info["mean_r"],
+                "peak_r": task_info["peak_r"],
+                "is_not_a_smile": eff == "not_a_smile",
+                "label": eff,
+            })
+
+    return {"points": points}

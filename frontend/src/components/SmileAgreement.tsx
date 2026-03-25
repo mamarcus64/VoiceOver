@@ -6,34 +6,47 @@ import {
   CartesianGrid,
   Cell,
   Legend,
+  Line,
+  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import type { SmileAgreementStats } from "../types";
+import type { AU12ScatterPoint, SmileAgreementStats, SmileModeKey } from "../types";
 import { ALL_SMILE_LABELS } from "../types";
 
 const STORAGE_KEY = "smile_annotator_name";
 const API = "/api";
 
-const LABEL_DISPLAY: Record<string, string> = Object.fromEntries(
-  ALL_SMILE_LABELS.map((x) => [x.key, x.display])
-);
+const LABEL_DISPLAY: Record<string, string> = {
+  ...Object.fromEntries(ALL_SMILE_LABELS.map((x) => [x.key, x.display])),
+  positive: "Positive (genuine + polite)",
+  smile: "Smile",
+};
 const LABEL_COLOR: Record<string, string> = {
   ...Object.fromEntries(ALL_SMILE_LABELS.map((x) => [x.key, x.color])),
   positive: "#60a5fa",
   masking: "#f59e0b",
   not_a_smile: "#64748b",
+  smile: "#22c55e",
 };
-const COARSE_DISPLAY: Record<string, string> = {
-  positive: "Positive (genuine + polite)",
-  masking: "Masking",
-  not_a_smile: "Not a smile",
+
+const MODE_DISPLAY: Record<SmileModeKey, string> = {
+  fine: "4-class (G / P / M / NaS)",
+  coarse: "3-class (Pos / M / NaS)",
+  smile_fine: "3-class smiles only (G / P / M)",
+  smile_coarse: "2-class smiles only (Pos / M)",
+  binary: "Binary (Smile / NaS)",
 };
 
 const ANNOTATOR_PALETTE = ["#38bdf8", "#a78bfa", "#f472b6", "#34d399", "#fbbf24"];
+
+/** AU12 mean_r bin width for P(smile) curve */
+const AU12_INTENSITY_BIN = 0.12;
+/** Minimum annotations in a bin to plot a rate (avoids noisy sparse bins) */
+const AU12_MIN_PER_BIN = 3;
 
 const KAPPA_BANDS = [
   { min: 0.8, label: "Almost perfect", color: "#22c55e" },
@@ -160,11 +173,67 @@ function cellBg(count: number, maxVal: number, isDiag: boolean): string {
 
 interface KappaBarDatum {
   name: string;
-  fine: number;
-  coarse: number;
-  fineRaw: number | null;
-  coarseRaw: number | null;
+  mode: number;
+  binary: number;
+  modeRaw: number | null;
+  binaryRaw: number | null;
   n: number;
+}
+
+type SmileIntensityRow = {
+  intensity: number;
+  binLabel: string;
+  p_all: number | null;
+  n_all: number;
+} & Record<string, number | null | string | number | undefined>;
+
+function smileRateByIntensity(
+  points: AU12ScatterPoint[],
+  annotators: string[]
+): SmileIntensityRow[] {
+  const filtered = points.filter((p) => annotators.includes(p.annotator));
+  if (filtered.length === 0) return [];
+  const minR = Math.min(...filtered.map((p) => p.mean_r));
+  const maxR = Math.max(...filtered.map((p) => p.mean_r));
+  const low0 = Math.floor(minR / AU12_INTENSITY_BIN) * AU12_INTENSITY_BIN;
+  const hiEnd = Math.ceil(maxR / AU12_INTENSITY_BIN) * AU12_INTENSITY_BIN;
+  const rows: SmileIntensityRow[] = [];
+  for (let low = low0; low < hiEnd - 1e-9; low += AU12_INTENSITY_BIN) {
+    const high = Math.min(low + AU12_INTENSITY_BIN, hiEnd);
+    const isLast = high >= hiEnd - 1e-9;
+    const inBin = (p: AU12ScatterPoint) => {
+      if (p.mean_r < low) return false;
+      if (isLast) return p.mean_r <= high;
+      return p.mean_r < high;
+    };
+    const mid = (low + high) / 2;
+    const binLabel = `${low.toFixed(2)}–${high.toFixed(2)}`;
+    const row: SmileIntensityRow = {
+      intensity: mid,
+      binLabel,
+      p_all: null,
+      n_all: 0,
+    };
+    const pool = filtered.filter(inBin);
+    row.n_all = pool.length;
+    if (pool.length >= AU12_MIN_PER_BIN) {
+      const smiles = pool.filter((p) => !p.is_not_a_smile).length;
+      row.p_all = smiles / pool.length;
+    }
+    for (const name of annotators) {
+      const sub = pool.filter((p) => p.annotator === name);
+      const nKey = `n_${name}` as const;
+      row[nKey] = sub.length;
+      if (sub.length >= AU12_MIN_PER_BIN) {
+        const smiles = sub.filter((p) => !p.is_not_a_smile).length;
+        row[name] = smiles / sub.length;
+      } else {
+        row[name] = null;
+      }
+    }
+    rows.push(row);
+  }
+  return rows;
 }
 
 export default function SmileAgreement() {
@@ -173,10 +242,20 @@ export default function SmileAgreement() {
   const [allNames, setAllNames] = useState<string[]>([]);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<SmileAgreementStats | null>(null);
+  const [scatterPoints, setScatterPoints] = useState<AU12ScatterPoint[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pairIdx, setPairIdx] = useState(0);
-  const [confMode, setConfMode] = useState<"fine" | "coarse">("coarse");
+  const [mergeClasses, setMergeClasses] = useState(false);
+  const [includeNaS, setIncludeNaS] = useState(true);
+
+  const modeKey: SmileModeKey = useMemo(() => {
+    if (mergeClasses) return includeNaS ? "coarse" : "smile_coarse";
+    return includeNaS ? "fine" : "smile_fine";
+  }, [mergeClasses, includeNaS]);
+
+  const modeStats = stats?.modes?.[modeKey];
+  const binaryStats = stats?.modes?.binary;
 
   useEffect(() => {
     if (!me) navigate("/smile-login?next=/agreement", { replace: true });
@@ -207,24 +286,32 @@ export default function SmileAgreement() {
   const loadStats = useCallback(async () => {
     if (activeList.length === 0) {
       setStats(null);
+      setScatterPoints(null);
       setError(null);
       return;
     }
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(
-        `${API}/smile-agreement/stats?annotators=${encodeURIComponent(activeList.join(","))}`
-      );
-      if (!res.ok) {
-        const j = await res.json().catch(() => null);
-        throw new Error(j?.detail ?? `HTTP ${res.status}`);
+      const qs = encodeURIComponent(activeList.join(","));
+      const [statsRes, scatterRes] = await Promise.all([
+        fetch(`${API}/smile-agreement/stats?annotators=${qs}`),
+        fetch(`${API}/smile-agreement/au12-scatter?annotators=${qs}`),
+      ]);
+      if (!statsRes.ok) {
+        const j = await statsRes.json().catch(() => null);
+        throw new Error(j?.detail ?? `HTTP ${statsRes.status}`);
       }
-      setStats(await res.json());
+      setStats(await statsRes.json());
       setPairIdx(0);
+      if (scatterRes.ok) {
+        const sd = await scatterRes.json();
+        setScatterPoints(sd.points ?? []);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load stats");
       setStats(null);
+      setScatterPoints(null);
     } finally {
       setLoading(false);
     }
@@ -238,20 +325,20 @@ export default function SmileAgreement() {
   const toggle = (name: string) => setSelected((s) => ({ ...s, [name]: !s[name] }));
 
   const kappaBarData = useMemo((): KappaBarDatum[] => {
-    if (!stats) return [];
-    return stats.pairwise
-      .filter((p) => p.n_tasks > 0)
-      .map((p) => ({
+    if (!modeStats || !binaryStats) return [];
+    return modeStats.pairwise.map((p, i) => {
+      const bp = binaryStats.pairwise[i];
+      return {
         name: `${p.annotator_a} ↔ ${p.annotator_b}`,
-        fine: p.cohen_kappa ?? 0,
-        coarse: p.coarse_cohen_kappa ?? 0,
-        fineRaw: p.cohen_kappa,
-        coarseRaw: p.coarse_cohen_kappa,
+        mode: p.cohen_kappa ?? 0,
+        binary: bp?.cohen_kappa ?? 0,
+        modeRaw: p.cohen_kappa,
+        binaryRaw: bp?.cohen_kappa ?? null,
         n: p.n_tasks,
-      }));
-  }, [stats]);
+      };
+    }).filter((d) => d.n > 0);
+  }, [modeStats, binaryStats]);
 
-  // Stacked % bar data for annotator distributions
   const distData = useMemo(() => {
     if (!stats) return [];
     return stats.annotators.map((a) => {
@@ -266,12 +353,14 @@ export default function SmileAgreement() {
     });
   }, [stats]);
 
-  const pair = stats?.pairwise[pairIdx];
-  const activeConf = confMode === "coarse" ? pair?.coarse_confusion : pair?.confusion;
-  const activeLabels = confMode === "coarse"
-    ? (stats?.coarse_labels ?? [])
-    : (stats?.valid_labels ?? []);
-  const activeLabelDisplay = confMode === "coarse" ? COARSE_DISPLAY : LABEL_DISPLAY;
+  const smileIntensityRows = useMemo(
+    () => (scatterPoints?.length ? smileRateByIntensity(scatterPoints, activeList) : []),
+    [scatterPoints, activeList]
+  );
+
+  const modePair = modeStats?.pairwise[pairIdx];
+  const activeConf = modePair?.confusion;
+  const activeLabels = modeStats?.labels ?? [];
   const pairMax = activeConf ? confusionMax(activeConf) : 1;
 
   const logout = () => {
@@ -319,40 +408,62 @@ export default function SmileAgreement() {
 
       {error && <div style={st.err}>{error}</div>}
 
-      {stats && (
+      {stats && modeStats && (
         <>
+          {/* Mode toggles */}
+          <div style={st.card}>
+            <div style={st.cardTitle}>Agreement mode</div>
+            <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "16px 28px", alignItems: "center" }}>
+              <label style={st.toggle}>
+                <input type="checkbox" checked={mergeClasses} onChange={() => setMergeClasses((v) => !v)} />
+                <span>Merge genuine + polite</span>
+              </label>
+              <label style={st.toggle}>
+                <input type="checkbox" checked={includeNaS} onChange={() => setIncludeNaS((v) => !v)} />
+                <span>Include &ldquo;Not a Smile&rdquo; as class</span>
+              </label>
+              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                → {MODE_DISPLAY[modeKey]}
+              </span>
+            </div>
+          </div>
+
           {/* Summary */}
           <div style={st.card}>
-            <div style={st.cardTitle}>Summary</div>
+            <div style={st.cardTitle}>Summary — {MODE_DISPLAY[modeKey]}</div>
             <div style={st.statGrid}>
               <div style={st.statBox}>
-                <div style={st.statLab}>Tasks annotated</div>
-                <div style={st.statVal}>{stats.tasks_fully_labeled}
-                  <span style={st.statSub}>of {stats.tasks_with_any_label} labeled</span>
+                <div style={st.statLab}>Tasks (mode)</div>
+                <div style={st.statVal}>{modeStats.tasks_fully_labeled}
+                  <span style={st.statSub}>of {stats.tasks_with_any_label} total</span>
                 </div>
               </div>
               <div style={st.statBox}>
-                <div style={st.statLab}>Fleiss κ (4-class)</div>
-                <div style={{ ...st.statVal, color: kappaColor(stats.fleiss_kappa) }}>
-                  {fmtK(stats.fleiss_kappa)}
-                  <span style={{ ...st.statSub, color: kappaColor(stats.fleiss_kappa) }}>{kappaLabel(stats.fleiss_kappa)}</span>
+                <div style={st.statLab}>Fleiss κ ({MODE_DISPLAY[modeKey]})</div>
+                <div style={{ ...st.statVal, color: kappaColor(modeStats.fleiss_kappa) }}>
+                  {fmtK(modeStats.fleiss_kappa)}
+                  <span style={{ ...st.statSub, color: kappaColor(modeStats.fleiss_kappa) }}>{kappaLabel(modeStats.fleiss_kappa)}</span>
                 </div>
               </div>
               <div style={st.statBox}>
-                <div style={st.statLab}>Fleiss κ (Pos+/Mask/No)</div>
-                <div style={{ ...st.statVal, color: kappaColor(stats.coarse_fleiss_kappa) }}>
-                  {fmtK(stats.coarse_fleiss_kappa)}
-                  <span style={{ ...st.statSub, color: kappaColor(stats.coarse_fleiss_kappa) }}>{kappaLabel(stats.coarse_fleiss_kappa)}</span>
-                </div>
+                <div style={st.statLab}>Unanimous ({MODE_DISPLAY[modeKey]})</div>
+                <div style={st.statVal}>{fmtPct(modeStats.percent_full_agreement)}</div>
               </div>
-              <div style={st.statBox}>
-                <div style={st.statLab}>Unanimous (4-class)</div>
-                <div style={st.statVal}>{fmtPct(stats.percent_full_agreement)}</div>
-              </div>
-              <div style={st.statBox}>
-                <div style={st.statLab}>Unanimous (3-class)</div>
-                <div style={st.statVal}>{fmtPct(stats.coarse_percent_full_agreement)}</div>
-              </div>
+              {binaryStats && (
+                <>
+                  <div style={st.statBox}>
+                    <div style={st.statLab}>Fleiss κ (Smile / NaS)</div>
+                    <div style={{ ...st.statVal, color: kappaColor(binaryStats.fleiss_kappa) }}>
+                      {fmtK(binaryStats.fleiss_kappa)}
+                      <span style={{ ...st.statSub, color: kappaColor(binaryStats.fleiss_kappa) }}>{kappaLabel(binaryStats.fleiss_kappa)}</span>
+                    </div>
+                  </div>
+                  <div style={st.statBox}>
+                    <div style={st.statLab}>Unanimous (Smile / NaS)</div>
+                    <div style={st.statVal}>{fmtPct(binaryStats.percent_full_agreement)}</div>
+                  </div>
+                </>
+              )}
             </div>
             {stats.annotators.length < 2 && (
               <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "12px", marginBottom: 0 }}>
@@ -405,9 +516,9 @@ export default function SmileAgreement() {
           {/* Pairwise κ comparison */}
           {kappaBarData.length > 0 && (
             <div style={st.card}>
-              <div style={st.cardTitle}>Pairwise Cohen's κ — fine-grained vs. coarse (Positive / Masking / Not a smile)</div>
+              <div style={st.cardTitle}>Pairwise Cohen's κ — {MODE_DISPLAY[modeKey]} vs. Binary (Smile / NaS)</div>
               <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: "0 0 12px" }}>
-                Coarse κ merges genuine + polite into "Positive." A higher coarse κ means the pair's disagreement is mostly genuine↔polite. A lower coarse κ means deeper confusion.
+                The mode bar shows agreement on the selected classification. The binary bar shows agreement on whether the segment is a smile at all.
               </p>
               <div style={{ width: "100%", height: Math.max(160, kappaBarData.length * 64 + 40) }}>
                 <ResponsiveContainer>
@@ -423,9 +534,8 @@ export default function SmileAgreement() {
                     <Tooltip
                       contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569", borderRadius: 8 }}
                       formatter={(_v: number, name: string, props) => {
-                        const raw = name === "Fine (4-class)"
-                          ? (props.payload as KappaBarDatum).fineRaw
-                          : (props.payload as KappaBarDatum).coarseRaw;
+                        const d = props.payload as KappaBarDatum;
+                        const raw = name.startsWith("Binary") ? d.binaryRaw : d.modeRaw;
                         return [raw != null ? `${raw.toFixed(3)} (${kappaLabel(raw)})` : "—", name];
                       }}
                       labelFormatter={(_, payload) => {
@@ -434,14 +544,14 @@ export default function SmileAgreement() {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="fine" name="Fine (4-class)" radius={[0, 3, 3, 0]}>
+                    <Bar dataKey="mode" name={MODE_DISPLAY[modeKey]} radius={[0, 3, 3, 0]}>
                       {kappaBarData.map((d, i) => (
-                        <Cell key={i} fill={kappaColor(d.fineRaw)} fillOpacity={0.7} />
+                        <Cell key={i} fill={kappaColor(d.modeRaw)} fillOpacity={0.7} />
                       ))}
                     </Bar>
-                    <Bar dataKey="coarse" name="Coarse (3-class)" radius={[0, 3, 3, 0]}>
+                    <Bar dataKey="binary" name="Binary (Smile / NaS)" radius={[0, 3, 3, 0]}>
                       {kappaBarData.map((d, i) => (
-                        <Cell key={i} fill={kappaColor(d.coarseRaw)} />
+                        <Cell key={i} fill={kappaColor(d.binaryRaw)} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -460,19 +570,99 @@ export default function SmileAgreement() {
             </div>
           )}
 
-          {/* Confusion matrix with fine/coarse toggle */}
-          {stats.pairwise.length > 0 && (
+          {/* AU12: P(smile) vs intensity */}
+          {scatterPoints && scatterPoints.length > 0 && smileIntensityRows.length > 0 && (
+            <div style={st.card}>
+              <div style={st.cardTitle}>P(smile) vs. AU12 intensity</div>
+              <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: "0 0 12px" }}>
+                Y-axis is the fraction of annotations in each intensity bin labeled as a smile (not &ldquo;Not a Smile&rdquo;). Bins are {AU12_INTENSITY_BIN.toFixed(2)} wide; rates need at least {AU12_MIN_PER_BIN} annotations per bin. Lines are per annotator; &ldquo;All&rdquo; pools everyone selected.
+              </p>
+              <div style={{ width: "100%", height: 320 }}>
+                <ResponsiveContainer>
+                  <LineChart data={smileIntensityRows} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                    <XAxis
+                      type="number"
+                      dataKey="intensity"
+                      domain={["dataMin", "dataMax"]}
+                      tick={{ fill: "#94a3b8", fontSize: 11 }}
+                      label={{ value: "AU12 mean intensity", position: "insideBottom", offset: -4, fill: "#64748b", fontSize: 11 }}
+                    />
+                    <YAxis
+                      type="number"
+                      domain={[0, 1]}
+                      tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
+                      tick={{ fill: "#cbd5e1", fontSize: 11 }}
+                      width={44}
+                      label={{
+                        value: "P(smile)",
+                        angle: -90,
+                        position: "insideLeft",
+                        fill: "#64748b",
+                        fontSize: 11,
+                      }}
+                    />
+                    <ReferenceLine y={0.5} stroke="#475569" strokeDasharray="4 3" />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "#1e293b", border: "1px solid #475569", borderRadius: 8 }}
+                      content={({ payload }) => {
+                        if (!payload?.length) return null;
+                        const d = payload[0].payload as SmileIntensityRow;
+                        return (
+                          <div style={{ padding: "8px 12px", fontSize: "0.78rem", color: "#e2e8f0", maxWidth: 280 }}>
+                            <div style={{ fontWeight: 600, marginBottom: 6 }}>AU12 {d.binLabel}</div>
+                            {d.p_all != null && (
+                              <div style={{ color: "#cbd5e1" }}>
+                                All: {(d.p_all * 100).toFixed(0)}% smile (n={d.n_all})
+                              </div>
+                            )}
+                            {activeList.map((name) => {
+                              const pr = d[name];
+                              const n = d[`n_${name}`];
+                              if (typeof pr !== "number" || typeof n !== "number") return null;
+                              return (
+                                <div key={name} style={{ color: "#94a3b8" }}>
+                                  {name}: {(pr * 100).toFixed(0)}% (n={n})
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="p_all"
+                      name="All (pooled)"
+                      stroke="#e2e8f0"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                      connectNulls
+                    />
+                    {activeList.map((name, i) => (
+                      <Line
+                        key={name}
+                        type="monotone"
+                        dataKey={name}
+                        name={name}
+                        stroke={ANNOTATOR_PALETTE[i % ANNOTATOR_PALETTE.length]}
+                        strokeWidth={1.8}
+                        dot={{ r: 2 }}
+                        connectNulls
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Confusion matrix — uses active mode */}
+          {modeStats.pairwise.length > 0 && (
             <div style={st.card}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px", flexWrap: "wrap" as const, gap: "8px" }}>
-                <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "#f1f5f9" }}>Confusion matrix</span>
-                <div style={{ display: "flex", gap: "4px" }}>
-                  <button type="button" style={{ ...st.segBtnBase, backgroundColor: confMode === "coarse" ? "#334155" : "transparent", color: confMode === "coarse" ? "#f1f5f9" : "#64748b" }} onClick={() => setConfMode("coarse")}>
-                    3-class
-                  </button>
-                  <button type="button" style={{ ...st.segBtnBase, backgroundColor: confMode === "fine" ? "#334155" : "transparent", color: confMode === "fine" ? "#f1f5f9" : "#64748b" }} onClick={() => setConfMode("fine")}>
-                    4-class
-                  </button>
-                </div>
+                <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "#f1f5f9" }}>Confusion matrix — {MODE_DISPLAY[modeKey]}</span>
               </div>
 
               <select
@@ -484,17 +674,17 @@ export default function SmileAgreement() {
                 value={pairIdx}
                 onChange={(e) => setPairIdx(Number(e.target.value))}
               >
-                {stats.pairwise.map((p, i) => (
+                {modeStats.pairwise.map((p, i) => (
                   <option key={i} value={i}>
                     {p.annotator_a} vs {p.annotator_b} — n={p.n_tasks}
                   </option>
                 ))}
               </select>
 
-              {pair && activeConf && (
+              {modePair && activeConf && (
                 <>
                   <p style={{ fontSize: "0.78rem", color: "#64748b", margin: "0 0 10px" }}>
-                    Rows: <strong style={{ color: "#94a3b8" }}>{pair.annotator_a}</strong> &nbsp;·&nbsp; Columns: <strong style={{ color: "#94a3b8" }}>{pair.annotator_b}</strong>
+                    Rows: <strong style={{ color: "#94a3b8" }}>{modePair.annotator_a}</strong> &nbsp;·&nbsp; Columns: <strong style={{ color: "#94a3b8" }}>{modePair.annotator_b}</strong>
                   </p>
                   <div style={{ overflowX: "auto" as const }}>
                     <table style={{ borderCollapse: "collapse", fontSize: "0.8rem" }}>
@@ -503,7 +693,7 @@ export default function SmileAgreement() {
                           <th style={{ padding: 6, color: "#64748b" }} />
                           {activeLabels.map((lab) => (
                             <th key={lab} style={{ padding: "6px 10px", color: "#94a3b8", fontWeight: 600, textAlign: "center" as const, maxWidth: 110, fontSize: "0.76rem" }}>
-                              {activeLabelDisplay[lab] ?? lab}
+                              {LABEL_DISPLAY[lab] ?? lab}
                             </th>
                           ))}
                         </tr>
@@ -512,7 +702,7 @@ export default function SmileAgreement() {
                         {activeLabels.map((rowLab, ri) => (
                           <tr key={rowLab}>
                             <td style={{ padding: "6px 10px", color: "#94a3b8", fontWeight: 600, fontSize: "0.76rem", maxWidth: 110 }}>
-                              {activeLabelDisplay[rowLab] ?? rowLab}
+                              {LABEL_DISPLAY[rowLab] ?? rowLab}
                             </td>
                             {activeLabels.map((colLab, ci) => {
                               const cnt = activeConf[ri]?.[ci] ?? 0;
@@ -529,7 +719,7 @@ export default function SmileAgreement() {
                                     border: "1px solid #334155",
                                     minWidth: 56,
                                   }}
-                                  title={`${pair.annotator_a}: ${rowLab}, ${pair.annotator_b}: ${colLab} → ${cnt}`}
+                                  title={`${modePair.annotator_a}: ${rowLab}, ${modePair.annotator_b}: ${colLab} → ${cnt}`}
                                 >
                                   {cnt}
                                 </td>
@@ -543,17 +733,17 @@ export default function SmileAgreement() {
                   <div style={{ marginTop: 12, fontSize: "0.8rem", color: "#94a3b8", display: "flex", gap: "16px", flexWrap: "wrap" as const }}>
                     <span>
                       Cohen κ ={" "}
-                      <strong style={{ color: kappaColor(confMode === "coarse" ? pair.coarse_cohen_kappa : pair.cohen_kappa) }}>
-                        {fmtK(confMode === "coarse" ? pair.coarse_cohen_kappa : pair.cohen_kappa)}
+                      <strong style={{ color: kappaColor(modePair.cohen_kappa) }}>
+                        {fmtK(modePair.cohen_kappa)}
                       </strong>
                     </span>
                     <span>
                       Exact match ={" "}
                       <strong style={{ color: "#e2e8f0" }}>
-                        {fmtPct(confMode === "coarse" ? pair.coarse_percent_agreement : pair.percent_agreement)}
+                        {fmtPct(modePair.percent_agreement)}
                       </strong>
                     </span>
-                    <span>n = {pair.n_tasks}</span>
+                    <span>n = {modePair.n_tasks}</span>
                   </div>
                 </>
               )}
