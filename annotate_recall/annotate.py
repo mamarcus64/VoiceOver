@@ -9,7 +9,7 @@ Usage:
     python annotate.py [options]
 
 Options:
-    --chunk-words N      Target words per chunk (default: 800)
+    --chunk-words N      Target words per chunk (default: 600)
     --max-concurrent N   Max parallel API calls (default: 60)
     --limit N            Process at most N transcript files
     --file FILE          Process a single file (e.g. 10.1.json)
@@ -33,6 +33,7 @@ Output structure:
 """
 
 import argparse
+import ast
 import asyncio
 import json
 import os
@@ -55,10 +56,10 @@ CHUNKS_DIR = OUTPUT_DIR / "chunks"
 PROMPT_TEMPLATE_FILE = Path(__file__).resolve().parent / "prompt_template.txt"
 
 # ── Model / API ───────────────────────────────────────────────────────────────
-MODEL = "openai/gpt-4o-mini"          # override with --model; default is fast+cheap
-DEFAULT_MODEL = "openai/gpt-4o-mini"  # user requested openai/gpt-oss-120b (alias below)
+MODEL = "openai/gpt-oss-120b"          # override with --model; default is fast+cheap
+DEFAULT_MODEL = "openai/gpt-oss-120b"  # user requested openai/gpt-oss-120b (alias below)
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_CHUNK_WORDS = 800
+DEFAULT_CHUNK_WORDS = 600
 DEFAULT_MAX_CONCURRENT = 60
 MAX_RETRIES = 5
 BASE_RETRY_DELAY = 2.0  # seconds, doubles each attempt
@@ -75,8 +76,9 @@ VALID_TOPICS = {
     "Post-conflict",
     "Refugee experiences",
     "Parents",
-    "Other",
 }
+
+VALID_MEMORY_TYPES = {"internal", "external"}
 
 
 # ── API key ───────────────────────────────────────────────────────────────────
@@ -195,17 +197,13 @@ def validate_and_normalize_annotations(
 ) -> list[dict]:
     out = []
     for ann in annotations:
-        topics = ann.get("topics", [])
-        fixed_topics = []
-        for t in topics:
-            if t in VALID_TOPICS:
-                fixed_topics.append(t)
-            else:
-                if "Other" not in fixed_topics:
-                    fixed_topics.append("Other")
+        memory_type = ann.get("memory_type", "external")
+        if memory_type not in VALID_MEMORY_TYPES:
+            memory_type = "external"
+        fixed_topics = [t for t in ann.get("topics", []) if t in VALID_TOPICS]
         out.append({
             "idx": ann.get("idx"),
-            "recall": bool(ann.get("recall", False)),
+            "memory_type": memory_type,
             "topics": fixed_topics,
         })
     return out
@@ -218,7 +216,11 @@ def parse_llm_response(response_text: str, n_expected: int) -> list[dict]:
         end = next((i for i, l in enumerate(lines[1:], 1) if l.strip() == "```"), len(lines))
         text = "\n".join(lines[1:end])
 
-    parsed = json.loads(text)
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        # Model occasionally returns Python dict syntax (single quotes); ast handles it
+        parsed = ast.literal_eval(text)
 
     # Accept both {"sentences": [...]} and a bare list
     if isinstance(parsed, list):
@@ -262,15 +264,15 @@ async def call_openrouter_async(
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.1,
-        # 16384 tokens to accommodate reasoning models (gpt-oss-120b uses ~3k reasoning tokens)
-        "max_tokens": 16384,
+        # 32768 tokens to accommodate reasoning models (gpt-oss-120b uses ~3k reasoning tokens)
+        "max_tokens": 32768,
         "response_format": {"type": "json_object"},
     }
     async with session.post(
         OPENROUTER_URL,
         headers=headers,
         json=payload,
-        timeout=aiohttp.ClientTimeout(total=180),
+        timeout=aiohttp.ClientTimeout(total=300),
     ) as resp:
         if resp.status == 429:
             retry_after = int(resp.headers.get("Retry-After", "30"))
@@ -293,6 +295,9 @@ async def annotate_chunk_async(
     prompt_template: str,
     model: str,
     counter: dict,
+    stem_n_chunks: int,
+    chunk_words: int,
+    combine_locks: dict,
     dry_run: bool = False,
 ) -> bool:
     """Annotate a single chunk with independent retry. Returns True on success."""
@@ -309,7 +314,7 @@ async def annotate_chunk_async(
                 if dry_run:
                     await asyncio.sleep(0.01)  # simulate work
                     annotations = [
-                        {"idx": i, "recall": True, "topics": ["Other"]}
+                        {"idx": i, "memory_type": "internal", "topics": []}
                         for i in range(len(sentences))
                     ]
                     elapsed = 0.01
@@ -345,6 +350,18 @@ async def annotate_chunk_async(
                     f"  [{counter['done']}/{total} {pct}%] {stem} chunk {chunk_idx}"
                     f" ({len(sentences)} sents, {elapsed:.1f}s)"
                 )
+
+                # Progressive combine: as soon as all chunks for this stem are done
+                if not dry_run and all(is_chunk_done(stem, i) for i in range(stem_n_chunks)):
+                    lock = combine_locks.setdefault(stem, asyncio.Lock())
+                    async with lock:
+                        # Re-check inside the lock to avoid double-combining
+                        out_path = OUTPUT_DIR / f"{stem}.json"
+                        if not out_path.exists():
+                            ok = combine_transcript(stem, stem_n_chunks, chunk_words)
+                            if ok:
+                                print(f"  [COMBINED] {stem} ({stem_n_chunks} chunks)")
+
                 return True
 
             except aiohttp.ClientResponseError as e:
@@ -395,7 +412,7 @@ def combine_transcript(stem: str, n_chunks: int, chunk_words: int = DEFAULT_CHUN
                 "segment_idx": sent["segment_idx"],
                 "sentence_idx_in_seg": sent["sentence_idx_in_seg"],
                 "text": sent["text"],
-                "recall": ann.get("recall", False),
+                "memory_type": ann.get("memory_type", "external"),
                 "topics": ann.get("topics", []),
             })
 
@@ -423,10 +440,13 @@ def combine_all(
     stems_with_chunks: list[tuple[str, int]],
     chunk_words: int = DEFAULT_CHUNK_WORDS,
     verbose: bool = True,
+    skip_existing: bool = False,
 ) -> int:
     """Combine all completed transcripts. Returns count of combined files."""
     n = 0
     for stem, n_chunks in stems_with_chunks:
+        if skip_existing and (OUTPUT_DIR / f"{stem}.json").exists():
+            continue
         all_done = all(is_chunk_done(stem, i) for i in range(n_chunks))
         if all_done:
             ok = combine_transcript(stem, n_chunks, chunk_words=chunk_words)
@@ -591,13 +611,21 @@ async def run_async(args) -> None:
     else:
         counter = {"done": 0, "errors": 0, "total": total_pending}
         semaphore = asyncio.Semaphore(args.max_concurrent)
+        combine_locks: dict = {}
+
+        # Build a lookup: stem → n_chunks
+        stem_chunks_map = dict(stems_with_chunks)
 
         connector = aiohttp.TCPConnector(limit=args.max_concurrent + 10)
         async with aiohttp.ClientSession(connector=connector) as session:
             tasks = [
                 annotate_chunk_async(
                     session, semaphore, stem, chunk_idx, sentences,
-                    api_key, prompt_template, model, counter, dry_run=args.dry_run,
+                    api_key, prompt_template, model, counter,
+                    stem_n_chunks=stem_chunks_map[stem],
+                    chunk_words=args.chunk_words,
+                    combine_locks=combine_locks,
+                    dry_run=args.dry_run,
                 )
                 for stem, chunk_idx, sentences in work_items
             ]
@@ -611,14 +639,18 @@ async def run_async(args) -> None:
         if total_pending > 0:
             print(f"Throughput: {successes / elapsed * 60:.0f} chunks/min")
 
-    # Combine completed transcripts
-    print("\nCombining completed transcripts...")
+    # Final combine pass — catches transcripts already complete before this run started
+    print("\nChecking for any remaining uncombined transcripts...")
     n_combined = combine_all(
         stems_with_chunks,
         chunk_words=args.chunk_words,
         verbose=args.verbose if hasattr(args, "verbose") else True,
+        skip_existing=True,
     )
-    print(f"Combined {n_combined} transcript(s) → {OUTPUT_DIR}/")
+    if n_combined:
+        print(f"Combined {n_combined} additional transcript(s) → {OUTPUT_DIR}/")
+    else:
+        print("All transcripts already combined.")
 
 
 def main() -> None:
