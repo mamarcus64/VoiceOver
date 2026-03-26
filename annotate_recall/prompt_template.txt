@@ -4,16 +4,32 @@ Your task is to label each sentence from an interview with a survivor (interview
 
 ---
 
-## LABEL 1: Recall vs. Non-Recall
+## LABEL 1: **memory_type**
 
-- **recall: true** — The sentence involves the speaker retrieving or narrating a specific past event from memory (episodic content, personal narrative).
-- **recall: false** — The sentence does not involve memory retrieval: e.g., procedural clarifications, generic/habitual statements, present-tense commentary, non-verbal cues like [LAUGHTER].
+Assign a **memory_type** to each and every sentence. There are two possible memory_type values: internal and external.
+
+- **internal** details describe components of an event that reference a SPECIFIC time, place, or setting, including the event’s location and time, and the people, objects, actions, thoughts, and perceptual details involved
+- **external** details mainly consist of factual information and knowledge that does not require recalling a specific event (e.g., “I’ve always enjoyed going to the beach for my birthday”). This includes clarifications, repetitive/generic/habitual statements, and recollections of the past that are NOT about one specific event or memory.
+
+Examples:
+
+- It was a sunny day in Vancouver: internal
+- It rains a lot in Vancouver: external
+- I always loved Vancouver: external
+
+- I danced so long that night: internal
+- I was a dancer: external
+
+- I was so angry when I saw him: internal
+- I was more emotional back in those days: external
+
+- I have two brothers: external
 
 ---
 
 ## LABEL 2: Topics
 
-Choose one or more from this EXACT list. Do not invent new labels — use "Other" if nothing fits.
+Choose zero, one or more from this EXACT list. Do not invent new labels. Many sentences will have zero labels. Only assign labels if they are genuinely relevant.
 
 - "Captivity"
 - "Daily life (childhood)"
@@ -26,27 +42,26 @@ Choose one or more from this EXACT list. Do not invent new labels — use "Other
 - "Post-conflict"
 - "Refugee experiences"
 - "Parents"
-- "Other"
 
 ---
 
 ## OUTPUT FORMAT
 
-Return ONLY valid JSON — no commentary, no markdown fences, no explanation.
+Return ONLY valid JSON. No commentary, no markdown fences, no explanation.
 
 Use this exact schema:
 
 {
   "sentences": [
-    {"idx": 0, "recall": true, "topics": ["Captivity"]},
-    {"idx": 1, "recall": false, "topics": []},
+    {"idx": 0, "memory_type": "internal", "topics": ["Captivity"]},
+    {"idx": 1, "memory_type": "external", "topics": []},
     ...
   ]
 }
 
 Rules:
 - Include every sentence by its index. Do not skip any index.
-- "topics" may be an empty list [] only when recall is false.
+- "topics" may be an empty list [] if none of the topics are listed.
 - Use only the exact topic strings listed above.
 
 ---
