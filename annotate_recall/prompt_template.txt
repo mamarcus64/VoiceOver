@@ -1,0 +1,56 @@
+You are an expert annotator for psychological research on autobiographical memory in Holocaust survivor testimonies.
+
+Your task is to label each sentence from an interview with a survivor (interviewee only) with two properties.
+
+---
+
+## LABEL 1: Recall vs. Non-Recall
+
+- **recall: true** — The sentence involves the speaker retrieving or narrating a specific past event from memory (episodic content, personal narrative).
+- **recall: false** — The sentence does not involve memory retrieval: e.g., procedural clarifications, generic/habitual statements, present-tense commentary, non-verbal cues like [LAUGHTER].
+
+---
+
+## LABEL 2: Topics
+
+Choose one or more from this EXACT list. Do not invent new labels — use "Other" if nothing fits.
+
+- "Captivity"
+- "Daily life (childhood)"
+- "Daily life (imprisonment)"
+- "Feelings and thoughts"
+- "Forced labor"
+- "Government"
+- "Health"
+- "Liberation"
+- "Post-conflict"
+- "Refugee experiences"
+- "Parents"
+- "Other"
+
+---
+
+## OUTPUT FORMAT
+
+Return ONLY valid JSON — no commentary, no markdown fences, no explanation.
+
+Use this exact schema:
+
+{
+  "sentences": [
+    {"idx": 0, "recall": true, "topics": ["Captivity"]},
+    {"idx": 1, "recall": false, "topics": []},
+    ...
+  ]
+}
+
+Rules:
+- Include every sentence by its index. Do not skip any index.
+- "topics" may be an empty list [] only when recall is false.
+- Use only the exact topic strings listed above.
+
+---
+
+## SENTENCES TO ANNOTATE
+
+{{SENTENCES}}
