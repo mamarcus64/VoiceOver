@@ -360,13 +360,15 @@ export default function RecallFactsAnnotate() {
           body: JSON.stringify({ annotator, task_id: taskId, answer }),
         });
         setAnswers((prev) => ({ ...prev, [taskId]: answer }));
+        // Auto-advance to next task
+        setCurrentIdx((i) => Math.min(i + 1, tasks.length - 1));
       } catch (e) {
         console.error("Save failed:", e);
       } finally {
         setSaving(false);
       }
     },
-    [annotator]
+    [annotator, tasks.length]
   );
 
   const handleLogin = (e: React.FormEvent) => {
