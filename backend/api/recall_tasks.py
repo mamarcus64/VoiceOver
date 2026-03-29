@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import math
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,8 +28,134 @@ router = APIRouter()
 
 VALID_LABELS = {"smile", "not_a_smile"}
 
+# ── Model definitions ─────────────────────────────────────────────────────────
 
-def _load_manifest() -> dict[str, Any]:
+MODELS: dict[str, dict[str, Any]] = {
+    "logistic": {
+        "score_key": "logistic_score",
+        "operating_threshold": 0.636,
+        "display_name": "17-AU Logistic",
+    },
+    "au12": {
+        "score_key": "mean_r",
+        "operating_threshold": 1.5,
+        "display_name": "AU12 Threshold",
+    },
+}
+
+# ── In-process manifest score cache (loaded once per server process) ──────────
+
+_manifest_scores_mem: dict[str, dict[str, dict]] = {}
+
+
+def _load_manifest_scores(manifest_path: Path) -> dict[str, dict]:
+    """Load {str(task_number): {mean_r, logistic_score?}} from a manifest.
+    Results are cached in memory so large manifests are only parsed once.
+    """
+    key = str(manifest_path)
+    if key not in _manifest_scores_mem:
+        with open(manifest_path) as f:
+            m = json.load(f)
+        lookup: dict[str, dict] = {}
+        for t in m.get("tasks", []):
+            entry: dict[str, Any] = {"mean_r": t.get("mean_r")}
+            if "logistic_score" in t:
+                entry["logistic_score"] = t["logistic_score"]
+            lookup[str(t["task_number"])] = entry
+        _manifest_scores_mem[key] = lookup
+    return _manifest_scores_mem[key]
+
+
+# ── Disk cache helpers ────────────────────────────────────────────────────────
+
+def _cache_path(model: str) -> Path:
+    return DATA_DIR / f"recall_pr_cache_{model}.json"
+
+
+def _compute_cache_key() -> str:
+    """MD5 of annotation file names+mtimes across all three sources.
+    Any new file or save triggers recomputation on next request.
+    """
+    parts: list[str] = []
+    for d in (
+        ANNOTATIONS_DIR,
+        DATA_DIR / "pilot_smile_annotations",
+        DATA_DIR / "smile_annotations",
+    ):
+        if d.is_dir():
+            for f in sorted(d.glob("*.json")):
+                parts.append(f"{d.name}/{f.name}:{int(f.stat().st_mtime)}")
+    return hashlib.md5(":".join(parts).encode()).hexdigest()[:12]
+
+
+def _load_cache(model: str, cache_key: str) -> dict | None:
+    path = _cache_path(model)
+    if not path.is_file():
+        return None
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        if data.get("cache_key") == cache_key:
+            return data
+    except Exception:
+        pass
+    return None
+
+
+def _save_cache(model: str, data: dict) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(_cache_path(model), "w") as f:
+        json.dump(data, f)
+
+
+# ── Binary label converters ───────────────────────────────────────────────────
+
+def _binary_label_pilot(entry: dict) -> str | None:
+    label = entry.get("label")
+    if label in ("genuine", "polite", "masking"):
+        return "smile"
+    if label == "not_a_smile":
+        return "not_a_smile"
+    return None
+
+
+def _binary_label_main(entry: dict) -> str | None:
+    if entry.get("not_a_smile") or entry.get("label") == "not_a_smile":
+        return "not_a_smile"
+    if entry.get("label") in ("felt", "false", "miserable"):
+        return "smile"
+    return None
+
+
+def _binary_label_recall(entry: dict) -> str | None:
+    label = entry.get("label")
+    return label if label in VALID_LABELS else None
+
+
+def _majority_label(labels: list[str]) -> str:
+    """Majority vote; ties favour 'smile'."""
+    smiles = labels.count("smile")
+    return "smile" if smiles * 2 >= len(labels) else "not_a_smile"
+
+
+# ── Data loading ──────────────────────────────────────────────────────────────
+
+def _collect_annotations(ann_dir: Path, label_fn) -> dict[str, list[str]]:
+    """Accumulate binary labels per task_number from all annotators in a dir."""
+    result: dict[str, list[str]] = {}
+    if not ann_dir.is_dir():
+        return result
+    for f in ann_dir.glob("*.json"):
+        with open(f) as fp:
+            data = json.load(fp)
+        for tk, entry in data.get("annotations", {}).items():
+            label = label_fn(entry)
+            if label:
+                result.setdefault(tk, []).append(label)
+    return result
+
+
+def _load_recall_manifest() -> dict[str, Any]:
     if not MANIFEST_PATH.is_file():
         raise HTTPException(
             status_code=404,
@@ -35,6 +163,252 @@ def _load_manifest() -> dict[str, Any]:
         )
     with open(MANIFEST_PATH) as f:
         return json.load(f)
+
+
+def _load_all_labeled_points(model: str) -> dict[str, list[dict]]:
+    """Return labeled data points from all three annotation sources.
+
+    Each point: {score: float, label: str, bin: int|-1}
+    Bin is set for recall-manifest points; -1 for supplementary data.
+    """
+    score_key = MODELS[model]["score_key"]
+
+    # ── Recall manifest (stratified sample, full score range) ──
+    recall_manifest = _load_recall_manifest()
+    task_by_num: dict[str, dict] = {str(t["task_number"]): t for t in recall_manifest["tasks"]}
+
+    recall_ann = _collect_annotations(ANNOTATIONS_DIR, _binary_label_recall)
+    recall_points: list[dict] = []
+    for tk, labels in recall_ann.items():
+        task = task_by_num.get(tk)
+        if not task:
+            continue
+        score = task.get(score_key)
+        if score is None:
+            continue
+        recall_points.append({
+            "score": float(score),
+            "label": _majority_label(labels),
+            "bin": task.get("bin", -1),
+        })
+
+    # ── Main study (high-score bias, logistic_score available) ──
+    main_manifest = DATA_DIR / "smile_task_manifest.json"
+    main_scores = _load_manifest_scores(main_manifest) if main_manifest.is_file() else {}
+    main_ann = _collect_annotations(DATA_DIR / "smile_annotations", _binary_label_main)
+    main_points: list[dict] = []
+    for tk, labels in main_ann.items():
+        task_scores = main_scores.get(tk)
+        if not task_scores:
+            continue
+        score = task_scores.get(score_key)
+        if score is None:
+            continue
+        main_points.append({
+            "score": float(score),
+            "label": _majority_label(labels),
+            "bin": -1,
+        })
+
+    # ── Pilot study (high-score bias, AU12 only — no logistic scores stored) ──
+    pilot_points: list[dict] = []
+    if score_key == "mean_r":
+        pilot_manifest = DATA_DIR / "pilot_smile_task_manifest.json"
+        pilot_scores = _load_manifest_scores(pilot_manifest) if pilot_manifest.is_file() else {}
+        pilot_ann = _collect_annotations(DATA_DIR / "pilot_smile_annotations", _binary_label_pilot)
+        for tk, labels in pilot_ann.items():
+            task_scores = pilot_scores.get(tk)
+            if not task_scores:
+                continue
+            score = task_scores.get(score_key)
+            if score is None:
+                continue
+            pilot_points.append({
+                "score": float(score),
+                "label": _majority_label(labels),
+                "bin": -1,
+            })
+
+    return {"recall": recall_points, "main": main_points, "pilot": pilot_points}
+
+
+# ── Statistics helpers ────────────────────────────────────────────────────────
+
+def _wilson_ci(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95 % Wilson confidence interval for k successes in n trials."""
+    if n == 0:
+        return 0.0, 1.0
+    p = k / n
+    denom = 1 + z * z / n
+    center = (p + z * z / (2 * n)) / denom
+    spread = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    return max(0.0, center - spread), min(1.0, center + spread)
+
+
+def _r(v: float | None, d: int = 4) -> float | None:
+    return round(v, d) if v is not None else None
+
+
+def _compute_pr_curve(
+    all_points: list[dict], thresholds: list[float]
+) -> list[dict]:
+    """Precision/recall with Wilson CIs at each threshold (all data, unweighted)."""
+    scores = np.array([p["score"] for p in all_points])
+    ys = np.array([1 if p["label"] == "smile" else 0 for p in all_points])
+    thr_arr = np.array(thresholds)
+
+    # passes[i, j] = 1 iff points[i] passes threshold[j]
+    passes = (scores[:, None] >= thr_arr[None, :])  # (N, T)
+
+    tp_arr = (passes * ys[:, None]).sum(axis=0)       # (T,)
+    fp_arr = (passes * (1 - ys)[:, None]).sum(axis=0) # (T,)
+    fn_arr = (~passes * ys[:, None]).sum(axis=0)      # (T,)
+    tn_arr = (~passes * (1 - ys)[:, None]).sum(axis=0)
+
+    curve: list[dict] = []
+    for j, thr in enumerate(thresholds):
+        tp, fp, fn, tn = int(tp_arr[j]), int(fp_arr[j]), int(fn_arr[j]), int(tn_arr[j])
+        rec = tp / (tp + fn) if (tp + fn) > 0 else None
+        prec = tp / (tp + fp) if (tp + fp) > 0 else None
+        r_lo, r_hi = _wilson_ci(tp, tp + fn) if (tp + fn) > 0 else (None, None)
+        p_lo, p_hi = _wilson_ci(tp, tp + fp) if (tp + fp) > 0 else (None, None)
+        curve.append({
+            "threshold": round(float(thr), 5),
+            "recall": _r(rec),
+            "precision": _r(prec),
+            "recall_ci_low": _r(r_lo),
+            "recall_ci_high": _r(r_hi),
+            "precision_ci_low": _r(p_lo),
+            "precision_ci_high": _r(p_hi),
+            "tp": tp, "fp": fp, "fn": fn, "tn": tn,
+        })
+    return curve
+
+
+def _compute_bin_stats(
+    recall_points: list[dict],
+    bins_meta: list[dict],
+    operating_threshold: float,
+) -> list[dict]:
+    bin_data: dict[int, list[int]] = {}
+    for p in recall_points:
+        k = p["bin"]
+        if k >= 0:
+            y = 1 if p["label"] == "smile" else 0
+            bin_data.setdefault(k, []).append(y)
+
+    stats = []
+    for bm in bins_meta:
+        k = bm["bin"]
+        ys = bin_data.get(k, [])
+        n = len(ys)
+        n_smile = sum(ys)
+        stats.append({
+            "bin": k,
+            "score_min": round(float(bm["score_min"]), 4),
+            "score_max": round(float(bm["score_max"]), 4),
+            "population": bm["population"],
+            "sampled": bm["sampled"],
+            "labeled": n,
+            "smile_count": n_smile,
+            "not_smile_count": n - n_smile,
+            "smile_rate": _r(n_smile / n) if n > 0 else None,
+            "passes_threshold": bm["score_min"] >= operating_threshold,
+        })
+    return stats
+
+
+# ── Main computation ──────────────────────────────────────────────────────────
+
+N_THRESHOLDS = 200
+
+
+def _compute_and_cache(model: str, cache_key: str) -> dict:
+    """Full computation for one model. Loads data, computes PR curves + HT curve,
+    saves to disk cache, returns result dict."""
+    model_cfg = MODELS[model]
+    score_key = model_cfg["score_key"]
+    operating_threshold = model_cfg["operating_threshold"]
+
+    sources = _load_all_labeled_points(model)
+    recall_pts = sources["recall"]
+    main_pts = sources["main"]
+    pilot_pts = sources["pilot"]
+    all_pts = recall_pts + main_pts + pilot_pts
+
+    recall_manifest = _load_recall_manifest()
+    bins_meta: list[dict] = recall_manifest["bins"]
+
+    bin_stats = _compute_bin_stats(recall_pts, bins_meta, operating_threshold)
+
+    per_annotator: dict[str, dict] = {}
+    for f in ANNOTATIONS_DIR.glob("*.json"):
+        with open(f) as fp:
+            data = json.load(fp)
+        counts: dict[str, int] = {"smile": 0, "not_a_smile": 0, "total": 0}
+        for entry in data.get("annotations", {}).values():
+            lbl = _binary_label_recall(entry)
+            if lbl:
+                counts[lbl] += 1
+                counts["total"] += 1
+        per_annotator[f.stem] = counts
+
+    if not all_pts:
+        result: dict[str, Any] = {
+            "model": model,
+            "cache_key": cache_key,
+            "computed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "score_key": score_key,
+            "operating_threshold": operating_threshold,
+            "score_range": [0.0, 1.0],
+            "sources": {"recall_manifest": 0, "main_study": 0, "pilot_study": 0},
+            "total_labeled": 0,
+            "pr_curve": [],
+            "bins": bin_stats,
+            "annotators": _list_annotators(),
+            "per_annotator_counts": per_annotator,
+        }
+        _save_cache(model, result)
+        return result
+
+    # Threshold range: cover full observed score range
+    all_scores = [p["score"] for p in all_pts]
+    s_min, s_max = min(all_scores), max(all_scores)
+    # Always include operating threshold in the sweep
+    thresholds_set = set(np.linspace(s_min, s_max, N_THRESHOLDS).tolist())
+    thresholds_set.add(float(operating_threshold))
+    thresholds = sorted(thresholds_set)
+
+    pr_curve = _compute_pr_curve(all_pts, thresholds)
+
+    result = {
+        "model": model,
+        "cache_key": cache_key,
+        "computed_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "score_key": score_key,
+        "operating_threshold": operating_threshold,
+        "score_range": [round(s_min, 4), round(s_max, 4)],
+        "sources": {
+            "recall_manifest": len(recall_pts),
+            "main_study": len(main_pts),
+            "pilot_study": len(pilot_pts),
+        },
+        "total_labeled": len(all_pts),
+        "total_recall_tasks": recall_manifest["total_tasks"],
+        "population_size": recall_manifest["population_size"],
+        "pr_curve": pr_curve,
+        "bins": bin_stats,
+        "annotators": _list_annotators(),
+        "per_annotator_counts": per_annotator,
+    }
+    _save_cache(model, result)
+    return result
+
+
+# ── Route helpers ─────────────────────────────────────────────────────────────
+
+def _load_manifest() -> dict[str, Any]:
+    return _load_recall_manifest()
 
 
 def _video_is_downloaded(video_id: str) -> bool:
@@ -76,6 +450,14 @@ def _save_annotations(annotator: str, data: dict[str, Any]) -> None:
         json.dump(data, f, indent=2)
 
 
+def _list_annotators() -> list[str]:
+    if not ANNOTATIONS_DIR.is_dir():
+        return []
+    return sorted(p.stem for p in ANNOTATIONS_DIR.glob("*.json"))
+
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+
 @router.get("/recall-tasks/count")
 async def task_count():
     manifest = _load_manifest()
@@ -83,6 +465,20 @@ async def task_count():
         "total_tasks": manifest["total_tasks"],
         "available_tasks": _count_available_tasks(manifest),
     }
+
+
+@router.get("/recall-tasks/results")
+async def get_results(model: str = Query("logistic")):
+    if model not in MODELS:
+        raise HTTPException(status_code=400, detail=f"Unknown model '{model}'. Choose: {list(MODELS)}")
+    cache_key = _compute_cache_key()
+    cached = _load_cache(model, cache_key)
+    if cached is not None:
+        cached["is_cached"] = True
+        return cached
+    result = _compute_and_cache(model, cache_key)
+    result["is_cached"] = False
+    return result
 
 
 @router.get("/recall-tasks/next-incomplete")
@@ -96,21 +492,6 @@ async def next_incomplete(annotator: str = Query(...)):
     return {"task_number": None}
 
 
-@router.get("/recall-tasks/results")
-async def get_results():
-    manifest = _load_manifest()
-    annotators = _list_annotators()
-    all_annotations: dict[str, dict[str, str]] = {}
-    for name in annotators:
-        data = _load_annotations(name)
-        all_annotations[name] = {
-            k: v["label"]
-            for k, v in data.get("annotations", {}).items()
-            if v.get("label") in VALID_LABELS
-        }
-    return _compute_results(manifest, all_annotations)
-
-
 @router.get("/recall-tasks/{task_number}")
 async def get_task(task_number: int):
     manifest = _load_manifest()
@@ -118,7 +499,6 @@ async def get_task(task_number: int):
     if task_number not in task_map:
         raise HTTPException(status_code=404, detail=f"Task {task_number} not found")
     task = task_map[task_number]
-    # Blinded: strip logistic_score and bin from API response
     return {
         "task_number": task["task_number"],
         "video_id": task["video_id"],
@@ -141,164 +521,6 @@ class RecallAnnotateBody(BaseModel):
     label: str
 
 
-def _list_annotators() -> list[str]:
-    if not ANNOTATIONS_DIR.is_dir():
-        return []
-    return sorted(p.stem for p in ANNOTATIONS_DIR.glob("*.json"))
-
-
-def _majority_label(labels: list[str]) -> str:
-    """Return majority label; ties go to 'smile'."""
-    smiles = labels.count("smile")
-    return "smile" if smiles >= len(labels) / 2 else "not_a_smile"
-
-
-OPERATING_THRESHOLD = 0.636
-BOOTSTRAP_REPS = 10_000
-MIN_LABELED_BINS = 5
-MIN_LABELED_PER_BIN = 5
-
-
-def _compute_results(manifest: dict[str, Any], all_annotations: dict[str, dict[str, str]]) -> dict[str, Any]:
-    """Compute HT recall estimate and per-bin stats from all annotation files."""
-    bins_meta: list[dict[str, Any]] = manifest["bins"]
-    tasks: list[dict[str, Any]] = manifest["tasks"]
-
-    # Build per-task consensus label from all annotators
-    # all_annotations: {annotator -> {str(task_number) -> label}}
-    task_labels: dict[str, list[str]] = {}
-    for ann_labels in all_annotations.values():
-        for task_key, label in ann_labels.items():
-            if label in VALID_LABELS:
-                task_labels.setdefault(task_key, []).append(label)
-
-    # Index tasks by task_number (int) -> task dict
-    task_by_num: dict[int, dict[str, Any]] = {t["task_number"]: t for t in tasks}
-
-    # Per-bin accumulation
-    bin_smile: list[list[int]] = [[] for _ in bins_meta]   # list of 0/1 per labeled task
-    bin_labeled: list[int] = [0] * len(bins_meta)
-
-    for task_num_str, labels in task_labels.items():
-        task = task_by_num.get(int(task_num_str))
-        if task is None:
-            continue
-        k = task["bin"]
-        consensus = _majority_label(labels)
-        y = 1 if consensus == "smile" else 0
-        bin_smile[k].append(y)
-        bin_labeled[k] += 1
-
-    # Per-bin stats
-    bin_stats: list[dict[str, Any]] = []
-    for k, meta in enumerate(bins_meta):
-        ys = bin_smile[k]
-        n_labeled = len(ys)
-        n_smile = sum(ys)
-        smile_rate = n_smile / n_labeled if n_labeled > 0 else None
-        passes = meta["score_max"] > OPERATING_THRESHOLD or (
-            meta["score_min"] < OPERATING_THRESHOLD < meta["score_max"]
-        )
-        bin_stats.append({
-            "bin": k,
-            "score_min": round(meta["score_min"], 4),
-            "score_max": round(meta["score_max"], 4),
-            "population": meta["population"],
-            "sampled": meta["sampled"],
-            "labeled": n_labeled,
-            "smile_count": n_smile,
-            "not_smile_count": n_labeled - n_smile,
-            "smile_rate": round(smile_rate, 4) if smile_rate is not None else None,
-            "passes_threshold": passes,
-        })
-
-    # Horvitz-Thompson recall estimate
-    # Recall = sum_k (N_k/n_k * sum_{i in S_k} 1[score_i >= theta] * y_i)
-    #        / sum_k (N_k/n_k * sum_{i in S_k} y_i)
-    # Since all N_k are equal (decile bins), weights cancel and it simplifies to
-    # smile_rate in bins >= theta / overall smile_rate, weighted by population.
-    # We implement the general form for correctness.
-    bins_ok = sum(1 for b in bin_stats if b["labeled"] >= MIN_LABELED_PER_BIN)
-    recall_est: float | None = None
-    ci_low: float | None = None
-    ci_high: float | None = None
-    ci_method: str | None = None
-
-    if bins_ok >= MIN_LABELED_BINS:
-        # Point estimate
-        num = 0.0
-        denom = 0.0
-        for k, meta in enumerate(bins_meta):
-            ys = bin_smile[k]
-            if not ys:
-                continue
-            N_k = meta["population"]
-            n_k = len(ys)
-            w = N_k / n_k
-            # passes_threshold: score_min >= OPERATING_THRESHOLD counts toward numerator
-            # For the boundary bin (spans theta), we weight by the fraction above theta,
-            # but since we can't know per-task scores (blinded), we treat entire bin.
-            # Conservative: bin "passes" if its score_min >= threshold.
-            if meta["score_min"] >= OPERATING_THRESHOLD:
-                num += w * sum(ys)
-            denom += w * sum(ys)
-
-        recall_est = num / denom if denom > 0 else None
-
-        # Stratified bootstrap CI
-        if recall_est is not None:
-            rng = np.random.default_rng(0)
-            boot_recalls: list[float] = []
-            for _ in range(BOOTSTRAP_REPS):
-                b_num = 0.0
-                b_den = 0.0
-                for k, meta in enumerate(bins_meta):
-                    ys = bin_smile[k]
-                    if not ys:
-                        continue
-                    N_k = meta["population"]
-                    n_k = len(ys)
-                    w = N_k / n_k
-                    sample = rng.choice(ys, size=len(ys), replace=True)
-                    s = int(sample.sum())
-                    if meta["score_min"] >= OPERATING_THRESHOLD:
-                        b_num += w * s
-                    b_den += w * s
-                if b_den > 0:
-                    boot_recalls.append(b_num / b_den)
-            if len(boot_recalls) > 100:
-                arr = np.array(boot_recalls)
-                ci_low = float(np.percentile(arr, 2.5))
-                ci_high = float(np.percentile(arr, 97.5))
-                ci_method = f"stratified_bootstrap_{BOOTSTRAP_REPS}"
-
-    # Per-annotator counts
-    per_annotator: dict[str, dict[str, int]] = {}
-    for name, ann_labels in all_annotations.items():
-        counts: dict[str, int] = {"smile": 0, "not_a_smile": 0, "total": 0}
-        for label in ann_labels.values():
-            if label in VALID_LABELS:
-                counts[label] += 1
-                counts["total"] += 1
-        per_annotator[name] = counts
-
-    return {
-        "operating_threshold": OPERATING_THRESHOLD,
-        "annotators": sorted(all_annotations.keys()),
-        "total_tasks": manifest["total_tasks"],
-        "population_size": manifest["population_size"],
-        "completed_tasks": sum(b["labeled"] for b in bin_stats),
-        "bins": bin_stats,
-        "recall_estimate": round(recall_est, 4) if recall_est is not None else None,
-        "recall_ci_low": round(ci_low, 4) if ci_low is not None else None,
-        "recall_ci_high": round(ci_high, 4) if ci_high is not None else None,
-        "ci_method": ci_method,
-        "bins_with_data": bins_ok,
-        "min_bins_for_estimate": MIN_LABELED_BINS,
-        "per_annotator_counts": per_annotator,
-    }
-
-
 @router.post("/recall-annotations")
 async def save_annotation(body: RecallAnnotateBody):
     if body.label not in VALID_LABELS:
@@ -317,4 +539,9 @@ async def save_annotation(body: RecallAnnotateBody):
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     _save_annotations(body.annotator, data)
+
+    # Invalidate disk cache so next results request recomputes
+    for m in MODELS:
+        _cache_path(m).unlink(missing_ok=True)
+
     return {"ok": True, "task_number": body.task_number, "label": body.label}

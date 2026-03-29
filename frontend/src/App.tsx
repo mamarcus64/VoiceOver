@@ -9,6 +9,8 @@ import RecallFactsAnnotate from "./components/RecallFactsAnnotate";
 import RecallFactsAgreement from "./components/RecallFactsAgreement";
 import RecallAnnotate from "./components/RecallAnnotate";
 import RecallResults from "./components/RecallResults";
+import TranscriptView from "./components/TranscriptView";
+import TranscriptGroupView from "./components/TranscriptGroupView";
 
 const HIDE_DEV_TABS = import.meta.env.VITE_HIDE_DEV_TABS === "true";
 
@@ -23,11 +25,13 @@ export default function App() {
           <Route path="/agreement" element={<SmileAgreement />} />
           <Route path="/pilot-smile-annotate" element={<SmileAnnotate apiPrefix="pilot-" />} />
           <Route path="/pilot-agreement" element={<SmileAgreement apiPrefix="pilot-" />} />
-          <Route path="/recall-annotate" element={<RecallAnnotate />} />
-          <Route path="/recall-results" element={<RecallResults />} />
-          <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
-          <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
-          <Route path="*" element={<Navigate to="/smile-login" replace />} />
+        <Route path="/recall-annotate" element={<RecallAnnotate />} />
+        <Route path="/recall-results" element={<RecallResults />} />
+        <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
+        <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
+        <Route path="/transcript/:videoId" element={<TranscriptView />} />
+        <Route path="/transcripts" element={<TranscriptGroupView />} />
+        <Route path="*" element={<Navigate to="/smile-login" replace />} />
         </Routes>
       </BrowserRouter>
     );
@@ -48,6 +52,8 @@ export default function App() {
         <Route path="/recall-results" element={<RecallResults />} />
         <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
         <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
+        <Route path="/transcript/:videoId" element={<TranscriptView />} />
+        <Route path="/transcripts" element={<TranscriptGroupView />} />
       </Routes>
     </BrowserRouter>
   );

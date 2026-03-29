@@ -17,6 +17,7 @@ from api.pilot_tasks import router as pilot_tasks_router
 from api.pilot_agreement import router as pilot_agreement_router
 from api.recall_facts import router as recall_facts_router
 from api.recall_tasks import router as recall_tasks_router
+from api.metadata import router as metadata_router
 
 DATA_DIR = Path(os.environ.get("VOICEOVER_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -43,6 +44,7 @@ app.include_router(pilot_tasks_router, prefix="/api")
 app.include_router(pilot_agreement_router, prefix="/api")
 app.include_router(recall_facts_router, prefix="/api")
 app.include_router(recall_tasks_router, prefix="/api")
+app.include_router(metadata_router, prefix="/api")
 
 if FRONTEND_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")
