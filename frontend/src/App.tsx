@@ -7,6 +7,8 @@ import SmileAnnotate from "./components/SmileAnnotate";
 import SmileAgreement from "./components/SmileAgreement";
 import RecallFactsAnnotate from "./components/RecallFactsAnnotate";
 import RecallFactsAgreement from "./components/RecallFactsAgreement";
+import RecallAnnotate from "./components/RecallAnnotate";
+import RecallResults from "./components/RecallResults";
 
 const HIDE_DEV_TABS = import.meta.env.VITE_HIDE_DEV_TABS === "true";
 
@@ -21,6 +23,8 @@ export default function App() {
           <Route path="/agreement" element={<SmileAgreement />} />
           <Route path="/pilot-smile-annotate" element={<SmileAnnotate apiPrefix="pilot-" />} />
           <Route path="/pilot-agreement" element={<SmileAgreement apiPrefix="pilot-" />} />
+          <Route path="/recall-annotate" element={<RecallAnnotate />} />
+          <Route path="/recall-results" element={<RecallResults />} />
           <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
           <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
           <Route path="*" element={<Navigate to="/smile-login" replace />} />
@@ -40,6 +44,8 @@ export default function App() {
         <Route path="/agreement" element={<SmileAgreement />} />
         <Route path="/pilot-smile-annotate" element={<SmileAnnotate apiPrefix="pilot-" />} />
         <Route path="/pilot-agreement" element={<SmileAgreement apiPrefix="pilot-" />} />
+        <Route path="/recall-annotate" element={<RecallAnnotate />} />
+        <Route path="/recall-results" element={<RecallResults />} />
         <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
         <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
       </Routes>

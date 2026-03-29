@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
-# Download the first N videos from data/annotation_sample.json.
+# Copy videos from redondo via scp instead of downloading from YouTube.
 #
 # Usage:
-#   ./scripts/download_videos.sh --limit 200
+#   ./scripts/download_from_redondo.sh --limit 200
+#   ./scripts/download_from_redondo.sh --from-manifest data/recall_task_manifest.json
 #
-# Idempotent: skips tapes whose .mp4 already exists in data/videos/.
-# Resumable:  re-running with the same or larger --limit picks up where it left off.
-# Order:      fixed by annotation_sample.json — increasing --limit only appends
-#             new downloads at the end; existing ones are never re-ordered.
+# Idempotent: skips videos whose .mp4 already exists in data/videos/.
+# Source:     redondo:/home/mjma/voices/test_data/videos/{video_id}.mp4
 
 set -euo pipefail
 
@@ -19,11 +18,9 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SAMPLE_JSON="${REPO_ROOT}/data/annotation_sample.json"
 VIDEO_DIR="${REPO_ROOT}/data/videos"
 MANIFEST="${REPO_ROOT}/data/manifest.json"
-VENV="${REPO_ROOT}/venv"
-COOKIES="${REPO_ROOT}/youtube_cookies.txt"
 
-# yt-dlp download format: best mp4 up to 1080p, fallback to best available
-YT_FORMAT="bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best"
+REMOTE_HOST="redondo"
+REMOTE_DIR="/home/mjma/voices/test_data/videos"
 
 ###############################################################################
 # Parse arguments
@@ -50,10 +47,27 @@ while [[ $# -gt 0 ]]; do
             FROM_MANIFEST="${1#*=}"
             shift
             ;;
+        --remote-host)
+            REMOTE_HOST="$2"
+            shift 2
+            ;;
+        --remote-host=*)
+            REMOTE_HOST="${1#*=}"
+            shift
+            ;;
+        --remote-dir)
+            REMOTE_DIR="$2"
+            shift 2
+            ;;
+        --remote-dir=*)
+            REMOTE_DIR="${1#*=}"
+            shift
+            ;;
         *)
             echo "Unknown argument: $1" >&2
             echo "Usage: $0 --limit N" >&2
             echo "       $0 --from-manifest path/to/task_manifest.json" >&2
+            echo "       $0 --from-manifest ... --remote-host redondo --remote-dir /path/to/videos" >&2
             exit 1
             ;;
     esac
@@ -74,7 +88,6 @@ if [[ -n "${LIMIT}" ]]; then
 fi
 
 if [[ -n "${FROM_MANIFEST}" && ! -f "${FROM_MANIFEST}" ]]; then
-    # Try relative to repo root
     if [[ -f "${REPO_ROOT}/${FROM_MANIFEST}" ]]; then
         FROM_MANIFEST="${REPO_ROOT}/${FROM_MANIFEST}"
     else
@@ -87,81 +100,72 @@ fi
 # Pre-flight checks
 ###############################################################################
 
-# Activate the project venv so yt-dlp and python3 use Python 3.10+
-if [[ -f "${VENV}/bin/activate" ]]; then
-    source "${VENV}/bin/activate"
-else
-    echo "Warning: venv not found at ${VENV} — run setup.sh first to create it with Python 3.10+" >&2
-fi
-
-command -v yt-dlp >/dev/null 2>&1 || { echo "Error: yt-dlp not found. Install it with: pip install yt-dlp" >&2; exit 1; }
 command -v python3 >/dev/null 2>&1 || { echo "Error: python3 not found in PATH" >&2; exit 1; }
-[[ -f "${SAMPLE_JSON}" ]] || { echo "Error: ${SAMPLE_JSON} not found. Run scripts/build_annotation_sample.py first." >&2; exit 1; }
+command -v scp    >/dev/null 2>&1 || { echo "Error: scp not found in PATH" >&2; exit 1; }
+[[ -f "${SAMPLE_JSON}" ]] || { echo "Error: ${SAMPLE_JSON} not found." >&2; exit 1; }
 
 mkdir -p "${VIDEO_DIR}"
 
+# Quick connectivity check
+echo "Checking SSH connectivity to ${REMOTE_HOST}..."
+if ! ssh -o BatchMode=yes -o ConnectTimeout=5 "${REMOTE_HOST}" true 2>/dev/null; then
+    echo "Error: cannot reach ${REMOTE_HOST} via SSH (passwordless auth required)." >&2
+    exit 1
+fi
+echo "  Connected."
+
 ###############################################################################
-# Build download list (id|youtube_url lines)
+# Build video ID list
 ###############################################################################
 
-# Emit one "id|youtube_url" line per video to download.
-# --limit:         first N entries from annotation_sample.json (original mode)
-# --from-manifest: unique video_ids from a task manifest, URLs from manifest.json
-ENTRIES=()
+# Emit one video_id per line — no URLs needed (scp uses video_id directly).
+VIDEO_IDS=()
 if [[ -n "${FROM_MANIFEST}" ]]; then
     _TMPPY=$(mktemp /tmp/voiceover_dl_XXXXXX.py)
     _TMPOUT=$(mktemp /tmp/voiceover_dl_XXXXXX.txt)
     cat > "${_TMPPY}" <<'PYEOF'
 import json, sys
-task_manifest_path, manifest_path = sys.argv[1], sys.argv[2]
-with open(task_manifest_path) as f:
+with open(sys.argv[1]) as f:
     task_manifest = json.load(f)
-with open(manifest_path) as f:
-    manifest = json.load(f)
-url_map = dict((e["id"], e.get("youtube_url", "")) for e in manifest)
 seen = set()
 for task in task_manifest.get("tasks", []):
     vid = task.get("video_id", "")
-    if vid in seen:
-        continue
-    seen.add(vid)
-    url = url_map.get(vid, "")
-    if url and url != "NULL":
-        print(vid + "|" + url)
-    else:
-        print(vid + "|NULL")
+    if vid and vid not in seen:
+        seen.add(vid)
+        print(vid)
 PYEOF
-    python3 "${_TMPPY}" "${FROM_MANIFEST}" "${MANIFEST}" > "${_TMPOUT}"
+    python3 "${_TMPPY}" "${FROM_MANIFEST}" > "${_TMPOUT}"
     rm -f "${_TMPPY}"
     while IFS= read -r line; do
-        ENTRIES+=("$line")
+        VIDEO_IDS+=("$line")
     done < "${_TMPOUT}"
     rm -f "${_TMPOUT}"
-    TOTAL=${#ENTRIES[@]}
+    TOTAL=${#VIDEO_IDS[@]}
     echo "Task manifest: ${FROM_MANIFEST}"
-    echo "Unique videos to download: ${TOTAL}"
+    echo "Unique videos needed: ${TOTAL}"
 else
-    while IFS= read -r line; do
-        ENTRIES+=("$line")
-    done < <(python3 - "${SAMPLE_JSON}" "${LIMIT}" <<'PYEOF'
+    _TMPPY=$(mktemp /tmp/voiceover_dl_XXXXXX.py)
+    _TMPOUT=$(mktemp /tmp/voiceover_dl_XXXXXX.txt)
+    cat > "${_TMPPY}" <<'PYEOF'
 import json, sys
 with open(sys.argv[1]) as f:
     data = json.load(f)
 limit = int(sys.argv[2])
 for e in data[:limit]:
-    url = e.get("youtube_url", "")
-    if url and url != "NULL":
-        print(f"{e['id']}|{url}")
-    else:
-        print(f"{e['id']}|NULL")
+    print(e["id"])
 PYEOF
-)
-    TOTAL=${#ENTRIES[@]}
-    echo "Annotation sample size: ${TOTAL} tapes (limit=${LIMIT})"
+    python3 "${_TMPPY}" "${SAMPLE_JSON}" "${LIMIT}" > "${_TMPOUT}"
+    rm -f "${_TMPPY}"
+    while IFS= read -r line; do
+        VIDEO_IDS+=("$line")
+    done < "${_TMPOUT}"
+    rm -f "${_TMPOUT}"
+    TOTAL=${#VIDEO_IDS[@]}
+    echo "Annotation sample size: ${TOTAL} videos (limit=${LIMIT})"
 fi
 
 ###############################################################################
-# Download loop
+# Copy loop
 ###############################################################################
 
 DOWNLOADED=0
@@ -169,41 +173,24 @@ SKIPPED=0
 FAILED=0
 FAILED_IDS=()
 
-for entry in "${ENTRIES[@]}"; do
-    TAPE_ID="${entry%%|*}"
-    URL="${entry##*|}"
-    OUT_FILE="${VIDEO_DIR}/${TAPE_ID}.mp4"
+for VIDEO_ID in "${VIDEO_IDS[@]}"; do
+    OUT_FILE="${VIDEO_DIR}/${VIDEO_ID}.mp4"
 
-    # Idempotency: skip if already downloaded
     if [[ -f "${OUT_FILE}" ]]; then
         (( SKIPPED++ )) || true
         continue
     fi
 
-    if [[ "${URL}" == "NULL" || -z "${URL}" ]]; then
-        echo "  [SKIP] ${TAPE_ID} — no YouTube URL"
-        (( SKIPPED++ )) || true
-        continue
-    fi
+    REMOTE_FILE="${REMOTE_HOST}:${REMOTE_DIR}/${VIDEO_ID}.mp4"
+    echo "  [CP] ${VIDEO_ID}  ($(( DOWNLOADED + SKIPPED + FAILED + 1 ))/${TOTAL})  ${REMOTE_FILE}"
 
-    echo "  [DL] ${TAPE_ID}  ($(( DOWNLOADED + SKIPPED + FAILED + 1 ))/${TOTAL})  ${URL}"
-
-    if [[ ! -f "${COOKIES}" ]]; then
-        echo "  [WARN] Cookie file not found at ${COOKIES} — download may fail bot check" >&2
-    fi
-
-    if yt-dlp \
-        --format "${YT_FORMAT}" \
-        --output "${OUT_FILE}" \
-        --no-playlist \
-        --cookies "${COOKIES}" \
-        --progress \
-        "${URL}"; then
+    if scp -q "${REMOTE_FILE}" "${OUT_FILE}"; then
         (( DOWNLOADED++ )) || true
     else
-        echo "  [FAIL] ${TAPE_ID}"
+        echo "  [FAIL] ${VIDEO_ID} — not found or scp error"
         (( FAILED++ )) || true
-        FAILED_IDS+=("${TAPE_ID}")
+        FAILED_IDS+=("${VIDEO_ID}")
+        rm -f "${OUT_FILE}"   # remove partial file
     fi
 done
 
@@ -214,14 +201,14 @@ done
 python3 - "${MANIFEST}" "${VIDEO_DIR}" <<'PYEOF'
 import json, os, sys
 manifest_path, video_dir = sys.argv[1], sys.argv[2]
-video_files = {os.path.splitext(f)[0] for f in os.listdir(video_dir) if f.endswith('.mp4')}
+video_files = set(os.path.splitext(f)[0] for f in os.listdir(video_dir) if f.endswith('.mp4'))
 with open(manifest_path) as f:
     manifest = json.load(f)
 for entry in manifest:
     entry['downloaded'] = entry['id'] in video_files
 with open(manifest_path, 'w') as f:
     json.dump(manifest, f, indent=2)
-print(f"Manifest updated: {sum(1 for e in manifest if e['downloaded'])} downloaded")
+print("Manifest updated: " + str(sum(1 for e in manifest if e['downloaded'])) + " downloaded")
 PYEOF
 
 ###############################################################################
@@ -231,11 +218,12 @@ PYEOF
 echo ""
 MODE_DESC="${FROM_MANIFEST:+manifest=$(basename "${FROM_MANIFEST}")}${LIMIT:+limit=${LIMIT}}"
 echo "========================================"
-echo "  DOWNLOAD SUMMARY  (${MODE_DESC})"
+echo "  COPY SUMMARY  (${MODE_DESC})"
+echo "  Source: ${REMOTE_HOST}:${REMOTE_DIR}"
 echo "========================================"
-echo "  Downloaded:        ${DOWNLOADED}"
+echo "  Copied:            ${DOWNLOADED}"
 echo "  Skipped (cached):  ${SKIPPED}"
-echo "  Failed:            ${FAILED}"
+echo "  Failed/missing:    ${FAILED}"
 if (( ${#FAILED_IDS[@]} > 0 )); then
 echo "  Failed IDs:        ${FAILED_IDS[*]}"
 fi
