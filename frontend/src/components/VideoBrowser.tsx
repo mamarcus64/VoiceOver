@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import type { VideoEntry, VideoListResponse, DownloadStatus } from '../types';
 
 const PAGE_SIZE = 50;
@@ -289,6 +289,17 @@ export default function VideoBrowser() {
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.title}>Video Browser</h1>
+        <Link
+          to="/transcripts"
+          style={{
+            padding: '8px 14px', fontSize: '0.875rem', fontWeight: 500,
+            backgroundColor: '#1e293b', color: '#94a3b8',
+            border: '1px solid #334155', borderRadius: '6px',
+            textDecoration: 'none', whiteSpace: 'nowrap' as const,
+          }}
+        >
+          Testimony Archive →
+        </Link>
         <input
           type="text"
           placeholder="Search videos..."
@@ -343,7 +354,7 @@ export default function VideoBrowser() {
                       <td style={styles.td}>
                         <span style={styles[statusStyle]}>{statusText}</span>
                       </td>
-                      <td style={styles.td}>
+                      <td style={{ ...styles.td, display: 'flex', gap: 8, alignItems: 'center' }}>
                         {isDownloaded ? (
                           <button
                             style={{ ...styles.btn, ...styles.btnPrimary }}
@@ -364,6 +375,16 @@ export default function VideoBrowser() {
                             {isDownloading ? 'Downloading...' : 'Download'}
                           </button>
                         )}
+                        <Link
+                          to={`/transcript/${video.id}`}
+                          style={{
+                            ...styles.btn, ...styles.btnSecondary,
+                            textDecoration: 'none', fontSize: '0.8rem',
+                            padding: '6px 10px',
+                          }}
+                        >
+                          Transcript
+                        </Link>
                       </td>
                     </tr>
                   );
