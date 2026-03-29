@@ -29,7 +29,7 @@ export default function App() {
         <Route path="/recall-results" element={<RecallResults />} />
         <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
         <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
-        <Route path="/transcript/:videoId" element={<TranscriptView />} />
+        <Route path="/transcript/:intCode" element={<TranscriptView />} />
         <Route path="/transcripts" element={<TranscriptGroupView />} />
         <Route path="*" element={<Navigate to="/smile-login" replace />} />
         </Routes>
@@ -52,7 +52,7 @@ export default function App() {
         <Route path="/recall-results" element={<RecallResults />} />
         <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
         <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
-        <Route path="/transcript/:videoId" element={<TranscriptView />} />
+        <Route path="/transcript/:intCode" element={<TranscriptView />} />
         <Route path="/transcripts" element={<TranscriptGroupView />} />
       </Routes>
     </BrowserRouter>

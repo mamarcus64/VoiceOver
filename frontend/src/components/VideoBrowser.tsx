@@ -376,7 +376,7 @@ export default function VideoBrowser() {
                           </button>
                         )}
                         <Link
-                          to={`/transcript/${video.id}`}
+                          to={`/transcript/${video.int_code}`}
                           style={{
                             ...styles.btn, ...styles.btnSecondary,
                             textDecoration: 'none', fontSize: '0.8rem',
