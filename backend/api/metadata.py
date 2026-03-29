@@ -119,6 +119,38 @@ def _extract_segments(root) -> list:
     return segments
 
 
+@router.get("/metadata/subjects")
+async def get_subject_list():
+    """Return sorted list of all subject int_codes (fast directory scan, no XML parsing)."""
+    metadata_dir = DATA_DIR / "vha_metadata"
+    if not metadata_dir.is_dir():
+        return []
+    codes = []
+    for xml_file in metadata_dir.glob("intcode-*.xml"):
+        try:
+            codes.append(int(xml_file.stem.replace("intcode-", "")))
+        except ValueError:
+            pass
+    codes.sort()
+    return codes
+
+
+@router.get("/metadata/{int_code}/tapes")
+async def get_tapes_for_subject(int_code: int):
+    """List available tape numbers for a subject (scans transcripts_llm directory)."""
+    transcripts_dir = DATA_DIR / "transcripts_llm"
+    tapes = []
+    for f in transcripts_dir.glob(f"{int_code}.*.json"):
+        parts = f.stem.split(".", 1)
+        if len(parts) == 2:
+            try:
+                tapes.append(int(parts[1]))
+            except ValueError:
+                pass
+    tapes.sort()
+    return {"int_code": int_code, "tapes": tapes}
+
+
 @router.get("/metadata/group-stats")
 async def get_group_stats():
     """Aggregate statistics across all VHA XML metadata files. May take a few seconds."""

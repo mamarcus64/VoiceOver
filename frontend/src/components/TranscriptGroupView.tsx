@@ -198,19 +198,21 @@ export default function TranscriptGroupView() {
         <button style={st.backBtn} onClick={() => navigate("/")}>← Home</button>
         <h1 style={st.title}>VHA Testimony Archive — Group View</h1>
         <div style={{ marginLeft: "auto", fontSize: 12, color: "#64748b" }}>
-          {stats.total.toLocaleString()} interviews · hover charts for details
+          {stats.total.toLocaleString()} subjects · hover charts for details
         </div>
       </div>
 
       {/* Top stat cards */}
       <div style={st.cardRow}>
-        <StatCard label="Total Interviews" value={stats.total.toLocaleString()} color="#3b82f6" />
+        <StatCard label="Subjects" value={stats.total.toLocaleString()} color="#3b82f6"
+          sub="unique survivors/witnesses" />
         {genderData.map((g, i) => (
           <StatCard key={g.name} label={g.name} value={g.value.toLocaleString()}
             sub={`${((g.value / stats.total) * 100).toFixed(1)}%`}
             color={COLORS[(i + 1) % COLORS.length]} />
         ))}
-        <StatCard label="Avg. Segments / Interview" value={avgSegments} color="#f59e0b" />
+        <StatCard label="Avg. VHA Segments / Subject" value={avgSegments} color="#f59e0b"
+          sub="1-min indexed segments" />
         <StatCard label="Unique Keywords" value={Object.keys(stats.keyword_freq).length.toLocaleString()} color="#a78bfa" />
       </div>
 
@@ -281,7 +283,11 @@ export default function TranscriptGroupView() {
       {/* Interview table */}
       <div style={st.chartSection}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-          <div style={st.chartTitle}>All Interviews</div>
+          <div style={st.chartTitle}>All Subjects</div>
+          <span style={{ fontSize: 11, color: "#475569" }}>
+            Each row = one survivor/witness. "Total Length" is the full interview across all tapes.
+            Click "View" to open that subject's transcript with tape navigation.
+          </span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -312,9 +318,9 @@ export default function TranscriptGroupView() {
                 <SortTh col="country_of_birth" label="Country" />
                 <SortTh col="city_of_birth" label="City" />
                 <SortTh col="interview_date" label="Date" />
-                <SortTh col="interview_length" label="Length" />
-                <SortTh col="num_segments" label="Segments" />
-                <th style={st.th}>Transcript</th>
+                <SortTh col="interview_length" label="Total Length" />
+                <SortTh col="num_segments" label="VHA Segs" />
+                <th style={st.th}>View</th>
               </tr>
             </thead>
             <tbody>
@@ -334,7 +340,7 @@ export default function TranscriptGroupView() {
                   </td>
                   <td style={{ ...st.td, textAlign: "center", color: "#94a3b8" }}>{iv.num_segments}</td>
                   <td style={st.td}>
-                    <Link to={`/transcript/${iv.int_code}.1`} style={st.viewLink}>
+                    <Link to={`/transcript/${iv.int_code}`} style={st.viewLink}>
                       View →
                     </Link>
                   </td>
