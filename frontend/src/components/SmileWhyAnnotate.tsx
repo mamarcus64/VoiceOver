@@ -444,14 +444,30 @@ export default function SmileWhyAnnotate() {
           {/* Response area */}
           <div style={{ marginTop: "10px" }}>
             <div style={{
-              fontSize: "0.9rem", fontWeight: 600, color: "#e2e8f0", marginBottom: "6px",
+              fontSize: "0.9rem", fontWeight: 600, color: "#e2e8f0", marginBottom: "4px",
             }}>
               Why did the subject smile here?
+            </div>
+            <div style={{
+              fontSize: "0.78rem", color: "#94a3b8", marginBottom: "6px", lineHeight: 1.5,
+            }}>
+              Pay attention to the subject matter, emotions, and whether the subject is directly
+              engaging with the interviewer or if the smile occurred for a story-telling or narrative purpose.
+            </div>
+            <div style={{
+              fontSize: "0.72rem", color: "#64748b", marginBottom: "8px", lineHeight: 1.6,
+              padding: "6px 10px", backgroundColor: "#1e293b", borderRadius: "6px",
+              border: "1px solid #334155",
+            }}>
+              <div style={{ fontWeight: 600, color: "#94a3b8", marginBottom: "2px" }}>Examples:</div>
+              <div>&bull; "The subject smiled because he was telling a joke to the interviewer."</div>
+              <div>&bull; "The subject smiled because she was fondly remembering meeting her husband."</div>
+              <div>&bull; "The subject smiled because he was emphasizing a moment of surprise during his story."</div>
             </div>
             <textarea
               value={responseText}
               onChange={(e) => setResponseText(e.target.value)}
-              placeholder="Describe why you think the subject smiled in this moment..."
+              placeholder="The subject smiled because..."
               rows={3}
               style={{
                 width: "100%", padding: "10px 12px", fontSize: "0.85rem",
