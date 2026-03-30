@@ -9,6 +9,8 @@ import RecallFactsAnnotate from "./components/RecallFactsAnnotate";
 import RecallFactsAgreement from "./components/RecallFactsAgreement";
 import RecallAnnotate from "./components/RecallAnnotate";
 import RecallResults from "./components/RecallResults";
+import SmileWhyAnnotate from "./components/SmileWhyAnnotate";
+import SmileWhyResults from "./components/SmileWhyResults";
 import TranscriptView from "./components/TranscriptView";
 import TranscriptGroupView from "./components/TranscriptGroupView";
 
@@ -29,6 +31,8 @@ export default function App() {
         <Route path="/recall-results" element={<RecallResults />} />
         <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
         <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
+        <Route path="/smile-why-annotate" element={<SmileWhyAnnotate />} />
+        <Route path="/smile-why-results" element={<SmileWhyResults />} />
         <Route path="/transcript/:intCode" element={<TranscriptView />} />
         <Route path="/transcripts" element={<TranscriptGroupView />} />
         <Route path="*" element={<Navigate to="/smile-login" replace />} />
@@ -52,6 +56,8 @@ export default function App() {
         <Route path="/recall-results" element={<RecallResults />} />
         <Route path="/recall-facts-annotation" element={<RecallFactsAnnotate />} />
         <Route path="/recall-facts-agreement" element={<RecallFactsAgreement />} />
+        <Route path="/smile-why-annotate" element={<SmileWhyAnnotate />} />
+        <Route path="/smile-why-results" element={<SmileWhyResults />} />
         <Route path="/transcript/:intCode" element={<TranscriptView />} />
         <Route path="/transcripts" element={<TranscriptGroupView />} />
       </Routes>
