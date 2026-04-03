@@ -1,0 +1,88 @@
+{
+  "status": "ok",
+  "smile_index": 60,
+  "video_id": "10.1",
+  "analysis_requested": true,
+  "smile": {
+    "start_ts": 864.267,
+    "end_ts": 864.767,
+    "peak_r": 1.71,
+    "mean_r": 1.2447,
+    "score": 0.6112,
+    "model": "fallback"
+  },
+  "context_window_seconds": {
+    "before": 20.0,
+    "after": 15.0
+  },
+  "context_bounds_seconds": {
+    "start": 844.267,
+    "end": 879.767
+  },
+  "context_text": "SMILE INDEX: 60\nWINDOW: 844.267s to 879.767s (smile at 864.267s to 864.767s)\n\nTRANSCRIPT CONTEXT:\n[722.850-1086.150] interviewee: And we went for hikes in the mountains. And I was supposed to be one of the leaders of the groups. But I told them, listen, I cannot go. I have to go back to work. My vacation is through. And I have to be back. And I went back. And somebody else took over. And when I returned home, in the morning, I got up in order to go to the pharmacy. I turned on the radio when I heard a terrible accident in the mountains. They ran in\n\nWORDS AT THE SMILE MOMENT:\nback. And",
+  "context_segments": [
+    {
+      "speaker": "interviewee",
+      "start_ms": 722850,
+      "end_ms": 1086150,
+      "text": "And we went for hikes in the mountains. And I was supposed to be one of the leaders of the groups. But I told them, listen, I cannot go. I have to go back to work. My vacation is through. And I have to be back. And I went back. And somebody else took over. And when I returned home, in the morning, I got up in order to go to the pharmacy. I turned on the radio when I heard a terrible accident in the mountains. They ran in"
+    }
+  ],
+  "smile_words": [
+    "back.",
+    "And"
+  ],
+  "prompt_text": "You are analyzing a smile moment from a Holocaust survivor testimony interview.\n\nYour task is to infer five narrative features about the discourse surrounding the smile.\n\nThe transcript context begins up to 20.0 seconds before the smile and ends up to 15.0 seconds after the smile.\n\nTranscript context:\nSMILE INDEX: 60\nWINDOW: 844.267s to 879.767s (smile at 864.267s to 864.767s)\n\nTRANSCRIPT CONTEXT:\n[722.850-1086.150] interviewee: And we went for hikes in the mountains. And I was supposed to be one of the leaders of the groups. But I told them, listen, I cannot go. I have to go back to work. My vacation is through. And I have to be back. And I went back. And somebody else took over. And when I returned home, in the morning, I got up in order to go to the pharmacy. I turned on the radio when I heard a terrible accident in the mountains. They ran in\n\nWORDS AT THE SMILE MOMENT:\nback. And\n\nFocus on the narrative content being discussed around the smile. Use the transcript only.\n\nDefinitions:\n\n1. content_domain\nChoose exactly one:\n- pre_war: life before the war or before persecution\n- wartime_or_camp: persecution, ghetto, hiding, deportation, camp life, war violence, imprisonment, escape during the war\n- liberation: liberation, immediate rescue, immediate end-of-war transition out of captivity\n- post_war: displaced persons period, rebuilding life after the war, migration, marriage, work, family life after the war\n- present_day: explicit present-day life, current reflections on today's life, interview-situation present\n- other: none of the above or too ambiguous\n\n2. temporal_syntax\nChoose exactly one:\n- strict_past: bounded past event narration such as \"this happened\"\n- habitual_past: repeated or ongoing past situation such as \"we used to...\" or \"this was happening all the time\"\n- present_narration: vivid present-tense narration of past events such as \"I am walking in and I see...\"\n- present_reflection: present-day reflective stance such as \"today I realize...\" or \"now I understand...\"\n- mixed: multiple temporal modes are genuinely mixed and no single label dominates\n\n3. narrative_structure\nChoose exactly one:\n- orientation: scene-setting, background, who/where/when, setup\n- complicating_action: events unfolding, escalation, conflict, what happened next\n- evaluation: interpretation, emotional or moral commentary, significance, stance toward the events\n- resolution_coda: aftermath, wrap-up, outcome, transition out of the episode\n- other: none of the above or too ambiguous\n\n4. narrative_valence\nInfer how the subject likely felt during the narrated events themselves, based only on the described events and explicitly ignoring present-day commentary.\nChoose exactly one:\n- very_negative\n- negative\n- neutral\n- positive\n- very_positive\n\n5. present_day_valence\nInfer how the subject appears to feel while speaking in the interview now, based on how they describe and engage with the memory in this passage.\nChoose exactly one:\n- very_negative\n- negative\n- neutral\n- positive\n- very_positive\n\nInclude an \"analysis\" field with 2-5 sentences explaining the reasoning behind the labels, distinguishing narrated emotion from present-day stance when relevant.\n\nReturn valid JSON only. Do not include markdown fences. Do not include any text before or after the JSON.\n\nUse this exact schema:\n{\n  \"analysis\": \"2-5 sentences explaining the reasoning behind the labels, distinguishing narrated emotion from present-day stance when relevant.\",\n  \"content_domain\": \"pre_war\",\n  \"temporal_syntax\": \"strict_past\",\n  \"narrative_structure\": \"orientation\",\n  \"narrative_valence\": \"negative\",\n  \"present_day_valence\": \"neutral\"\n}\n",
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "parse_error",
+      "error": "Parse/validation error: Invalid or missing 'temporal_syntax': 'strict_...'; Invalid or missing 'narrative_structure': None; Invalid or missing 'narrative_valence': None; Invalid or missing 'present_day_valence': None",
+      "sleep_s": 2.0
+    },
+    {
+      "attempt": 2,
+      "status": "parse_error",
+      "error": "Parse/validation error: Invalid or missing 'content_domain': 'wartime_or_cam p?'; Invalid or missing 'temporal_syntax': None; Invalid or missing 'narrative_structure': None; Invalid or missing 'narrative_valence': None; Invalid or missing 'present_day_valence': None",
+      "sleep_s": 4.0
+    },
+    {
+      "attempt": 3,
+      "status": "ok",
+      "elapsed_s": 2.8
+    }
+  ],
+  "elapsed_s": 2.8,
+  "usage": {
+    "prompt_tokens": 910,
+    "completion_tokens": 829,
+    "total_tokens": 1739,
+    "cost": 0.0005055,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.0005055,
+      "upstream_inference_prompt_cost": 9.1e-05,
+      "upstream_inference_completions_cost": 0.0004145
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 766,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "raw_response_text": "{\n  \"analysis\": \"The speaker recounts a past episode of mountain hikes and a forced return to work, then hearing a terrible accident, all narrated in past tense, placing the story in the wartime period. The passage moves from setting the scene to an escalating event, fitting a complicating_action structure. The described events are distressing, giving a negative narrative valence, while the interviewer's present‑day demeanor appears neutral despite the brief smile.\",\n  \"content_domain\": \"wartime_or_camp\",\n  \"temporal_syntax\": \"strict_past\",\n  \"narrative_structure\": \"complicating_action\",\n  \"narrative_valence\": \"negative\",\n  \"present_day_valence\": \"neutral\"\n}",
+  "annotation": {
+    "analysis": "The speaker recounts a past episode of mountain hikes and a forced return to work, then hearing a terrible accident, all narrated in past tense, placing the story in the wartime period. The passage moves from setting the scene to an escalating event, fitting a complicating_action structure. The described events are distressing, giving a negative narrative valence, while the interviewer's present‑day demeanor appears neutral despite the brief smile.",
+    "content_domain": "wartime_or_camp",
+    "temporal_syntax": "strict_past",
+    "narrative_structure": "complicating_action",
+    "narrative_valence": "negative",
+    "present_day_valence": "neutral"
+  }
+}

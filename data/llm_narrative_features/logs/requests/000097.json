@@ -1,0 +1,75 @@
+{
+  "status": "ok",
+  "smile_index": 97,
+  "video_id": "10.1",
+  "analysis_requested": false,
+  "smile": {
+    "start_ts": 1395.733,
+    "end_ts": 1396.4,
+    "peak_r": 1.43,
+    "mean_r": 1.217,
+    "score": 0.5676,
+    "model": "fallback"
+  },
+  "context_window_seconds": {
+    "before": 20.0,
+    "after": 15.0
+  },
+  "context_bounds_seconds": {
+    "start": 1375.733,
+    "end": 1411.4
+  },
+  "context_text": "SMILE INDEX: 97\nWINDOW: 1375.733s to 1411.400s (smile at 1395.733s to 1396.400s)\n\nTRANSCRIPT CONTEXT:\n[1370.660-1477.560] interviewee: I sit down. What is your name? I gave him my name. Is your father alive? I said, yes. What is his name? Leopold. And he smiles. He said you know, I know your father very well. Your father came in 1915 to Breslau, to Wroclaw, now Poland, to be checked if he is well enough to go to the army, to the Austrian Army, because we were Austrians, you see? And he said, I remember\n\nWORDS AT THE SMILE MOMENT:\nto",
+  "context_segments": [
+    {
+      "speaker": "interviewee",
+      "start_ms": 1370660,
+      "end_ms": 1477560,
+      "text": "I sit down. What is your name? I gave him my name. Is your father alive? I said, yes. What is his name? Leopold. And he smiles. He said you know, I know your father very well. Your father came in 1915 to Breslau, to Wroclaw, now Poland, to be checked if he is well enough to go to the army, to the Austrian Army, because we were Austrians, you see? And he said, I remember"
+    }
+  ],
+  "smile_words": [
+    "to"
+  ],
+  "prompt_text": "You are analyzing a smile moment from a Holocaust survivor testimony interview.\n\nYour task is to infer five narrative features about the discourse surrounding the smile.\n\nThe transcript context begins up to 20.0 seconds before the smile and ends up to 15.0 seconds after the smile.\n\nTranscript context:\nSMILE INDEX: 97\nWINDOW: 1375.733s to 1411.400s (smile at 1395.733s to 1396.400s)\n\nTRANSCRIPT CONTEXT:\n[1370.660-1477.560] interviewee: I sit down. What is your name? I gave him my name. Is your father alive? I said, yes. What is his name? Leopold. And he smiles. He said you know, I know your father very well. Your father came in 1915 to Breslau, to Wroclaw, now Poland, to be checked if he is well enough to go to the army, to the Austrian Army, because we were Austrians, you see? And he said, I remember\n\nWORDS AT THE SMILE MOMENT:\nto\n\nFocus on the narrative content being discussed around the smile. Use the transcript only.\n\nDefinitions:\n\n1. content_domain\nChoose exactly one:\n- pre_war: life before the war or before persecution\n- wartime_or_camp: persecution, ghetto, hiding, deportation, camp life, war violence, imprisonment, escape during the war\n- liberation: liberation, immediate rescue, immediate end-of-war transition out of captivity\n- post_war: displaced persons period, rebuilding life after the war, migration, marriage, work, family life after the war\n- present_day: explicit present-day life, current reflections on today's life, interview-situation present\n- other: none of the above or too ambiguous\n\n2. temporal_syntax\nChoose exactly one:\n- strict_past: bounded past event narration such as \"this happened\"\n- habitual_past: repeated or ongoing past situation such as \"we used to...\" or \"this was happening all the time\"\n- present_narration: vivid present-tense narration of past events such as \"I am walking in and I see...\"\n- present_reflection: present-day reflective stance such as \"today I realize...\" or \"now I understand...\"\n- mixed: multiple temporal modes are genuinely mixed and no single label dominates\n\n3. narrative_structure\nChoose exactly one:\n- orientation: scene-setting, background, who/where/when, setup\n- complicating_action: events unfolding, escalation, conflict, what happened next\n- evaluation: interpretation, emotional or moral commentary, significance, stance toward the events\n- resolution_coda: aftermath, wrap-up, outcome, transition out of the episode\n- other: none of the above or too ambiguous\n\n4. narrative_valence\nInfer how the subject likely felt during the narrated events themselves, based only on the described events and explicitly ignoring present-day commentary.\nChoose exactly one:\n- very_negative\n- negative\n- neutral\n- positive\n- very_positive\n\n5. present_day_valence\nInfer how the subject appears to feel while speaking in the interview now, based on how they describe and engage with the memory in this passage.\nChoose exactly one:\n- very_negative\n- negative\n- neutral\n- positive\n- very_positive\n\nDo not include any analysis, reasoning, summary, or explanation field. Return only the five categorical labels.\n\nReturn valid JSON only. Do not include markdown fences. Do not include any text before or after the JSON.\n\nUse this exact schema:\n{\n  \"content_domain\": \"pre_war\",\n  \"temporal_syntax\": \"strict_past\",\n  \"narrative_structure\": \"orientation\",\n  \"narrative_valence\": \"negative\",\n  \"present_day_valence\": \"neutral\"\n}\n",
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "ok",
+      "elapsed_s": 7.97
+    }
+  ],
+  "elapsed_s": 7.97,
+  "usage": {
+    "prompt_tokens": 856,
+    "completion_tokens": 549,
+    "total_tokens": 1405,
+    "cost": 0.00018005,
+    "is_byok": false,
+    "prompt_tokens_details": {
+      "cached_tokens": 0,
+      "cache_write_tokens": 0,
+      "audio_tokens": 0,
+      "video_tokens": 0
+    },
+    "cost_details": {
+      "upstream_inference_cost": 0.00018005,
+      "upstream_inference_prompt_cost": 4.28e-05,
+      "upstream_inference_completions_cost": 0.00013725
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 530,
+      "image_tokens": 0,
+      "audio_tokens": 0
+    }
+  },
+  "raw_response_text": "{\n  \"content_domain\": \"pre_war\",\n  \"temporal_syntax\": \"strict_past\",\n  \"narrative_structure\": \"orientation\",\n  \"narrative_valence\": \"neutral\",\n  \"present_day_valence\": \"positive\"\n}",
+  "annotation": {
+    "analysis": "",
+    "content_domain": "pre_war",
+    "temporal_syntax": "strict_past",
+    "narrative_structure": "orientation",
+    "narrative_valence": "neutral",
+    "present_day_valence": "positive"
+  }
+}

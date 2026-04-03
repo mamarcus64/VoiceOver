@@ -1,0 +1,62 @@
+You are analyzing a smile moment from a Holocaust survivor testimony interview.
+
+Your task is to infer five narrative features about the discourse surrounding the smile.
+
+The transcript context begins up to {{WINDOW_BEFORE_SECONDS}} seconds before the smile and ends up to {{WINDOW_AFTER_SECONDS}} seconds after the smile.
+
+Transcript context:
+{{CONTEXT}}
+
+Focus on the narrative content being discussed around the smile. Use the transcript only.
+
+Definitions:
+
+1. content_domain
+Choose exactly one:
+- pre_war: life before the war or before persecution
+- wartime_or_camp: persecution, ghetto, hiding, deportation, camp life, war violence, imprisonment, escape during the war
+- liberation: liberation, immediate rescue, immediate end-of-war transition out of captivity
+- post_war: displaced persons period, rebuilding life after the war, migration, marriage, work, family life after the war
+- present_day: explicit present-day life, current reflections on today's life, interview-situation present
+- other: none of the above or too ambiguous
+
+2. temporal_syntax
+Choose exactly one:
+- strict_past: bounded past event narration such as "this happened"
+- habitual_past: repeated or ongoing past situation such as "we used to..." or "this was happening all the time"
+- present_narration: vivid present-tense narration of past events such as "I am walking in and I see..."
+- present_reflection: present-day reflective stance such as "today I realize..." or "now I understand..."
+- mixed: multiple temporal modes are genuinely mixed and no single label dominates
+
+3. narrative_structure
+Choose exactly one:
+- orientation: scene-setting, background, who/where/when, setup
+- complicating_action: events unfolding, escalation, conflict, what happened next
+- evaluation: interpretation, emotional or moral commentary, significance, stance toward the events
+- resolution_coda: aftermath, wrap-up, outcome, transition out of the episode
+- other: none of the above or too ambiguous
+
+4. narrative_valence
+Infer how the subject likely felt during the narrated events themselves, based only on the described events and explicitly ignoring present-day commentary.
+Choose exactly one:
+- very_negative
+- negative
+- neutral
+- positive
+- very_positive
+
+5. present_day_valence
+Infer how the subject appears to feel while speaking in the interview now, based on how they describe and engage with the memory in this passage.
+Choose exactly one:
+- very_negative
+- negative
+- neutral
+- positive
+- very_positive
+
+{{ANALYSIS_INSTRUCTION}}
+
+Return valid JSON only. Do not include markdown fences. Do not include any text before or after the JSON.
+
+Use this exact schema:
+{{OUTPUT_SCHEMA}}
