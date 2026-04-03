@@ -19,6 +19,7 @@ from api.recall_facts import router as recall_facts_router
 from api.recall_tasks import router as recall_tasks_router
 from api.smile_why_tasks import router as smile_why_tasks_router
 from api.metadata import router as metadata_router
+from api.gaze_verify import router as gaze_verify_router
 
 DATA_DIR = Path(os.environ.get("VOICEOVER_DATA_DIR", Path(__file__).resolve().parent.parent / "data"))
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
@@ -47,6 +48,7 @@ app.include_router(recall_facts_router, prefix="/api")
 app.include_router(recall_tasks_router, prefix="/api")
 app.include_router(smile_why_tasks_router, prefix="/api")
 app.include_router(metadata_router, prefix="/api")
+app.include_router(gaze_verify_router, prefix="/api")
 
 if FRONTEND_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIR / "assets"), name="assets")

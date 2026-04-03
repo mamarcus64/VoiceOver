@@ -13,6 +13,7 @@ import SmileWhyAnnotate from "./components/SmileWhyAnnotate";
 import SmileWhyResults from "./components/SmileWhyResults";
 import TranscriptView from "./components/TranscriptView";
 import TranscriptGroupView from "./components/TranscriptGroupView";
+import GazeVerify from "./components/GazeVerify";
 
 const HIDE_DEV_TABS = import.meta.env.VITE_HIDE_DEV_TABS === "true";
 
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/smile-why-results" element={<SmileWhyResults />} />
         <Route path="/transcript/:intCode" element={<TranscriptView />} />
         <Route path="/transcripts" element={<TranscriptGroupView />} />
+        <Route path="/gaze-verify" element={<GazeVerify />} />
         <Route path="*" element={<Navigate to="/smile-login" replace />} />
         </Routes>
       </BrowserRouter>
@@ -60,6 +62,7 @@ export default function App() {
         <Route path="/smile-why-results" element={<SmileWhyResults />} />
         <Route path="/transcript/:intCode" element={<TranscriptView />} />
         <Route path="/transcripts" element={<TranscriptGroupView />} />
+        <Route path="/gaze-verify" element={<GazeVerify />} />
       </Routes>
     </BrowserRouter>
   );
