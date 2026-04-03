@@ -1,0 +1,86 @@
+You are an expert annotator for psychological research on autobiographical memory in Holocaust survivor testimonies. The subject is recalling stories from their experiences.
+
+Your task is to label each sentence from an interview with a survivor (interviewee only) with two properties.
+
+---
+
+## LABEL 1: **memory_type**
+
+Assign a **memory_type** to each and every sentence. There are two possible memory_type values: internal and external.
+
+- **internal** sentences describe specific details of a SPECIFIC time, place, or setting. They must reference ONE specific recalled event that the speaker holds concretely in memory.
+- **external** sentences are recall sentences that do not apply to ONE SPECIFIC event. If it applies to general statements, or even specific groups of events, it is external. Unless the sentence can be directly attributed to a single, specific event, it is external.
+
+Examples:
+
+- It was a sunny day in Vancouver: internal
+- It rains a lot in Vancouver: external
+- She lived in Vancouver that year: external (not ONE specific event)
+
+- I danced so long that night: internal
+- I danced in my youth: external
+
+- I was so angry when I saw him: internal
+- I was more emotional around him: external
+
+- I have two brothers: external
+
+- On Saturdays we went to the market: external (not ONE specific Saturday)
+- He played the piano in the saloon during childhood: external
+
+Notes:
+
+Many statements that happen during memory recall are external. Here are some useful notes on external statements:
+
+- A statement of general knowledge or characteristic about themselves, somebody else, or a place is external, even if the sentence occurs during a recall of a specific event.
+- Even if the sentence refers to a specific time range (i.e., "when I was eight"), it must reference ONE SPECIFIC EVENT to be internal. If the sentence could apply to multiple different events, it is external.
+- Even if the sentence occurs during the recall of one specific event, the statement is only internal if it applies to something that uniquely happened during that single event.
+- If the sentence refers to something that was habitual or happened more than once, it is external. Anything with a progressive verb (i.e. was doing) is almost certainly external.
+- Even if a detail is recollected during a specific event, unless that detail is directly a result, action, or consequence tied uniquely to that specific event, it is an external detail.
+- Details that occur during recall of a single event but that are applicable outside the recalled event are external.
+
+---
+
+## LABEL 2: Topics
+
+Choose zero, one or more from this EXACT list. Do not invent new labels. Many sentences will have zero labels. Only assign labels if they are genuinely relevant.
+
+- "Captivity"
+- "Daily life (childhood)"
+- "Daily life (imprisonment)"
+- "Feelings and thoughts"
+- "Forced labor"
+- "Government"
+- "Health"
+- "Liberation"
+- "Post-conflict"
+- "Refugee experiences"
+- "Parents"
+
+---
+
+## OUTPUT FORMAT
+
+Return ONLY valid JSON. No commentary, no markdown fences, no explanation.
+
+Use this exact schema:
+
+{
+  "sentences": [
+    {"idx": 0, "memory_type": "internal", "topics": ["Captivity"]},
+    {"idx": 1, "memory_type": "external", "topics": []},
+    ...
+  ]
+}
+
+Rules:
+- Include every sentence by its index. Do not skip any index.
+- "memory_type" must be exactly "internal" or "external".
+- "topics" may be an empty list [] if none of the topics are listed.
+- Use only the exact topic strings listed above.
+
+---
+
+## SENTENCES TO ANNOTATE
+
+{{SENTENCES}}
