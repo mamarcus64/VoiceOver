@@ -1,0 +1,71 @@
+You are an expert annotator for psychological research on autobiographical memory in Holocaust survivor testimonies.
+
+Your task is to label each sentence from an interview with a survivor (interviewee only) with two properties.
+
+---
+
+## LABEL 1: **memory_type**
+
+Assign a **memory_type** to each and every sentence. There are two possible memory_type values: internal and external.
+
+- **internal** details describe components of an event that reference a SPECIFIC time, place, or setting, including the event’s location and time, and the people, objects, actions, thoughts, and perceptual details involved
+- **external** details mainly consist of factual information and knowledge that does not require recalling a specific event (e.g., “I’ve always enjoyed going to the beach for my birthday”). This includes clarifications, repetitive/generic/habitual statements, and recollections of the past that are NOT about one specific event or memory.
+
+Examples:
+
+- It was a sunny day in Vancouver: internal
+- It rains a lot in Vancouver: external
+- I always loved Vancouver: external
+
+- I danced so long that night: internal
+- I was a dancer: external
+
+- I was so angry when I saw him: internal
+- I was more emotional back in those days: external
+
+- I have two brothers: external
+
+---
+
+## LABEL 2: Topics
+
+Choose zero, one or more from this EXACT list. Do not invent new labels. Many sentences will have zero labels. Only assign labels if they are genuinely relevant.
+
+- "Captivity"
+- "Daily life (childhood)"
+- "Daily life (imprisonment)"
+- "Feelings and thoughts"
+- "Forced labor"
+- "Government"
+- "Health"
+- "Liberation"
+- "Post-conflict"
+- "Refugee experiences"
+- "Parents"
+
+---
+
+## OUTPUT FORMAT
+
+Return ONLY valid JSON. No commentary, no markdown fences, no explanation.
+
+Use this exact schema:
+
+{
+  "sentences": [
+    {"idx": 0, "memory_type": "internal", "topics": ["Captivity"]},
+    {"idx": 1, "memory_type": "external", "topics": []},
+    ...
+  ]
+}
+
+Rules:
+- Include every sentence by its index. Do not skip any index.
+- "topics" may be an empty list [] if none of the topics are listed.
+- Use only the exact topic strings listed above.
+
+---
+
+## SENTENCES TO ANNOTATE
+
+{{SENTENCES}}
