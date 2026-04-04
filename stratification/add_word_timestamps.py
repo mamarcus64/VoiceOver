@@ -12,9 +12,10 @@ from multiprocessing import Pool, cpu_count
 
 EYEGAZE_DIR  = Path("/Users/marcus/Desktop/usc/VoiceOver/data/llm_annotated_eyegaze")
 TRANSCRIPT_DIR = Path("/Users/marcus/Desktop/usc/VoiceOver/data/transcripts_llm")
-OFFSETS_FILE = Path("/Users/marcus/Desktop/usc/VoiceOver/data/transcript_offsets.json")
 
-offsets = json.loads(OFFSETS_FILE.read_text())
+# Note: transcripts_llm/*.json timestamps are already in video-time.
+# standardize_transcripts.py applied the tape→video offset when building those
+# files, so we do NOT re-apply it here.
 
 
 # ── Text normalisation ────────────────────────────────────────────────────────
@@ -77,8 +78,6 @@ def process_file(fname: str) -> tuple[str, int, int]:
     data = json.loads(eyegaze_path.read_text())
     tr   = json.loads(transcript_path.read_text())
 
-    offset = offsets.get(data["transcript_id"], 0)
-
     # Build interviewee-segment index
     interviewee_segs = [s for s in tr if s["speaker"] == "interviewee"]
 
@@ -109,8 +108,8 @@ def process_file(fname: str) -> tuple[str, int, int]:
             first_ms, last_ms, next_cursor = find_span(sent_toks, flat, 0)
 
         if first_ms is not None:
-            sent["first_word_ms"] = first_ms + offset
-            sent["last_word_ms"]  = last_ms  + offset
+            sent["first_word_ms"] = first_ms
+            sent["last_word_ms"]  = last_ms
             cursors[seg_idx]      = next_cursor
             matched += 1
         else:
