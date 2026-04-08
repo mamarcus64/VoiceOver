@@ -1,0 +1,177 @@
+You are an expert annotator for psychological research on autobiographical memory in Holocaust survivor testimonies. The subject is recalling stories from their experiences.
+
+Your task is to label each sentence from an interview with a survivor with seven properties.
+
+---
+
+## LABEL 1: memory_type
+
+Assign a **memory_type** to each and every sentence. There are two possible values: internal and external.
+
+- **internal** sentences describe specific details of a SPECIFIC time, place, or setting. They must reference ONE specific recalled event that the speaker holds concretely in memory.
+- **external** sentences are recall sentences that do not apply to ONE SPECIFIC event. If it applies to general statements, or even specific groups of events, it is external. Unless the sentence can be directly attributed to a single, specific event, it is external.
+
+Examples:
+
+- It was a sunny day in Vancouver: internal
+- It rains a lot in Vancouver: external
+- She lived in Vancouver that year: external (not ONE specific event)
+- I danced so long that night: internal
+- I danced in my youth: external
+- I was so angry when I saw him: internal
+- I was more emotional around him: external
+- I have two brothers: external
+- On Saturdays we went to the market: external (not ONE specific Saturday)
+
+Notes:
+- A statement of general knowledge or characteristic is external, even if it occurs during recall of a specific event.
+- Even if the sentence refers to a specific time range, it must reference ONE SPECIFIC EVENT to be internal.
+- If the sentence refers to something habitual or repeated, it is external.
+- Even if the sentence refers to a specific time range (i.e., "when I was eight"), it must reference ONE SPECIFIC EVENT to be internal. If the sentence could apply to multiple different events, it is external.
+- Details that occur during recall of a single event but that are applicable outside the recalled event are external.
+
+---
+
+## LABEL 2: content_domain
+
+Assign one **content_domain** reflecting what life period the sentence is discussing:
+
+- **"pre-war"** — events, people, or circumstances from before the war began
+- **"wartime"** — events during the war, including camp experiences and persecution
+- **"liberation"** — events surrounding liberation, the end of the war, and immediate aftermath
+- **"post-war"** — life after the war ended (resettlement, rebuilding, emigration)
+- **"present-day"** — the speaker's life now, at the time of the interview
+- **"other"** — meta-commentary, clarifications, or content that does not fit any above
+
+Examples:
+- "We lived in a small town in Poland before the Nazis came.": pre-war
+- "They put us on a transport to Auschwitz.": wartime
+- "When the Americans arrived, we could hardly believe it.": liberation
+- "We eventually settled in New York and started over.": post-war
+- "I still think about it every single day.": present-day
+- "I'm not sure I'm remembering this correctly.": other
+
+---
+
+## LABEL 3: temporal_syntax
+
+Assign one **temporal_syntax** reflecting the grammatical tense and mode of narration:
+
+- **"strict_past"** — a single completed past action or state ("We arrived at the camp", "She said goodbye")
+- **"habitual_past"** — a repeated or ongoing past pattern ("We used to walk to school", "Every morning they counted us")
+- **"present_narration"** — present tense used as a narrative convention for reporting what someone said or did ("So he comes up to me and says...", "And she tells him to leave"); the present tense here is a storytelling device for recounting others' speech or actions, not the speaker's own re-experiencing
+- **"present_reliving"** — vivid present tense expressing the speaker's own intense re-experiencing of a past event, as if it is happening to them now ("So I walk in and I can barely believe what I see...", "And there I am, completely alone")
+- **"present_reflection"** — present tense expressing a current thought, belief, or realization ("Today I understand that...", "I still feel afraid")
+
+---
+
+## LABEL 4: narrative_structure
+
+Assign one **narrative_structure** using a simplified Labovian narrative taxonomy:
+
+- **"orientation"** — scene-setting: introduces who, what, where, when; provides background context for an event
+- **"complicating_action"** — the main event sequence; what happened, step by step
+- **"evaluation"** — the speaker's emotional reaction, assessment, or commentary on the event
+- **"resolution"** — how the event ended; outcome or coda ("And that was the last time I saw him")
+- **"other"** — does not fit into a narrative function (e.g., meta-commentary, clarifications, abstract statements)
+
+---
+
+## LABEL 5: narrative_valence
+
+Assign one **narrative_valence** reflecting the inferred emotion of the subject *during the described events themselves* — based solely on what happened in the narrative, explicitly ignoring any present-day commentary or how the speaker sounds today.
+
+- **"positive"** — the events described were joyful, celebratory, warm, or fortunate
+- **"negative"** — the events described were painful, frightening, tragic, or traumatic
+- **"neutral"** — the events described are mundane, factual, or carry no clear emotional charge
+- **"mixed"** — the events described contain both positive and negative elements
+
+Examples:
+- "We danced and celebrated all night long.": positive (the event itself was joyful)
+- "They took my mother away and I never saw her again.": negative (the event was tragic)
+- "We arrived at the station at around three in the afternoon.": neutral (purely factual)
+- "It was a beautiful place, but of course it all ended so terribly.": mixed
+
+Note: a sentence may be narrated calmly today but describe a deeply negative event — label the *event*, not the narration style.
+
+---
+
+## LABEL 6: present_day_valence
+
+Assign one **present_day_valence** reflecting the speaker's inferred emotional state *as they are currently speaking* — not the emotion of the past event being described, but the affect visible in how they engage with and narrate the content right now.
+
+- **"positive"** — warmth, pride, joy, amusement, fondness
+- **"negative"** — sadness, grief, distress, fear, anger, pain
+- **"neutral"** — matter-of-fact, flat affect, detached recollection
+- **"mixed"** — bittersweet, ambivalent, or shifting between positive and negative within the sentence
+
+Examples:
+- "And we laughed and laughed, it was wonderful.": positive
+- "They took my mother away and I never saw her again.": negative
+- "We arrived at the station at around three in the afternoon.": neutral
+- "It was a beautiful place, but of course it all ended so terribly.": mixed
+
+Note: a speaker may recount a terrible event calmly (narrative_valence=negative, present_day_valence=neutral), or speak with visible grief about something that was objectively mild.
+
+---
+
+## LABEL 7: topics
+
+Choose zero, one or more from this EXACT list. Do not invent new labels. Many sentences will have zero labels. Only assign labels if they are genuinely relevant.
+
+- "Captivity"
+- "Daily life (childhood)"
+- "Daily life (imprisonment)"
+- "Feelings and thoughts"
+- "Forced labor"
+- "Government"
+- "Health"
+- "Liberation"
+- "Post-conflict"
+- "Refugee experiences"
+- "Parents"
+
+---
+
+## OUTPUT FORMAT
+
+Return ONLY valid JSON. No commentary, no markdown fences, no explanation.
+
+Use this exact schema:
+
+{
+  "sentences": [
+    {
+      "idx": 0,
+      "memory_type": "internal",
+      "content_domain": "wartime",
+      "temporal_syntax": "strict_past",
+      "narrative_structure": "complicating_action",
+      "narrative_valence": "negative",
+      "present_day_valence": "neutral",
+      "topics": ["Captivity"]
+    },
+    {
+      "idx": 1,
+      "memory_type": "external",
+      "content_domain": "pre-war",
+      "temporal_syntax": "habitual_past",
+      "narrative_structure": "orientation",
+      "narrative_valence": "positive",
+      "present_day_valence": "positive",
+      "topics": []
+    },
+    ...
+  ]
+}
+
+Rules:
+- Include every sentence by its index. Do not skip any index.
+- Each single-value field must be exactly one of the values listed for that label.
+- "topics" may be an empty list [] if none apply. Use only the exact topic strings listed above.
+
+---
+
+## SENTENCES TO ANNOTATE
+
+{{SENTENCES}}

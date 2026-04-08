@@ -18,6 +18,7 @@ from api.pilot_agreement import router as pilot_agreement_router
 from api.recall_facts import router as recall_facts_router
 from api.recall_tasks import router as recall_tasks_router
 from api.smile_why_tasks import router as smile_why_tasks_router
+from api.smile_valence_tasks import router as smile_valence_tasks_router
 from api.metadata import router as metadata_router
 from api.gaze_verify import router as gaze_verify_router
 
@@ -47,6 +48,7 @@ app.include_router(pilot_agreement_router, prefix="/api")
 app.include_router(recall_facts_router, prefix="/api")
 app.include_router(recall_tasks_router, prefix="/api")
 app.include_router(smile_why_tasks_router, prefix="/api")
+app.include_router(smile_valence_tasks_router, prefix="/api")
 app.include_router(metadata_router, prefix="/api")
 app.include_router(gaze_verify_router, prefix="/api")
 

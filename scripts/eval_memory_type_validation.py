@@ -157,7 +157,18 @@ def compute_accuracy(ann_index: dict[str, dict[str, dict]]) -> dict:
         print(f"  [WARN] {len(missing)} tasks not found in annotation files: {missing}")
 
     correct = sum(1 for v in per_task.values() if v["correct"])
-    return {"correct": correct, "total": len(per_task), "per_task": per_task}
+
+    # Cohen's kappa
+    n = len(per_task)
+    kappa = 0.0
+    if n > 0:
+        po = correct / n
+        p_gt_int  = sum(1 for v in per_task.values() if v["ground_truth"] == "internal") / n
+        p_llm_int = sum(1 for v in per_task.values() if v["llm"] == "internal") / n
+        pe = p_gt_int * p_llm_int + (1 - p_gt_int) * (1 - p_llm_int)
+        kappa = (po - pe) / (1 - pe) if pe < 1.0 else 1.0
+
+    return {"correct": correct, "total": n, "kappa": round(kappa, 3), "per_task": per_task}
 
 
 # ── Subprocess helper ─────────────────────────────────────────────────────────
@@ -216,8 +227,11 @@ def main():
     pct     = correct / total * 100 if total else 0
     delta   = correct - BASELINE
 
+    kappa = results["kappa"]
+
     print(f"\n{'='*55}")
     print(f"  Accuracy : {correct}/{total} = {pct:.1f}%")
+    print(f"  Kappa    : {kappa:.3f}")
     print(f"  Baseline : {BASELINE}/100 = {BASELINE}.0%")
     print(f"  Change   : {delta:+d} tasks")
     print(f"{'='*55}")
@@ -227,13 +241,14 @@ def main():
     print(f"\n  {'ID':>4}  {'GT':8} {'LLM':8}  sentence")
     for tid in sorted(wrong.keys()):
         p = wrong[tid]
-        print(f"  {tid:>4}  {p['ground_truth']:8} {p['llm']:8}  '{p['sentence'][:60]}'")
+        print(f"  {tid:>4}  {p['ground_truth']:8} {p['llm']:8}  '{p['sentence']}'")
 
     # ── 5. save results ────────────────────────────────────────────────────
     results["timestamp"]       = timestamp
     results["model"]           = args.model
     results["prompt_snapshot"] = prompt_snapshot.name
     results["accuracy_pct"]    = round(pct, 1)
+    results["kappa"]           = kappa
     results["baseline"]        = BASELINE
     results["delta"]           = delta
 
