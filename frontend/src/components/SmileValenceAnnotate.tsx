@@ -188,8 +188,10 @@ export default function SmileValenceAnnotate() {
     if (taskNum === null) return;
     let cancelled = false;
     setLoading(true);
-    setNarrativeValence(null);
-    setSpeakerValence(null);
+    // Pre-populate from any existing annotation so re-annotation shows current values
+    const existing = annotations?.annotations[String(taskNum)];
+    setNarrativeValence(existing?.narrative_valence ?? null);
+    setSpeakerValence(existing?.speaker_valence ?? null);
     (async () => {
       try {
         const data = await preloadTask(taskNum);
@@ -465,8 +467,8 @@ export default function SmileValenceAnnotate() {
             <ValenceSelector
               label="Narrative Valence"
               description="What is the emotional valence of the story or content being discussed at this moment?"
-              value={currentAnnotation?.narrative_valence ?? narrativeValence}
-              locked={!!currentAnnotation || saving}
+              value={narrativeValence}
+              locked={saving}
               onChange={setNarrativeValence}
             />
 
@@ -474,29 +476,28 @@ export default function SmileValenceAnnotate() {
             <ValenceSelector
               label="Speaker's Current Valence"
               description="What is the speaker's personal emotional state during this moment?"
-              value={currentAnnotation?.speaker_valence ?? speakerValence}
-              locked={!!currentAnnotation || saving}
-              disabled={!narrativeValence && !currentAnnotation}
+              value={speakerValence}
+              locked={saving}
+              disabled={!narrativeValence}
               onChange={handleSelectSpeakerValence}
             />
 
-            {/* Not a smile escape hatch */}
-            {!currentAnnotation && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  disabled={saving}
-                  onClick={handleNotASmile}
-                  style={{
-                    padding: "6px 16px", fontSize: "0.78rem", fontWeight: 600,
-                    border: "2px solid #475569", borderRadius: "6px", cursor: saving ? "default" : "pointer",
-                    backgroundColor: "#1e293b", color: "#94a3b8",
-                    opacity: saving ? 0.6 : 1,
-                  }}
-                >
-                  Not a Smile
-                </button>
-              </div>
-            )}
+            {/* Not a smile — always available */}
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                disabled={saving}
+                onClick={handleNotASmile}
+                style={{
+                  padding: "6px 16px", fontSize: "0.78rem", fontWeight: 600,
+                  border: "2px solid #475569", borderRadius: "6px", cursor: saving ? "default" : "pointer",
+                  backgroundColor: currentAnnotation?.not_a_smile ? "#334155" : "#1e293b",
+                  color: currentAnnotation?.not_a_smile ? "#e2e8f0" : "#94a3b8",
+                  opacity: saving ? 0.6 : 1,
+                }}
+              >
+                Not a Smile
+              </button>
+            </div>
           </div>
 
           {/* Show existing annotation */}

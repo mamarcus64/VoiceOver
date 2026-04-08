@@ -162,55 +162,103 @@ async def save_annotation(body: SmileValenceAnnotateBody):
 
 # ── Results / stats ───────────────────────────────────────────────────────────
 
-LLM_FEATURES_PATH = DATA_DIR / "llm_narrative_features" / "narrative_features_combined.json"
-LLM_ITEMS_DIR = DATA_DIR / "llm_narrative_features" / "items"
+LLM_EYEGAZE_DIR = DATA_DIR / "llm_annotated_eyegaze"
 
 VALENCE_LABELS = ["negative", "neutral", "positive"]
 
 
-def _load_llm_index() -> dict[tuple[str, float], dict[str, Any]]:
-    """Return dict keyed by (video_id, rounded_start_ts) → LLM annotation entry."""
-    index: dict[tuple[str, float], dict[str, Any]] = {}
+def _best_sentence_for_smile(
+    sentences: list[dict], smile_start_ms: float, smile_end_ms: float
+) -> dict | None:
+    """Return the sentence that best covers the smile window.
 
-    def _ingest(results: list[dict]) -> None:
-        for r in results:
-            if not r.get("analysis_requested"):
-                continue
-            nv = r.get("narrative_valence")
-            sv = r.get("present_day_valence")
-            if nv not in VALENCE_LABELS or sv not in VALENCE_LABELS:
-                continue
-            smile = r.get("smile", {})
-            vid = r.get("video_id")
-            start = smile.get("start_ts")
-            if vid is None or start is None:
-                continue
-            key = (vid, round(float(start), 2))
-            index[key] = {
+    Scoring: temporal overlap duration (with a 1ms floor for point-sentences
+    that fall inside the window).  Ties broken by proximity of sentence
+    midpoint to smile midpoint.
+    """
+    smile_mid = (smile_start_ms + smile_end_ms) / 2
+    best: dict | None = None
+    best_score: tuple[float, float] = (-1, float("inf"))
+
+    for s in sentences:
+        fw = s.get("first_word_ms")
+        lw = s.get("last_word_ms")
+        if fw is None or lw is None:
+            continue
+        fw, lw = float(fw), float(lw)
+        # Overlap duration
+        overlap = min(smile_end_ms, lw) - max(smile_start_ms, fw)
+        if overlap < 0:
+            continue
+        # Point-sentences (fw == lw) that fall inside the window get 1ms overlap
+        if overlap == 0 and fw >= smile_start_ms and lw <= smile_end_ms:
+            overlap = 1.0
+        if overlap <= 0:
+            continue
+        mid_dist = abs((fw + lw) / 2 - smile_mid)
+        score: tuple[float, float] = (overlap, -mid_dist)
+        if score > best_score:
+            best_score = score
+            best = s
+
+    return best
+
+
+def _build_llm_by_task(tasks: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+    """Return dict of task_number → LLM annotation entry.
+
+    Prefers labels embedded directly in the manifest task (llm_narrative_valence /
+    llm_speaker_valence).  Falls back to loading the eyegaze file for any task
+    that lacks embedded labels.
+    """
+    result: dict[int, dict[str, Any]] = {}
+    fallback_tasks: list[dict[str, Any]] = []
+
+    for t in tasks:
+        nv = t.get("llm_narrative_valence")
+        sv = t.get("llm_speaker_valence")
+        if nv in VALENCE_LABELS and sv in VALENCE_LABELS:
+            result[t["task_number"]] = {
                 "narrative_valence": nv,
                 "speaker_valence": sv,
-                "content_domain": r.get("content_domain"),
-                "narrative_structure": r.get("narrative_structure"),
             }
+        else:
+            fallback_tasks.append(t)
 
-    if LLM_FEATURES_PATH.is_file():
-        try:
-            with open(LLM_FEATURES_PATH) as f:
-                data = json.load(f)
-            _ingest(data.get("results", []))
-        except Exception:
-            pass
-
-    if LLM_ITEMS_DIR.is_dir():
-        for fp in LLM_ITEMS_DIR.glob("*.json"):
+    if fallback_tasks:
+        # Group by video_id and load eyegaze files for remaining tasks
+        by_video: dict[str, list[dict]] = {}
+        for t in fallback_tasks:
+            by_video.setdefault(t["video_id"], []).append(t)
+        for vid, vid_tasks in by_video.items():
+            fp = LLM_EYEGAZE_DIR / f"{vid}.json"
+            if not fp.is_file():
+                continue
             try:
                 with open(fp) as f:
-                    item = json.load(f)
-                _ingest([item] if isinstance(item, dict) else item)
+                    data = json.load(f)
             except Exception:
-                pass
+                continue
+            sentences = data.get("sentences", [])
+            for t in vid_tasks:
+                start_ms = t["smile_start"] * 1000
+                end_ms = t["smile_end"] * 1000
+                sent = _best_sentence_for_smile(sentences, start_ms, end_ms)
+                if sent is None:
+                    continue
+                nv = sent.get("narrative_valence")
+                sv = sent.get("present_day_valence")
+                if nv not in VALENCE_LABELS or sv not in VALENCE_LABELS:
+                    continue
+                result[t["task_number"]] = {
+                    "narrative_valence": nv,
+                    "speaker_valence": sv,
+                    "content_domain": sent.get("content_domain"),
+                    "narrative_structure": sent.get("narrative_structure"),
+                    "sentence_text": sent.get("text", ""),
+                }
 
-    return index
+    return result
 
 
 def _majority(labels: list[str]) -> str | None:
@@ -293,14 +341,7 @@ def _compute_iaa(
 async def get_results():
     manifest = _load_manifest()
     task_map = {t["task_number"]: t for t in manifest["tasks"]}
-    llm_index = _load_llm_index()
-
-    # Index LLM by task_number for fast lookup
-    llm_by_task: dict[int, dict] = {}
-    for task in manifest["tasks"]:
-        key = (task["video_id"], round(float(task["smile_start"]), 2))
-        if key in llm_index:
-            llm_by_task[task["task_number"]] = llm_index[key]
+    llm_by_task = _build_llm_by_task(manifest["tasks"])
 
     # Load all human annotations
     annotators: list[str] = []
